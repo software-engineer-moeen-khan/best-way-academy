@@ -44,8 +44,6 @@ setenv APP_TIMEZONE "Asia/Karachi"
 setenv SESSION_SECURE_COOKIE true
 setenv MAIL_FROM_ADDRESS "noreply@$HOSTINGER_DOMAIN"
 
-# Composer normally runs this as a post-autoload script. Hostinger disables proc_open,
-# so Composer cannot launch PHP subprocesses. Running Artisan directly avoids that restriction.
 if "$PHP_BIN" artisan package:discover --ansi >/dev/null 2>&1; then
   log "Laravel package discovery completed directly."
 else
@@ -116,7 +114,7 @@ if [[ -z "$ADMIN_PASSWORD" ]]; then
 fi
 ADMIN_EMAIL="$($PHP_BIN -r '$e=parse_ini_file(".env");echo $e["ADMIN_EMAIL"]??"admin@example.com";' 2>/dev/null || true)"
 if [[ ! -f .deploy/admin-credentials.txt ]]; then
-  { echo "Admin URL: https://$HOSTINGER_DOMAIN/admin.html"; echo "Email: $ADMIN_EMAIL"; echo "Password: $ADMIN_PASSWORD"; } > .deploy/admin-credentials.txt
+  { echo "Admin URL: https://$HOSTINGER_DOMAIN/admin"; echo "Email: $ADMIN_EMAIL"; echo "Password: $ADMIN_PASSWORD"; } > .deploy/admin-credentials.txt
   chmod 600 .deploy/admin-credentials.txt
 fi
 
@@ -125,20 +123,14 @@ log "Running database migrations and seeders..."
 "$PHP_BIN" artisan migrate --force
 "$PHP_BIN" artisan db:seed --force
 
-log "Publishing frontend + Laravel front controller to public_html..."
-PROTECTED=' checkout.html dashboard.html my-learning.html learn.html certificate.html account.html orders.html messages.html notifications.html success.html admin.html instructor.html '
+log "Publishing Laravel front controller + assets to public_html..."
+# Remove all stale static page files. Pages are now served only through Laravel routes.
 find "$PUBLIC_HTML" -maxdepth 1 -type f -name '*.html' -delete
-for f in "$ROOT"/*.html; do
-  [[ -e "$f" ]] || continue
-  name="$(basename "$f")"
-  if [[ "$PROTECTED" == *" $name "* ]]; then continue; fi
-  "$PHP_BIN" deploy/inject-backend.php "$f" "$PUBLIC_HTML/$name"
-done
 rm -rf "$PUBLIC_HTML/assets"
 cp -a "$ROOT/assets" "$PUBLIC_HTML/assets"
 cp "$ROOT/public/index.php" "$PUBLIC_HTML/index.php"
 cp "$ROOT/public/.htaccess" "$PUBLIC_HTML/.htaccess"
-rm -f "$PUBLIC_HTML/index.php~" "$PUBLIC_HTML/default.php"
+rm -f "$PUBLIC_HTML/default.php"
 
 chmod -R u+rwX,go+rX "$PUBLIC_HTML" || true
 chmod -R ug+rwX storage bootstrap/cache || true
@@ -156,10 +148,10 @@ if [[ -n "$HOSTINGER_API_TOKEN" ]]; then
 fi
 
 "$PHP_BIN" artisan config:cache
-# route:cache/view:cache are intentionally skipped: this compatibility app serves existing HTML through small route closures and has no Blade views.
 
 log "Deployment complete: https://$HOSTINGER_DOMAIN"
 log "Backend health: https://$HOSTINGER_DOMAIN/api/health"
+log "Clean routes active: /courses /dashboard /my-learning /admin /instructor"
 if [[ -f .deploy/admin-credentials.txt ]]; then
   log "Admin credentials saved server-side at: $ROOT/.deploy/admin-credentials.txt (chmod 600)"
 fi
