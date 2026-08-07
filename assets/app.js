@@ -1,26 +1,31 @@
-const search = document.getElementById('courseSearch');
-const cards = [...document.querySelectorAll('.course-card')];
-const noResults = document.getElementById('noResults');
+const pageStyles=document.createElement('link');pageStyles.rel='stylesheet';pageStyles.href='assets/pages.css';document.head.appendChild(pageStyles);
 
-search?.addEventListener('input', () => {
-  const term = search.value.trim().toLowerCase();
-  let visible = 0;
-  cards.forEach((card) => {
-    const haystack = (card.dataset.search + ' ' + card.innerText).toLowerCase();
-    const show = !term || haystack.includes(term);
-    card.style.display = show ? '' : 'none';
-    if (show) visible += 1;
-  });
-  if (noResults) noResults.hidden = visible !== 0;
-});
+const COURSES={python:{title:'Python & Web Development Bootcamp',category:'Development',subtitle:'Go from Python fundamentals to modern web development with practical projects you can add to your portfolio.',rating:'4.8',students:'2,431 learners',price:'Rs 4,999',image:'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1200&q=85',learn:['Write clean Python programs from scratch','Build responsive web interfaces','Work with APIs and real project data','Create portfolio-ready applications'],modules:['Python foundations and problem solving','HTML, CSS and JavaScript essentials','Frontend projects and responsive design','APIs, deployment and final project']},ai:{title:'Complete AI, ChatGPT & Prompt Engineering',category:'Artificial Intelligence',subtitle:'Use modern generative AI tools confidently for research, productivity, content and practical automation.',rating:'4.9',students:'1,903 learners',price:'Rs 5,499',image:'https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=1200&q=85',learn:['Understand practical generative AI concepts','Write reliable prompts for real tasks','Create repeatable AI workflows','Use AI responsibly in professional work'],modules:['Generative AI fundamentals','Prompt engineering frameworks','ChatGPT workflows and productivity','Automation projects and responsible AI']},data:{title:'Data Science & Analytics Career Track',category:'Data',subtitle:'Build job-ready analytics skills with Python, data cleaning, visualization and practical business projects.',rating:'4.7',students:'1,154 learners',price:'Rs 6,999',image:'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=85',learn:['Clean and analyze real datasets','Build clear dashboards and reports','Use Python for data analysis','Present insights for business decisions'],modules:['Data analysis foundations','Python and pandas','Visualization and dashboards','Capstone analytics project']},marketing:{title:'Digital Marketing, SEO & Social Media',category:'Marketing',subtitle:'Learn practical digital marketing strategies for SEO, social media, content and paid campaigns.',rating:'4.8',students:'973 learners',price:'Rs 3,999',image:'https://images.unsplash.com/photo-1557838923-2985c318be48?auto=format&fit=crop&w=1200&q=85',learn:['Plan an effective digital strategy','Improve website SEO fundamentals','Build social media campaigns','Measure performance and conversions'],modules:['Digital marketing strategy','SEO and content marketing','Social media and paid campaigns','Analytics and campaign optimization']},excel:{title:'Microsoft Excel for Business & Analytics',category:'Data',subtitle:'Master formulas, reporting, charts and practical Excel workflows for everyday business analysis.',rating:'4.8',students:'821 learners',price:'Rs 2,999',image:'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=85',learn:['Use essential and advanced formulas','Clean and organize business data','Create charts and dashboards','Automate common reporting workflows'],modules:['Excel essentials','Formulas and functions','Pivot tables and dashboards','Business reporting project']},cloud:{title:'Cloud Engineer Career Path',category:'Career',subtitle:'Build foundations in cloud infrastructure, AWS concepts, Linux and networking for a cloud career.',rating:'4.7',students:'667 learners',price:'Rs 6,499',image:'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=85',learn:['Understand cloud infrastructure','Work with core AWS concepts','Use Linux for cloud environments','Apply networking fundamentals'],modules:['Cloud computing foundations','Linux essentials','Networking for cloud','AWS services and career project']}};
 
-document.querySelectorAll('#skillTabs button').forEach((button) => {
-  button.addEventListener('click', () => {
-    document.querySelectorAll('#skillTabs button').forEach((item) => item.classList.remove('active'));
-    button.classList.add('active');
-  });
-});
+const page=document.body.dataset.page||'home';
+const qs=(s)=>document.querySelector(s);const qsa=(s)=>[...document.querySelectorAll(s)];
 
-document.getElementById('menuBtn')?.addEventListener('click', () => {
-  document.getElementById('courses')?.scrollIntoView({ behavior: 'smooth' });
-});
+if(page==='home'){
+  qsa('a[href="#courses"]').forEach(a=>a.href='courses.html');
+  qsa('a[href="#skills"]').forEach(a=>a.href='courses.html?category=Artificial%20Intelligence');
+  qsa('a[href="#careers"]').forEach(a=>a.href='courses.html?category=Career');
+  const login=qs('.header-actions .login');const signup=qs('.header-actions .signup');if(login)login.href='login.html';if(signup)signup.href='signup.html';
+  const ids=['python','ai','data','marketing'];qsa('#courseGrid .course-card').forEach((card,i)=>{card.tabIndex=0;card.setAttribute('role','link');const go=()=>location.href=`course.html?course=${ids[i]||'python'}`;card.addEventListener('click',go);card.addEventListener('keydown',e=>{if(e.key==='Enter')go()})});
+  const search=qs('#courseSearch');if(search){search.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();location.href=`courses.html?q=${encodeURIComponent(search.value.trim())}`}})}
+  const skillMap=['Artificial Intelligence','Development','Data','Development','Marketing','Marketing'];qsa('#skillTabs button').forEach((button,i)=>button.addEventListener('click',()=>location.href=`courses.html?category=${encodeURIComponent(skillMap[i])}`));
+  const careerIds=['cloud','data','marketing'];qsa('.career-grid article').forEach((card,i)=>{card.tabIndex=0;card.setAttribute('role','link');card.addEventListener('click',()=>location.href=`course.html?course=${careerIds[i]}`)});
+  qsa('.google-cards>div').forEach(card=>{card.tabIndex=0;card.setAttribute('role','link');card.addEventListener('click',()=>location.href='courses.html?category=Artificial%20Intelligence')});
+  qs('#menuBtn')?.addEventListener('click',()=>location.href='courses.html');
+}
+
+if(page==='courses'){
+  const input=qs('#catalogSearch'),cards=qsa('#catalogGrid .course-card'),empty=qs('#catalogEmpty'),params=new URLSearchParams(location.search);let active=params.get('category')||'all';if(params.get('q'))input.value=params.get('q');
+  const apply=()=>{const term=(input?.value||'').trim().toLowerCase();let visible=0;cards.forEach(card=>{const category=card.dataset.category||'',hay=(card.dataset.search+' '+card.innerText).toLowerCase();const categoryOK=active==='all'||category.toLowerCase().includes(active.toLowerCase());const searchOK=!term||hay.includes(term);card.style.display=categoryOK&&searchOK?'':'none';if(categoryOK&&searchOK)visible++});if(empty)empty.hidden=visible!==0;qsa('#categoryFilters button').forEach(b=>b.classList.toggle('active',b.dataset.filter===active))};
+  input?.addEventListener('input',apply);qsa('#categoryFilters button').forEach(b=>b.addEventListener('click',()=>{active=b.dataset.filter;apply()}));apply();
+}
+
+if(page==='course'){
+  const id=new URLSearchParams(location.search).get('course')||'python',c=COURSES[id]||COURSES.python;document.title=`${c.title} — Best Way Academy`;qs('#detailCategory').textContent=c.category;qs('#detailTitle').textContent=c.title;qs('#detailSubtitle').textContent=c.subtitle;qs('#detailRating').textContent=c.rating;qs('#detailStudents').textContent=`(${c.students})`;qs('#detailPrice').textContent=c.price;const img=qs('#detailImage');img.src=c.image;img.alt=c.title;qs('#learnList').innerHTML=c.learn.map(x=>`<li>✓ ${x}</li>`).join('');qs('#curriculum').innerHTML=c.modules.map((x,i)=>`<div><b>${String(i+1).padStart(2,'0')}</b><span>${x}</span><small>${i+2} lessons</small></div>`).join('');
+}
+
+qs('#demoAuthForm')?.addEventListener('submit',e=>{e.preventDefault();const msg=qs('#authMessage');if(msg){msg.textContent='Form UI is working. Backend authentication can be connected in the next phase.';msg.classList.add('success-message')}});
