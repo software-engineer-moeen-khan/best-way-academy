@@ -49,14 +49,14 @@
     if(form.id==='demoAuthForm'){
       e.preventDefault();e.stopImmediatePropagation();await ready; if(!backend)return;
       const signup=location.pathname.toLowerCase().includes('signup'),email=form.querySelector('input[type=email]')?.value.trim(),password=form.querySelector('input[type=password]')?.value||'',name=form.querySelector('input[type=text]')?.value.trim()||'Learner';
-      try{const out=await api(signup?'/api/auth/register':'/api/auth/login',{method:'POST',body:JSON.stringify(signup?{name,email,password}:{email,password})});currentUser=out.user;csrf=out.csrf_token||csrf;putLocal('bwa_user',out.user);const next=new URLSearchParams(location.search).get('next');location.href=next||out.redirect||'dashboard.html'}catch(err){const m=document.querySelector('#authMessage');if(m)m.textContent=err.data?.errors?Object.values(err.data.errors).flat().join(' '):err.message}return;
+      try{const out=await api(signup?'/api/auth/register':'/api/auth/login',{method:'POST',body:JSON.stringify(signup?{name,email,password}:{email,password})});currentUser=out.user;csrf=out.csrf_token||csrf;putLocal('bwa_user',out.user);const next=new URLSearchParams(location.search).get('next');location.href=next||out.redirect||'/dashboard'}catch(err){const m=document.querySelector('#authMessage');if(m)m.textContent=err.data?.errors?Object.values(err.data.errors).flat().join(' '):err.message}return;
     }
     if(form.id==='checkoutForm'){
-      await ready;if(!backend)return;if(!currentUser){e.preventDefault();e.stopImmediatePropagation();location.href='login.html?next='+encodeURIComponent(location.pathname+location.search);return}
+      await ready;if(!backend)return;if(!currentUser){e.preventDefault();e.stopImmediatePropagation();location.href='/login?next='+encodeURIComponent(location.pathname+location.search);return}
       e.preventDefault();e.stopImmediatePropagation();const p=new URLSearchParams(location.search);let ids=p.get('cart')==='1'?(readLocal('bwa_cart',[])||[]):[p.get('course')||'python'];
       try{const pm=form.querySelector('input[name=payment]:checked')?.value||'demo',out=await api('/api/checkout',{method:'POST',body:JSON.stringify({course_slugs:ids,payment_method:pm})});
         const order={number:out.order.number,total:out.order.total,date:out.order.created_at,ids};putLocal('bwa_last_order',order);putLocal('bwa_orders',[order,...(readLocal('bwa_orders',[])||[]).filter(x=>x.number!==order.number)]);
-        const enroll=(out.enrollments||[]).map(x=>({id:x.course?.slug,date:x.enrolled_at||x.created_at,progress:x.progress||0})).filter(x=>x.id);putLocal('bwa_enrollments',enroll);putLocal('bwa_cart',[]);location.href='success.html';
+        const enroll=(out.enrollments||[]).map(x=>({id:x.course?.slug,date:x.enrolled_at||x.created_at,progress:x.progress||0})).filter(x=>x.id);putLocal('bwa_enrollments',enroll);putLocal('bwa_cart',[]);location.href='/success';
       }catch(err){alert(err.message)}return;
     }
     if(form.id==='profileForm'&&backend&&currentUser){
@@ -64,5 +64,22 @@
       try{const out=await api('/api/profile',{method:'PUT',body:JSON.stringify({name,email})});currentUser=out.user;putLocal('bwa_user',out.user);location.reload()}catch(err){alert(err.message)}
     }
   },true);
+
+  const cleanMap={
+    'index.html':'/','about.html':'/about','account.html':'/account','admin.html':'/admin','cart.html':'/cart',
+    'categories.html':'/categories','certificate.html':'/certificate','checkout.html':'/checkout','contact.html':'/contact',
+    'course.html':'/course','courses.html':'/courses','dashboard.html':'/dashboard','faq.html':'/faq','gift.html':'/gift',
+    'instructor-profile.html':'/instructor-profile','instructor.html':'/instructor','learn.html':'/learn','login.html':'/login',
+    'messages.html':'/messages','my-learning.html':'/my-learning','notifications.html':'/notifications','orders.html':'/orders',
+    'plans.html':'/plans','practice.html':'/practice','privacy.html':'/privacy','signup.html':'/signup','success.html':'/success',
+    'teach.html':'/teach','terms.html':'/terms','wishlist.html':'/wishlist'
+  };
+  document.addEventListener('DOMContentLoaded',()=>{
+    document.querySelectorAll('a[href]').forEach(a=>{
+      const raw=a.getAttribute('href');if(!raw||raw.startsWith('#')||raw.startsWith('mailto:')||raw.startsWith('tel:'))return;
+      try{const u=new URL(raw,location.href);if(u.origin!==location.origin)return;const file=u.pathname.split('/').pop();if(!cleanMap[file])return;u.pathname=cleanMap[file];a.href=u.pathname+u.search+u.hash}catch{}
+    });
+  });
+
   window.BWABackend={ready,api,get user(){return currentUser},get available(){return backend}};
 })();
