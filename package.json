@@ -1,18 +1,18 @@
 {
-	"name": "monorepo",
-	"version": "0.0.0",
-	"private": true,
-	"scripts": {
-		"setup": "npm install",
-		"dev": "concurrently --kill-others --raw \"npm run dev --prefix apps/web\"",
-		"build": "concurrently --raw \"npm run build --prefix apps/web\"",
-		"start": "concurrently --kill-others --raw",
-		"lint": "concurrently --raw \"npm run lint --prefix apps/web\""
-	},
-	"devDependencies": {
-		"concurrently": "^10.0.3"
-	},
-	"workspaces": [
-		"apps/*"
-	]
+  "name": "best-way-academy",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "setup": "npm install",
+    "dev": "npm run dev --prefix apps/web",
+    "build": "npm run build --prefix apps/web",
+    "start": "npm run start --prefix apps/web",
+    "lint": "npm run lint --prefix apps/web"
+  },
+  "engines": {
+    "node": ">=20 <23"
+  },
+  "workspaces": [
+    "apps/*"
+  ]
 }
