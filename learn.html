@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Learning — Best Way Academy</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <link rel="stylesheet" href="assets/player.css">
+</head>
+<body data-player-page="learn">
+<header class="player-header">
+  <a class="brand" href="index.html"><span class="brand-mark">B</span><span>Best Way <b>Academy</b></span></a>
+  <a class="player-back" href="my-learning.html">← My Learning</a>
+</header>
+<main class="player-layout">
+  <aside class="lesson-sidebar" id="lessonSidebar">
+    <div class="sidebar-top">
+      <div><p class="eyebrow">COURSE CONTENT</p><h2 id="playerCourseTitle">Course</h2></div>
+      <button id="closeLessons" class="sidebar-close" type="button" aria-label="Close lessons">×</button>
+    </div>
+    <div class="player-progress"><span><b id="progressText">0%</b> complete</span><div><i id="progressBar"></i></div></div>
+    <div id="lessonList" class="lesson-list"></div>
+  </aside>
+
+  <section class="lesson-main">
+    <div class="lesson-mobile-bar"><button id="openLessons" type="button">☰ Lessons</button><span id="mobileProgress">0% complete</span></div>
+    <div class="lesson-stage" id="lessonStage">
+      <img id="lessonImage" src="" alt="Course lesson">
+      <div class="stage-overlay">
+        <span class="stage-kicker" id="lessonModule">Module</span>
+        <h1 id="lessonTitle">Lesson</h1>
+        <p id="lessonIntro">Select a lesson to begin learning.</p>
+        <button id="startLesson" class="stage-play" type="button">▶ Start lesson</button>
+      </div>
+    </div>
+
+    <div class="lesson-content">
+      <div class="lesson-copy">
+        <p class="eyebrow">CURRENT LESSON</p>
+        <h2 id="contentTitle">Lesson</h2>
+        <p id="contentText">This lesson introduces the key ideas and gives you a practical activity to complete.</p>
+        <div class="lesson-points" id="lessonPoints"></div>
+        <div class="resource-box"><b>Lesson resources</b><span>✓ Practice checklist</span><span>✓ Quick-reference notes</span><span>✓ Portfolio activity</span></div>
+      </div>
+      <aside class="lesson-actions-panel">
+        <button id="prevLesson" class="secondary-player" type="button">← Previous</button>
+        <button id="completeLesson" class="primary-player" type="button">Mark complete & next →</button>
+        <a id="certificateLink" class="certificate-link locked" href="#">🏆 Certificate locked</a>
+      </aside>
+    </div>
+  </section>
+</main>
+<div id="playerToast" class="player-toast" aria-live="polite"></div>
+<script src="assets/player.js"></script>
+</body>
+</html>
