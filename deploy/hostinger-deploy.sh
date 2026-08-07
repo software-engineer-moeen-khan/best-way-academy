@@ -32,8 +32,8 @@ COMPOSER_BIN="$(command -v composer2 || command -v composer || true)"
 command -v curl >/dev/null 2>&1 || fail "curl is required."
 
 log "PHP: $($PHP_BIN -r 'echo PHP_VERSION;')"
-log "Installing PHP dependencies..."
-"$COMPOSER_BIN" install --no-dev --prefer-dist --no-interaction --optimize-autoloader
+log "Installing PHP dependencies (Composer scripts disabled for Hostinger shared hosting)..."
+"$COMPOSER_BIN" install --no-dev --prefer-dist --no-interaction --optimize-autoloader --no-scripts
 
 if [[ ! -f .env ]]; then cp .env.example .env; chmod 600 .env; fi
 setenv(){ "$PHP_BIN" deploy/env-set.php .env "$1" "$2"; }
@@ -43,6 +43,14 @@ setenv APP_URL "https://$HOSTINGER_DOMAIN"
 setenv APP_TIMEZONE "Asia/Karachi"
 setenv SESSION_SECURE_COOKIE true
 setenv MAIL_FROM_ADDRESS "noreply@$HOSTINGER_DOMAIN"
+
+# Composer normally runs this as a post-autoload script. Hostinger disables proc_open,
+# so Composer cannot launch PHP subprocesses. Running Artisan directly avoids that restriction.
+if "$PHP_BIN" artisan package:discover --ansi >/dev/null 2>&1; then
+  log "Laravel package discovery completed directly."
+else
+  log "Laravel package discovery was skipped; the app can rebuild its package manifest on boot."
+fi
 
 DB_DATABASE="$($PHP_BIN -r '$e=parse_ini_file(".env");echo $e["DB_DATABASE"]??"";' 2>/dev/null || true)"
 DB_USERNAME="$($PHP_BIN -r '$e=parse_ini_file(".env");echo $e["DB_USERNAME"]??"";' 2>/dev/null || true)"
