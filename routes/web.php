@@ -33,10 +33,19 @@ $serveHtml=function(string $file){
     $path=base_path($file);
     abort_unless(is_file($path),404);
     $html=file_get_contents($path);
+
+    // Clean Laravel routes can be nested, therefore all frontend assets must be root absolute.
+    $html=str_replace(['href="assets/','src="assets/'],['href="/assets/','src="/assets/'],$html);
+
     if(!str_contains($html,'backend-sync.js')){
-        $html=str_ireplace('</body>','<script src="/assets/backend-sync.js?v=20260808-2"></script>'.PHP_EOL.'</body>',$html);
+        $html=str_ireplace('</body>','<script src="/assets/backend-sync.js?v=20260808-7"></script>'.PHP_EOL.'</body>',$html);
     }
-    return response($html)->header('Content-Type','text/html; charset=UTF-8');
+
+    return response($html)
+        ->header('Content-Type','text/html; charset=UTF-8')
+        ->header('Cache-Control','no-cache, no-store, must-revalidate')
+        ->header('Pragma','no-cache')
+        ->header('Expires','0');
 };
 
 Route::get('/',fn()=>$serveHtml('index.html'))->name('home');
@@ -90,7 +99,6 @@ Route::get('/instructor',function()use($serveHtml){
     return $serveHtml('instructor.html');
 })->middleware('auth');
 
-// Friendly course-specific clean URLs while keeping the existing frontend query contract.
 Route::get('/course/{slug}',fn(string $slug)=>redirect('/course?course='.rawurlencode($slug),302));
 Route::get('/learn/{slug}',fn(string $slug)=>redirect('/learn?course='.rawurlencode($slug),302))->middleware('auth');
 Route::get('/certificate/{slug}',fn(string $slug)=>redirect('/certificate?course='.rawurlencode($slug),302))->middleware('auth');
@@ -102,7 +110,6 @@ Route::get('/assets/{path}',function(string $path){
     return response()->file($file);
 })->where('path','.*');
 
-// Backwards compatibility: old .html links permanently redirect to clean Laravel URLs.
 $legacy=[
     'index'=>'/',
     'about'=>'/about','account'=>'/account','admin'=>'/admin','cart'=>'/cart','categories'=>'/categories',
