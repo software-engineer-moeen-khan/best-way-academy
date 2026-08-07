@@ -1,1 +1,115 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Checkout at Best Way Academy"><title>Checkout — Best Way Academy</title><link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/pages.css"></head><body data-page="checkout"><header class="site-header"><a class="brand" href="index.html"><span class="brand-mark">B</span><span>Best Way <b>Academy</b></span></a><nav class="desktop-nav"></nav><div class="header-actions"></div></header><main class="checkout-main"><div class="shell checkout-grid"><section class="checkout-panel"><p class="eyebrow">SECURE CHECKOUT</p><h1>Complete your enrollment</h1><p class="checkout-muted">Review your courses and enter your details. This static frontend records the enrollment in this browser; no real payment is processed.</p><form id="checkoutForm"><h2>Billing details</h2><div class="form-grid"><label>Full name<input type="text" placeholder="Your full name" required></label><label>Email<input type="email" placeholder="you@example.com" required></label></div><h2>Payment method</h2><div class="payment-methods"><label><input type="radio" name="payment" value="card" checked><span><b>Credit / Debit Card</b><small>Demo card form</small></span></label><label><input type="radio" name="payment" value="bank"><span><b>Bank Transfer</b><small>Demo manual payment</small></span></label><label><input type="radio" name="payment" value="wallet"><span><b>Digital Wallet</b><small>Demo wallet option</small></span></label></div><div id="cardFields" class="card-fields"><label>Card number<input type="text" inputmode="numeric" placeholder="1234 5678 9012 3456"></label><div class="form-grid"><label>Expiry<input type="text" placeholder="MM/YY"></label><label>CVV<input type="text" inputmode="numeric" placeholder="123"></label></div></div><button class="primary-btn checkout-button" type="submit">Complete enrollment</button><p class="auth-note">Demo only: card details are not sent or stored.</p></form></section><aside class="order-card"><div class="order-body"><p class="eyebrow">YOUR ORDER</p><div id="checkoutItems" class="checkout-items"></div><div class="order-line total"><span>Total</span><strong id="checkoutTotal">Rs 0</strong></div><p class="order-note">✓ Lifetime access<br>✓ Certificate of completion<br>✓ Learn on any device</p><a class="text-link" href="cart.html">← Back to cart</a></div></aside></div></main><footer><div class="footer-bottom shell"><div class="brand footer-brand"><span class="brand-mark">B</span><span>Best Way <b>Academy</b></span></div><span>© 2026 Best Way Academy</span><a href="courses.html">All courses</a></div></footer><script src="assets/app.js"></script><script src="assets/admin-overrides.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Secure checkout at Best Way Academy">
+  <title>Checkout — Best Way Academy</title>
+  <link rel="stylesheet" href="/assets/style.css?v=20260808-7">
+  <link rel="stylesheet" href="/assets/pages.css?v=20260808-7">
+  <link rel="stylesheet" href="/assets/checkout.css?v=20260808-7">
+</head>
+<body class="checkout-page" data-page="checkout">
+  <header class="checkout-header">
+    <div class="shell">
+      <a class="brand" href="/"><span class="brand-mark">B</span><span>Best Way <b>Academy</b></span></a>
+      <div class="checkout-security" aria-label="Secure checkout">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3M6 10h12v10H6V10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Secure checkout</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="checkout-main">
+    <div class="checkout-shell">
+      <div class="checkout-heading">
+        <p class="eyebrow">CHECKOUT</p>
+        <h1>Complete your enrollment</h1>
+        <p>Review your order and billing details. Your enrollment will be saved securely to your Best Way Academy account.</p>
+      </div>
+
+      <div class="checkout-grid">
+        <section class="checkout-panel">
+          <form id="checkoutForm">
+            <div class="checkout-section">
+              <h2>Billing details</h2>
+              <div class="form-grid">
+                <label>Full name
+                  <input type="text" autocomplete="name" placeholder="Your full name" required>
+                </label>
+                <label>Email address
+                  <input type="email" autocomplete="email" placeholder="you@example.com" required>
+                </label>
+              </div>
+            </div>
+
+            <div class="checkout-section">
+              <h2>Payment method</h2>
+              <div class="payment-methods">
+                <label class="payment-option">
+                  <input type="radio" name="payment" value="card" checked>
+                  <span><b>Credit / Debit Card</b><small>Visa, Mastercard and supported cards</small></span>
+                  <span class="payment-badge">CARD</span>
+                </label>
+                <label class="payment-option">
+                  <input type="radio" name="payment" value="bank">
+                  <span><b>Bank Transfer</b><small>Manual bank transfer option</small></span>
+                </label>
+                <label class="payment-option">
+                  <input type="radio" name="payment" value="wallet">
+                  <span><b>Digital Wallet</b><small>Wallet payment option</small></span>
+                </label>
+              </div>
+
+              <div id="cardFields" class="card-fields">
+                <label>Card number
+                  <input type="text" inputmode="numeric" autocomplete="cc-number" placeholder="1234 5678 9012 3456">
+                </label>
+                <div class="form-grid">
+                  <label>Expiry
+                    <input type="text" autocomplete="cc-exp" placeholder="MM/YY">
+                  </label>
+                  <label>CVV
+                    <input type="text" inputmode="numeric" autocomplete="cc-csc" placeholder="123">
+                  </label>
+                </div>
+              </div>
+
+              <button id="checkoutSubmit" class="checkout-button" type="submit">Complete enrollment</button>
+              <p class="checkout-trust"><span>🔒</span><span><strong>Protected checkout.</strong> Payment fields are currently a demo interface; no card number is stored by Best Way Academy.</span></p>
+            </div>
+          </form>
+        </section>
+
+        <aside class="order-card">
+          <div class="order-card-head"><h2>Your order</h2></div>
+          <div id="checkoutItems" class="checkout-items"><p class="checkout-loading">Loading your course…</p></div>
+          <div class="order-summary">
+            <div class="order-line"><span>Subtotal</span><strong id="checkoutSubtotal">Rs 0</strong></div>
+            <div class="order-line total"><span>Total</span><strong id="checkoutTotal">Rs 0</strong></div>
+            <p class="checkout-price-note">Taxes, if applicable, are included at checkout.</p>
+            <div class="order-benefits">
+              <span>✓ Lifetime access to purchased courses</span>
+              <span>✓ Certificate of completion</span>
+              <span>✓ Learn across desktop and mobile</span>
+              <span>✓ Progress saved to your account</span>
+            </div>
+            <a class="back-link" href="/cart">← Back to cart</a>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <footer class="checkout-footer">
+    <div class="shell">
+      <div class="brand footer-brand"><span class="brand-mark">B</span><span>Best Way <b>Academy</b></span></div>
+      <small>© 2026 Best Way Academy · Secure learner checkout</small>
+    </div>
+  </footer>
+
+  <script src="/assets/app.js?v=20260808-7"></script>
+  <script src="/assets/admin-overrides.js?v=20260808-7"></script>
+  <script src="/assets/checkout-page.js?v=20260808-7"></script>
+</body>
+</html>
