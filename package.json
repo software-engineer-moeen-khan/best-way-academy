@@ -1,6 +1,6 @@
 {
-  "name": "best-way-academy",
-  "version": "1.0.0",
+  "name": "monorepo",
+  "version": "0.0.0",
   "private": true,
   "scripts": {
     "setup": "npm install",
@@ -8,6 +8,9 @@
     "build": "npm run build --prefix apps/web",
     "start": "npm run start --prefix apps/web",
     "lint": "npm run lint --prefix apps/web"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.3"
   },
   "engines": {
     "node": ">=20 <23"
