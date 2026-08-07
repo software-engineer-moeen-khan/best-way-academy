@@ -1,0 +1,5 @@
+developerssecurityEB
+
+cd ~/domains/dreamscourier.com/public_html
+
+php artisan migrate --path=database/migrations/2026_07_19_000001_expand_pricing_and_merchant_banking_fields.php

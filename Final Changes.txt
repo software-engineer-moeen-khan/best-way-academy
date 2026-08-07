@@ -1,0 +1,5 @@
+Reference website may saari details Single Booking may enter krnay k baad Continue button hay, jis pay click pay yai appear hota hay neechay hmaaray Review k liay. Hmaari website may bhi aesay hi kr do please but hmaaray logo k colors k according, jaisay k red. Single Booking form may Asteric bhi aaey ga, jis say pta lgay k required fields hain. Aur hmaara CN number is trha ka ho: 41960000001
+
+6 zeros hon.
+
+Aur aesa bhi kro k mobile pay 'Edit Profile' popup may yai checkbox chota ho, itna bra nhi, aur 'Remove current photo' aik hi line may likha ho. Aur 'Shopify Orders' page ka table mobile responsivness may usi trha ho, jis trha mobile pay hmaaray portal may baaqi tables hotay hain k horizontal scroll lgta hay table pay.

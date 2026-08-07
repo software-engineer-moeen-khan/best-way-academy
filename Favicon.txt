@@ -1,0 +1,5 @@
+Please Continue. Boht kuch miss hay. Boht say pages ki css incomplete hay, ya implementation incomplete hay, pehle wo kro please theek say. Ghlt css waali screenshots bhi lga daita hun. Is page ko zra acha kr do dikhnay may. Visually attractive lgay. Yai admin portal ka dashboard page hay. Kuch is trha ka admin panel k dashboard may bhi lga do. Yai zra acha lgta hota hay. Buttons koi na hon is section k, bs banner type ho is trha ka. Aur jisay favicon k liay use krna hay, usay attach kr lia hay may nay. Zaada bra size ka favicon ho, aur yai ho. Jo sparrow attach ki hay, wo favicon k liay use ho gi, bhra ho favicon aur clear ho.
+Yai khtm kro:
+Payment Cheques 136  Order-Level Payments 270 New Settlements 3
+
+Ya in sections ko khtm kr do payments may, ya phir theek kro in k counts.

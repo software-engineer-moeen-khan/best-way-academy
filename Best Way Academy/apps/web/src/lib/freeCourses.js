@@ -1,0 +1,56 @@
+export const freeCourses = [
+  {
+    id: 'free-html-css',
+    title: 'HTML & CSS Crash Course',
+    subtitle: 'Build your first responsive web page in one afternoon.',
+    instructor: 'Ayesha Siddiqui',
+    level: 'Beginner',
+    hours: 4.5,
+    rating: 4.6,
+    students: 18420,
+    image: 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?auto=format&fit=crop&w=800&q=70',
+    lessons: [
+      { title: 'How the web works', minutes: 9 },
+      { title: 'Your first HTML document', minutes: 14 },
+      { title: 'Styling with CSS selectors', minutes: 18 },
+      { title: 'Flexbox layout basics', minutes: 21 },
+      { title: 'Project: personal landing page', minutes: 27 },
+    ],
+  },
+  {
+    id: 'free-git',
+    title: 'Git & GitHub for Absolute Beginners',
+    subtitle: 'Version control habits every developer is expected to know.',
+    instructor: 'Bilal Raza',
+    level: 'Beginner',
+    hours: 2.5,
+    rating: 4.7,
+    students: 9310,
+    image: 'https://images.unsplash.com/photo-1556075798-4825dfaaf498?auto=format&fit=crop&w=800&q=70',
+    lessons: [
+      { title: 'Why version control matters', minutes: 7 },
+      { title: 'Commits, staging and history', minutes: 16 },
+      { title: 'Branching and merging', minutes: 19 },
+      { title: 'Pull requests on GitHub', minutes: 15 },
+    ],
+  },
+  {
+    id: 'free-freelancing',
+    title: 'Freelancing Foundations: First Client in 30 Days',
+    subtitle: 'Positioning, proposals and pricing for new freelancers.',
+    instructor: 'Hina Malik',
+    level: 'All levels',
+    hours: 3,
+    rating: 4.5,
+    students: 12760,
+    image: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=800&q=70',
+    lessons: [
+      { title: 'Choosing a niche you can sell', minutes: 12 },
+      { title: 'A portfolio with no experience', minutes: 17 },
+      { title: 'Proposals that get replies', minutes: 20 },
+      { title: 'Pricing and scope control', minutes: 18 },
+    ],
+  },
+];
+
+export const findFreeCourse = (id) => freeCourses.find((c) => c.id === id);

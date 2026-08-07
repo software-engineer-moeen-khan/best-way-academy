@@ -1,0 +1,47 @@
+Nice. Loadsheets, invoices, reports etc is trha hotay hain k koi pdf etc nhi in ki? May nay reference k liay https://www.merchant.fulfillkaro.pk share kia tha. aur credentials share kiay thay k username aur password is k:
+AUG_STORE_COD. aur mobile view bhi acha kr do k menu k liay hamburger etc. mobile view k liay kuch aur bhi cheezain khrab hain k fields cross kr raheen hain screen ko etc. please do this all now. and also please let me know whether other stores can also be connected with our laravel portal with just this configuration of app on shopify partners? please also see other such things like a Principle tester/QA and please solve that all like Principle Software Engineer. https://www.merchant.fulfillkaro.pk has such advance things like reports, invoices, load sheets etc. Reports etc should be downloaded as a pdf as well. and please see formats of all the pdfs of https://www.merchant.fulfillkaro.pk as well for your reference.
+
+And please see if everything of our laravel project aligns properly in detail with it:
+System Requirements Overview
+
+Admin Dashboard
+
+The Admin Dashboard will include the following functionalities:
+
+1. User Management
+    Ability to create and manage user accounts.
+    Generate and securely share login credentials with users.
+2. Pricing Configuration
+    Set and manage pricing structures for users.
+    Define service charges, shipping rates, and other applicable fees.
+
+Merchant Dashboard
+
+The Merchant Dashboard will provide comprehensive operational and integration features:
+
+1. Shopify Integration
+    Seamless integration with Shopify for order synchronization and management.
+2. Leopard Courier Integration
+    Direct integration with Leopard Courier services for shipment processing.
+3. Automated Account Creation (Leopard)
+    Any account created on the portal will automatically be created in the Leopard system as well.
+4. Order Management
+    Add orders individually or in bulk.
+    Manage and process orders efficiently.
+5. Awaiting Orders
+    View and handle orders with issues or pending status.
+6. Invoice Generation
+    Generate invoices for processed orders.
+7. Load Sheet History
+    Access and manage historical load sheet records.
+8. Order Tracking
+    Track shipment status in real-time.
+9. Shipper Advice
+    Generate and manage shipper advice documentation.
+10. Return Management
+    Handle returned shipments and related processes.
+11. Shipper Management
+    Manage shipper details and configurations.
+12. Reporting
+    Generate detailed reports for orders, shipments, and performance metrics.
+13. Shopify Integration
