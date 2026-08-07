@@ -1,1 +1,85 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Student Dashboard — Best Way Academy</title><link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/dashboard.css"></head><body data-dashboard-page="student"><header class="site-header"><a class="brand" href="index.html"><span class="brand-mark">B</span><span>Best Way <b>Academy</b></span></a><nav class="desktop-nav"><a href="courses.html">Explore</a><a href="my-learning.html">My Learning</a><a href="plans.html">Plans</a><a href="messages.html">Messages</a></nav><div class="header-actions"><a class="login" href="notifications.html">Notifications</a><a class="login" href="account.html">Account</a></div></header><main class="dashboard-main"><section class="dashboard-hero"><div class="shell dashboard-hero-inner"><div><p class="eyebrow">STUDENT DASHBOARD</p><h1 id="dashboardGreeting">Welcome back</h1><p>Track your courses, learning progress, certificates and account activity.</p></div><a class="primary-btn" href="courses.html">Explore courses</a></div></section><section class="shell dashboard-content"><div class="dashboard-profile"><div class="profile-avatar" id="profileAvatar">L</div><div><h2 id="profileName">Learner</h2><p id="profileEmail">Sign in to personalize your dashboard.</p></div><div class="profile-actions"><a class="dashboard-outline" href="account.html">Account settings</a><a class="dashboard-outline" href="orders.html">Purchase history</a><button id="editProfileBtn" class="dashboard-outline">Quick edit</button><button id="dashboardLogout" class="dashboard-outline">Log out</button></div></div><div class="dashboard-stats"><article><span>Enrolled courses</span><b id="statEnrolled">0</b></article><article><span>Average progress</span><b id="statProgress">0%</b></article><article><span>Certificates</span><b id="statCertificates">0</b></article><article><span>Wishlist</span><b id="statWishlist">0</b></article></div><div class="dashboard-grid"><section class="dashboard-card"><div class="dashboard-card-head"><div><p class="eyebrow">CONTINUE LEARNING</p><h2>Your courses</h2></div><a href="my-learning.html">View all →</a></div><div id="dashboardCourses" class="dashboard-course-list"></div><div id="dashboardEmpty" class="dashboard-empty" hidden><p>You have no enrolled courses yet.</p><a class="primary-btn" href="courses.html">Find a course</a></div></section><aside class="dashboard-side"><section class="dashboard-card"><p class="eyebrow">QUICK ACCESS</p><h2>Learning tools</h2><div class="quick-links"><a href="plans.html"><span>★</span><div><b>Personal Plan</b><small>Unlimited learning demo</small></div></a><a href="practice.html?course=python"><span>✓</span><div><b>Practice</b><small>Tests, code & labs</small></div></a><a href="messages.html"><span>✉</span><div><b>Messages</b><small>Instructor & support</small></div></a><a href="notifications.html"><span>●</span><div><b>Notifications</b><small>Learning updates</small></div></a><a href="cart.html"><span>🛒</span><div><b>Cart</b><small id="quickCart">0 courses</small></div></a><a href="wishlist.html"><span>♡</span><div><b>Wishlist</b><small id="quickWishlist">0 saved</small></div></a></div></section><section class="dashboard-card"><p class="eyebrow">RECENT ORDER</p><div id="dashboardOrder"></div></section></aside></div></section></main><div class="dashboard-modal" id="profileModal" hidden><div class="dashboard-modal-card"><button id="closeProfileModal" class="modal-close">×</button><p class="eyebrow">EDIT PROFILE</p><h2>Update your details</h2><form id="profileForm"><label>Full name<input id="profileNameInput" type="text" required></label><label>Email<input id="profileEmailInput" type="email" required></label><button class="primary-btn" type="submit">Save profile</button></form></div></div><script src="assets/dashboard.js"></script><script src="assets/udemy-suite.js?v=20260808-5"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Best Way Academy learner dashboard">
+  <title>Dashboard — Best Way Academy</title>
+  <link rel="stylesheet" href="assets/style.css?v=20260808-5">
+  <link rel="stylesheet" href="assets/dashboard.css?v=20260808-5">
+</head>
+<body data-page="dashboard">
+  <header class="site-header dashboard-header">
+    <a class="brand" href="index.html"><span class="brand-mark">B</span><span>Best Way <b>Academy</b></span></a>
+    <nav class="desktop-nav"><a href="courses.html">Explore</a><a href="my-learning.html">My Learning</a><a href="plans.html">Plans</a><a href="messages.html">Messages</a></nav>
+    <div class="header-actions"><a class="login" href="notifications.html">Notifications</a><a class="signup" href="account.html">Account</a></div>
+  </header>
+
+  <main class="dashboard-main">
+    <section class="dashboard-hero">
+      <div class="shell dashboard-hero-inner">
+        <div>
+          <p class="eyebrow">LEARNER DASHBOARD</p>
+          <h1 id="dashGreeting">Welcome back</h1>
+          <p>Track your learning, certificates, saved courses, purchases and account details in one place.</p>
+        </div>
+        <a class="primary-btn" href="my-learning.html">Continue learning</a>
+      </div>
+    </section>
+
+    <section class="shell dashboard-shell">
+      <div class="dashboard-stats">
+        <article><span>Enrolled</span><strong id="statEnrolled">0</strong><small>courses</small></article>
+        <article><span>Average progress</span><strong id="statProgress">0%</strong><small>across learning</small></article>
+        <article><span>Certificates</span><strong id="statCertificates">0</strong><small>completed courses</small></article>
+        <article><span>Saved</span><strong id="statWishlist">0</strong><small>wishlist courses</small></article>
+      </div>
+
+      <div class="dashboard-grid">
+        <section class="dashboard-card dashboard-learning">
+          <div class="dashboard-card-head"><div><p class="eyebrow">IN PROGRESS</p><h2>Your learning</h2></div><a href="my-learning.html">View all →</a></div>
+          <div id="dashLearningList" class="dash-learning-list"></div>
+          <div id="dashLearningEmpty" class="dashboard-empty" hidden><p>You have not enrolled in a course yet.</p><a class="primary-btn" href="courses.html">Explore courses</a></div>
+        </section>
+
+        <aside class="dashboard-card account-card">
+          <div class="account-avatar" id="accountAvatar">L</div>
+          <h2 id="accountName">Learner</h2>
+          <p id="accountEmail">Not signed in</p>
+          <form id="profileForm" class="profile-form">
+            <label>Full name<input id="profileName" type="text" placeholder="Your name"></label>
+            <label>Email<input id="profileEmail" type="email" placeholder="you@example.com"></label>
+            <button class="primary-btn" type="submit">Save profile</button>
+            <button class="dashboard-secondary" id="logoutBtn" type="button">Log out</button>
+            <p class="profile-message" id="profileMessage"></p>
+          </form>
+          <div style="display:grid;gap:8px;margin-top:14px"><a class="dashboard-secondary" href="account.html">Account settings</a><a class="dashboard-secondary" href="orders.html">Purchase history</a></div>
+        </aside>
+
+        <section class="dashboard-card">
+          <div class="dashboard-card-head"><div><p class="eyebrow">ACTIVITY</p><h2>Latest order</h2></div><a href="orders.html">Purchase history →</a></div>
+          <div id="latestOrder" class="order-history"></div>
+        </section>
+
+        <section class="dashboard-card">
+          <div class="dashboard-card-head"><div><p class="eyebrow">QUICK ACCESS</p><h2>Your academy</h2></div></div>
+          <div class="quick-grid">
+            <a href="my-learning.html"><b>▶</b><span>My Learning<small>Continue your courses</small></span></a>
+            <a href="wishlist.html"><b>♡</b><span>Wishlist<small id="quickWishlist">0 saved courses</small></span></a>
+            <a href="cart.html"><b>🛒</b><span>Cart<small id="quickCart">0 courses</small></span></a>
+            <a href="plans.html"><b>★</b><span>Personal Plan<small>Unlimited learning demo</small></span></a>
+            <a href="practice.html?course=python"><b>✓</b><span>Practice<small>Tests, coding & labs</small></span></a>
+            <a href="messages.html"><b>✉</b><span>Messages<small>Instructor & support</small></span></a>
+            <a href="notifications.html"><b>●</b><span>Notifications<small>Learning updates</small></span></a>
+            <a href="faq.html"><b>?</b><span>Help & FAQ<small>Get learning support</small></span></a>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <footer><div class="footer-bottom shell"><div class="brand footer-brand"><span class="brand-mark">B</span><span>Best Way <b>Academy</b></span></div><span>© 2026 Best Way Academy</span><a href="contact.html">Support</a></div></footer>
+  <script src="assets/dashboard.js?v=20260808-5"></script>
+  <script src="assets/udemy-suite.js?v=20260808-5"></script>
+</body>
+</html>
