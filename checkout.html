@@ -1,1 +1,76 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Checkout — Best Way Academy</title><link rel="stylesheet" href="assets/style.css"></head><body data-page="checkout"><header class="site-header"><a class="brand" href="index.html"><span class="brand-mark">B</span><span>Best Way <b>Academy</b></span></a><nav class="desktop-nav"><a href="courses.html">Explore</a><a href="courses.html?category=Artificial%20Intelligence">Skills</a><a href="courses.html?category=Career">Careers</a></nav><div class="header-actions"><a class="login" href="login.html">Log in</a><a class="signup" href="signup.html">Sign up</a></div></header><main class="checkout-main"><div class="shell checkout-grid"><section class="checkout-panel"><p class="eyebrow">SECURE CHECKOUT</p><h1>Complete your enrollment</h1><p class="checkout-muted">Choose a payment method and review your course before continuing.</p><form id="checkoutForm"><h2>Billing details</h2><div class="form-grid"><label>Full name<input type="text" placeholder="Your full name" required></label><label>Email<input type="email" placeholder="you@example.com" required></label></div><h2>Payment method</h2><div class="payment-methods"><label><input type="radio" name="payment" value="card" checked><span><b>Credit / Debit Card</b><small>Visa, Mastercard</small></span></label><label><input type="radio" name="payment" value="bank"><span><b>Bank Transfer</b><small>Manual payment instructions</small></span></label><label><input type="radio" name="payment" value="wallet"><span><b>Digital Wallet</b><small>Wallet payment placeholder</small></span></label></div><div id="cardFields" class="card-fields"><label>Card number<input type="text" inputmode="numeric" placeholder="1234 5678 9012 3456"></label><div class="form-grid"><label>Expiry<input type="text" placeholder="MM/YY"></label><label>CVV<input type="text" inputmode="numeric" placeholder="123"></label></div></div><button class="primary-btn checkout-button" type="submit">Complete purchase</button><p id="checkoutMessage" class="auth-note"></p></form></section><aside class="order-card"><img id="checkoutImage" src="" alt="Selected course"><div class="order-body"><p class="eyebrow">YOUR ORDER</p><h2 id="checkoutTitle">Course</h2><p id="checkoutSubtitle" class="checkout-muted"></p><div class="order-line"><span>Course price</span><strong id="checkoutPrice">Rs 0</strong></div><div class="order-line total"><span>Total</span><strong id="checkoutTotal">Rs 0</strong></div><p class="order-note">✓ Lifetime access<br>✓ Certificate of completion<br>✓ Learn on any device</p><a id="backToCourse" class="text-link" href="courses.html">← Back to course</a></div></aside></div></main><footer><div class="footer-bottom shell"><div class="brand footer-brand"><span class="brand-mark">B</span><span>Best Way <b>Academy</b></span></div><span>© 2026 Best Way Academy</span><a href="courses.html">All courses</a></div></footer><script src="assets/app.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Checkout — Best Way Academy</title>
+  <link rel="stylesheet" href="assets/style.css?v=20260808-1">
+  <link rel="stylesheet" href="assets/pages.css?v=20260808-1">
+</head>
+<body data-page="checkout">
+  <header class="site-header">
+    <a class="brand" href="index.html"><span class="brand-mark">B</span><span>Best Way <b>Academy</b></span></a>
+    <nav class="desktop-nav"><a href="courses.html">Explore</a><a href="courses.html?category=Artificial%20Intelligence">Skills</a><a href="courses.html?category=Career">Careers</a></nav>
+    <div class="header-actions"><a class="login" href="login.html">Log in</a><a class="signup" href="signup.html">Sign up</a></div>
+  </header>
+
+  <main class="checkout-main">
+    <div class="shell checkout-grid">
+      <section class="checkout-panel">
+        <p class="eyebrow">SECURE CHECKOUT</p>
+        <h1>Complete your enrollment</h1>
+        <p class="checkout-muted">Choose a payment method and review your course before continuing.</p>
+
+        <form id="checkoutForm">
+          <h2>Billing details</h2>
+          <div class="form-grid">
+            <label>Full name<input type="text" placeholder="Your full name" required></label>
+            <label>Email<input type="email" placeholder="you@example.com" required></label>
+          </div>
+
+          <h2>Payment method</h2>
+          <div class="payment-methods">
+            <label><input type="radio" name="payment" value="card" checked><span><b>Credit / Debit Card</b><small>Visa, Mastercard</small></span></label>
+            <label><input type="radio" name="payment" value="bank"><span><b>Bank Transfer</b><small>Manual payment instructions</small></span></label>
+            <label><input type="radio" name="payment" value="wallet"><span><b>Digital Wallet</b><small>Wallet payment placeholder</small></span></label>
+          </div>
+
+          <div id="cardFields" class="card-fields">
+            <label>Card number<input type="text" inputmode="numeric" placeholder="1234 5678 9012 3456"></label>
+            <div class="form-grid">
+              <label>Expiry<input type="text" placeholder="MM/YY"></label>
+              <label>CVV<input type="text" inputmode="numeric" placeholder="123"></label>
+            </div>
+          </div>
+
+          <button class="primary-btn checkout-button" type="submit">Complete purchase</button>
+          <p id="checkoutMessage" class="auth-note"></p>
+        </form>
+      </section>
+
+      <aside class="order-card">
+        <img id="checkoutImage" src="https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1200&q=85" alt="Python & Web Development Bootcamp">
+        <div class="order-body">
+          <p class="eyebrow">YOUR ORDER</p>
+          <h2 id="checkoutTitle">Python & Web Development Bootcamp</h2>
+          <p id="checkoutSubtitle" class="checkout-muted">Go from Python fundamentals to modern web development with practical projects you can add to your portfolio.</p>
+          <div class="order-line"><span>Course price</span><strong id="checkoutPrice">Rs 4,999</strong></div>
+          <div class="order-line total"><span>Total</span><strong id="checkoutTotal">Rs 4,999</strong></div>
+          <p class="order-note">✓ Lifetime access<br>✓ Certificate of completion<br>✓ Learn on any device</p>
+          <a id="backToCourse" class="text-link" href="course.html?course=python">← Back to course</a>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-bottom shell">
+      <div class="brand footer-brand"><span class="brand-mark">B</span><span>Best Way <b>Academy</b></span></div>
+      <span>© 2026 Best Way Academy</span>
+      <a href="courses.html">All courses</a>
+    </div>
+  </footer>
+
+  <script src="assets/app.js?v=20260808-1"></script>
+</body>
+</html>
