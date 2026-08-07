@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Best Way Academy frontend admin demo">
+  <title>Admin Panel — Best Way Academy</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <link rel="stylesheet" href="assets/admin.css">
+</head>
+<body class="admin-body">
+  <header class="admin-topbar">
+    <a class="brand" href="index.html"><span class="brand-mark">B</span><span>Best Way <b>Academy</b></span></a>
+    <div class="admin-top-actions"><span class="admin-demo-badge">Frontend Admin Demo</span><a href="index.html">View website</a></div>
+  </header>
+
+  <div class="admin-shell">
+    <aside class="admin-sidebar">
+      <div class="admin-profile"><span>A</span><div><strong>Academy Admin</strong><small>Local browser data</small></div></div>
+      <nav id="adminTabs">
+        <button class="active" data-tab="overview">Overview</button>
+        <button data-tab="courses">Courses</button>
+        <button data-tab="students">Students</button>
+        <button data-tab="orders">Orders</button>
+        <button data-tab="settings">Settings</button>
+      </nav>
+    </aside>
+
+    <main class="admin-main">
+      <section class="admin-section active" data-panel="overview">
+        <div class="admin-heading"><div><p class="eyebrow">ADMINISTRATION</p><h1>Academy overview</h1><p>Manage the static frontend demo data stored in this browser.</p></div><button id="exportAdminData" class="admin-outline">Export data</button></div>
+        <div class="admin-stat-grid">
+          <article><span>Courses</span><strong id="adminCourseCount">0</strong><small>Published + hidden</small></article>
+          <article><span>Students</span><strong id="adminStudentCount">0</strong><small>Registered locally</small></article>
+          <article><span>Enrollments</span><strong id="adminEnrollmentCount">0</strong><small>Browser enrollments</small></article>
+          <article><span>Revenue</span><strong id="adminRevenue">Rs 0</strong><small>Recorded demo orders</small></article>
+        </div>
+        <div class="admin-two-col">
+          <section class="admin-card"><div class="admin-card-head"><h2>Course performance</h2><button data-go="courses">Manage</button></div><div id="adminTopCourses"></div></section>
+          <section class="admin-card"><div class="admin-card-head"><h2>Recent activity</h2></div><div id="adminActivity"></div></section>
+        </div>
+      </section>
+
+      <section class="admin-section" data-panel="courses">
+        <div class="admin-heading"><div><p class="eyebrow">CONTENT</p><h1>Courses</h1><p>Edit existing course titles, categories, prices and visibility.</p></div><button id="resetCourseOverrides" class="admin-outline">Reset course edits</button></div>
+        <div class="admin-card admin-table-wrap"><table class="admin-table"><thead><tr><th>Course</th><th>Category</th><th>Price</th><th>Status</th><th></th></tr></thead><tbody id="adminCoursesBody"></tbody></table></div>
+      </section>
+
+      <section class="admin-section" data-panel="students">
+        <div class="admin-heading"><div><p class="eyebrow">LEARNERS</p><h1>Students</h1><p>Accounts created in this browser appear here.</p></div></div>
+        <div class="admin-card admin-table-wrap"><table class="admin-table"><thead><tr><th>Name</th><th>Email</th><th>Enrollment status</th></tr></thead><tbody id="adminStudentsBody"></tbody></table><div id="adminStudentsEmpty" class="admin-empty" hidden>No local student accounts yet.</div></div>
+      </section>
+
+      <section class="admin-section" data-panel="orders">
+        <div class="admin-heading"><div><p class="eyebrow">SALES</p><h1>Orders</h1><p>Demo enrollment orders recorded by this browser.</p></div></div>
+        <div class="admin-card admin-table-wrap"><table class="admin-table"><thead><tr><th>Order</th><th>Date</th><th>Courses</th><th>Total</th></tr></thead><tbody id="adminOrdersBody"></tbody></table><div id="adminOrdersEmpty" class="admin-empty" hidden>No demo orders recorded yet.</div></div>
+      </section>
+
+      <section class="admin-section" data-panel="settings">
+        <div class="admin-heading"><div><p class="eyebrow">SETTINGS</p><h1>Demo data controls</h1><p>These actions affect only this browser's localStorage.</p></div></div>
+        <div class="admin-card settings-list">
+          <div><div><strong>Reset course customizations</strong><p>Restore original titles, categories, prices and visibility.</p></div><button id="resetCourseOverrides2" class="admin-outline">Reset</button></div>
+          <div><div><strong>Clear shopping data</strong><p>Remove local cart and wishlist items.</p></div><button id="clearShoppingData" class="admin-outline">Clear</button></div>
+          <div><div><strong>Clear learning demo data</strong><p>Remove enrollments, progress and recorded orders.</p></div><button id="clearLearningData" class="admin-danger">Clear learning data</button></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="courseEditDialog" class="admin-dialog">
+    <form method="dialog" id="courseEditForm">
+      <div class="dialog-head"><div><p class="eyebrow">EDIT COURSE</p><h2 id="editCourseHeading">Course</h2></div><button type="button" id="closeCourseDialog" aria-label="Close">×</button></div>
+      <input type="hidden" id="editCourseId">
+      <label>Course title<input id="editCourseTitle" required></label>
+      <label>Category<select id="editCourseCategory"><option>Development</option><option>Artificial Intelligence</option><option>Data</option><option>Marketing</option><option>Career</option></select></label>
+      <label>Price (PKR)<input id="editCoursePrice" type="number" min="0" step="1" required></label>
+      <label>Status<select id="editCourseStatus"><option value="published">Published</option><option value="hidden">Hidden</option></select></label>
+      <div class="dialog-actions"><button type="button" class="admin-outline" id="cancelCourseEdit">Cancel</button><button type="submit" class="admin-primary">Save changes</button></div>
+    </form>
+  </dialog>
+
+  <script src="assets/admin.js"></script>
+</body>
+</html>
