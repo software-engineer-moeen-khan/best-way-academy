@@ -26,7 +26,8 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($courses as $slug=>$c) {
-            $course=Course::updateOrCreate(['slug'=>$slug],[
+            // Seed only missing catalog records. Existing production edits must survive future deploys.
+            $course=Course::firstOrCreate(['slug'=>$slug],[
                 'instructor_id'=>$admin->id,'title'=>$c[0],'category'=>$c[1],'subtitle'=>$c[2],'description'=>$c[2],
                 'price'=>$c[3],'status'=>'published','rating'=>$c[4],'students_count'=>$c[5],'image'=>$c[6],'badge'=>$c[7],
                 'metadata'=>['modules'=>$c[8],'learn'=>$c[9]],
