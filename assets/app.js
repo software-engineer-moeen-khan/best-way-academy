@@ -25,7 +25,13 @@ if(page==='courses'){
 }
 
 if(page==='course'){
-  const id=new URLSearchParams(location.search).get('course')||'python',c=COURSES[id]||COURSES.python;document.title=`${c.title} — Best Way Academy`;qs('#detailCategory').textContent=c.category;qs('#detailTitle').textContent=c.title;qs('#detailSubtitle').textContent=c.subtitle;qs('#detailRating').textContent=c.rating;qs('#detailStudents').textContent=`(${c.students})`;qs('#detailPrice').textContent=c.price;const img=qs('#detailImage');img.src=c.image;img.alt=c.title;qs('#learnList').innerHTML=c.learn.map(x=>`<li>✓ ${x}</li>`).join('');qs('#curriculum').innerHTML=c.modules.map((x,i)=>`<div><b>${String(i+1).padStart(2,'0')}</b><span>${x}</span><small>${i+2} lessons</small></div>`).join('');
+  const id=new URLSearchParams(location.search).get('course')||'python',c=COURSES[id]||COURSES.python;document.title=`${c.title} — Best Way Academy`;qs('#detailCategory').textContent=c.category;qs('#detailTitle').textContent=c.title;qs('#detailSubtitle').textContent=c.subtitle;qs('#detailRating').textContent=c.rating;qs('#detailStudents').textContent=`(${c.students})`;qs('#detailPrice').textContent=c.price;const img=qs('#detailImage');img.src=c.image;img.alt=c.title;qs('#learnList').innerHTML=c.learn.map(x=>`<li>✓ ${x}</li>`).join('');qs('#curriculum').innerHTML=c.modules.map((x,i)=>`<div><b>${String(i+1).padStart(2,'0')}</b><span>${x}</span><small>${i+2} lessons</small></div>`).join('');const enroll=qs('#enrollNow');if(enroll)enroll.href=`checkout.html?course=${encodeURIComponent(id)}`;
+}
+
+if(page==='checkout'){
+  const id=new URLSearchParams(location.search).get('course')||'python',c=COURSES[id]||COURSES.python;document.title=`Checkout: ${c.title} — Best Way Academy`;qs('#checkoutTitle').textContent=c.title;qs('#checkoutSubtitle').textContent=c.subtitle;qs('#checkoutPrice').textContent=c.price;qs('#checkoutTotal').textContent=c.price;const img=qs('#checkoutImage');img.src=c.image;img.alt=c.title;const back=qs('#backToCourse');if(back)back.href=`course.html?course=${encodeURIComponent(id)}`;
+  const cardFields=qs('#cardFields');qsa('input[name="payment"]').forEach(radio=>radio.addEventListener('change',()=>{if(cardFields)cardFields.style.display=radio.value==='card'&&radio.checked?'grid':'none'}));
+  qs('#checkoutForm')?.addEventListener('submit',e=>{e.preventDefault();const msg=qs('#checkoutMessage');if(msg){msg.textContent='Checkout frontend is working. Real payment processing can be connected in the backend phase.';msg.classList.add('success-message')}});
 }
 
 qs('#demoAuthForm')?.addEventListener('submit',e=>{e.preventDefault();const msg=qs('#authMessage');if(msg){msg.textContent='Form UI is working. Backend authentication can be connected in the next phase.';msg.classList.add('success-message')}});
