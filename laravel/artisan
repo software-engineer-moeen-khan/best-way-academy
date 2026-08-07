@@ -1,0 +1,24 @@
+#!/usr/bin/env php
+<?php
+
+use Illuminate\Foundation\Application;
+use Symfony\Component\Console\Input\ArgvInput;
+
+define('LARAVEL_START', microtime(true));
+
+// Bootstrap the application
+$app = require __DIR__.'/bootstrap/app.php';
+
+// Run the Artisan console
+$status = $app->handle(
+    new ArgvInput
+);
+
+/*
+|--------------------------------------------------------------------------
+| Shutdown The Application
+|--------------------------------------------------------------------------
+*/
+$app->terminate();
+
+exit($status);

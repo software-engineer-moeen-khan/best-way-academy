@@ -1,1 +1,12 @@
+node_modules/
+apps/*/node_modules/
+dist/
+/index.html
+/assets/
+.env
+.env.*
+!.env.example
+laravel/vendor/
+laravel/storage/logs/*.log
 token.txt
+.DS_Store

@@ -1,4 +1,0 @@
-Database: u309526250_dreams_courier
-Username: u309526250_dreams_user
-
-Password: DreamsCourier@123
