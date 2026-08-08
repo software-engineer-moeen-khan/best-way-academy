@@ -34,4 +34,22 @@ class SupportController extends Controller
             'message'=>'Your support request has been received.',
         ],201);
     }
+
+    public function index(Request $request): JsonResponse
+    {
+        abort_unless($request->user()?->role==='admin',403);
+        $status=$request->query('status');
+        $query=DB::table('support_requests')->latest('created_at');
+        if(is_string($status)&&in_array($status,['open','in_progress','resolved','closed'],true))$query->where('status',$status);
+        return response()->json($query->limit(200)->get());
+    }
+
+    public function updateStatus(Request $request,int $supportRequest): JsonResponse
+    {
+        abort_unless($request->user()?->role==='admin',403);
+        $data=$request->validate(['status'=>['required','string','in:open,in_progress,resolved,closed']]);
+        $updated=DB::table('support_requests')->where('id',$supportRequest)->update(['status'=>$data['status'],'updated_at'=>now()]);
+        abort_unless($updated||DB::table('support_requests')->where('id',$supportRequest)->exists(),404);
+        return response()->json(['ok'=>true,'status'=>$data['status']]);
+    }
 }
