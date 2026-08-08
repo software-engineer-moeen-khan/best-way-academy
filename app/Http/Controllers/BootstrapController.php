@@ -40,6 +40,30 @@ class BootstrapController extends Controller
             ->get()->map(fn($e)=>['id'=>$e->slug,'date'=>$e->enrolled_at?:$e->created_at,'progress'=>(int)$e->progress,'completed_at'=>$e->completed_at,'title'=>$e->title])->values()->all();
     }
 
+    private function playerStates(int $userId): array
+    {
+        $states=[];
+        $enrollments=DB::table('enrollments as e')->join('courses as c','c.id','=','e.course_id')
+            ->where('e.user_id',$userId)->select('e.course_id','c.slug')->get();
+        foreach($enrollments as $enrollment){
+            $lessonIds=DB::table('lessons as l')->join('course_sections as s','s.id','=','l.course_section_id')
+                ->where('s.course_id',$enrollment->course_id)->orderBy('s.position')->orderBy('l.position')->pluck('l.id')->values();
+            $doneIds=$lessonIds->isEmpty()?collect():DB::table('lesson_progress')->where('user_id',$userId)->whereIn('lesson_id',$lessonIds)->pluck('lesson_id');
+            $doneLookup=array_fill_keys($doneIds->map(fn($id)=>(string)$id)->all(),true);
+            $completed=[];
+            foreach($lessonIds as $index=>$lessonId)if(isset($doneLookup[(string)$lessonId]))$completed[]=$index;
+            $current=0;
+            if($lessonIds->isNotEmpty()){
+                $current=count($completed)>=count($lessonIds)?max(0,count($lessonIds)-1):0;
+                if(count($completed)<count($lessonIds)){
+                    for($i=0;$i<count($lessonIds);$i++){if(!in_array($i,$completed,true)){$current=$i;break;}}
+                }
+            }
+            $states[$enrollment->slug]=['completed'=>$completed,'current'=>$current];
+        }
+        return $states;
+    }
+
     private function orders(int $userId): array
     {
         $orders=DB::table('orders')->where('user_id',$userId)->latest('created_at')->limit(100)->get();
@@ -97,7 +121,7 @@ class BootstrapController extends Controller
         return response()->json([
             'user'=>$user->only(['id','name','email','role']),
             'courses'=>$courses,'curricula'=>$curricula,'announcements'=>$announcements,'coupons'=>$coupons,
-            'states'=>$states,'global_states'=>$globals,'enrollments'=>$this->enrollments($user->id),'orders'=>$this->orders($user->id),
+            'states'=>$states,'global_states'=>$globals,'enrollments'=>$this->enrollments($user->id),'player_states'=>$this->playerStates($user->id),'orders'=>$this->orders($user->id),
             'csrf_token'=>csrf_token(),
         ]);
     }
