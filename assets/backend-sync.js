@@ -1,6 +1,6 @@
 (()=>{
   const nativeSet=Storage.prototype.setItem,nativeRemove=Storage.prototype.removeItem;
-  let csrf=null,currentUser=null,backend=false,syncing=false;
+  let csrf=null,currentUser=null,backend=false,syncing=false,courseSnapshot={};
   const canonicalKeys=new Set(['bwa_user','bwa_enrollments','bwa_orders','bwa_last_order','bwa_admin_courses']);
   const globalKey=k=>k.startsWith('bwa_global_');
 
@@ -25,7 +25,14 @@
     if(!backend||!currentUser||syncing||!k.startsWith('bwa_'))return;
     try{
       if(k==='bwa_admin_courses'&&['admin','instructor'].includes(currentUser.role)){
-        await api('/api/instructor/courses/sync',{method:'POST',body:JSON.stringify({courses:JSON.parse(v||'{}')||{}})});return;
+        const next=JSON.parse(v||'{}')||{},changed={};
+        for(const [slug,patch] of Object.entries(next)){
+          if(JSON.stringify(courseSnapshot[slug]??null)!==JSON.stringify(patch))changed[slug]=patch;
+        }
+        if(!Object.keys(changed).length)return;
+        await api('/api/instructor/courses/sync',{method:'POST',body:JSON.stringify({courses:changed})});
+        for(const [slug,patch] of Object.entries(changed))courseSnapshot[slug]=patch;
+        return;
       }
       if(canonicalKeys.has(k))return;
       if(k.startsWith('bwa_curriculum_')&&['admin','instructor'].includes(currentUser.role)){
@@ -69,6 +76,7 @@
 
       const courseOverrides={};
       for(const [slug,c] of Object.entries(b.courses||{}))courseOverrides[slug]={title:c.title,category:c.category,subtitle:c.subtitle,description:c.description,price:c.price,status:c.status,image:c.image,badge:c.badge};
+      courseSnapshot=JSON.parse(JSON.stringify(courseOverrides));
       putLocal('bwa_admin_courses',courseOverrides);
       for(const [slug,sections] of Object.entries(b.curricula||{}))putLocal(`bwa_curriculum_${slug}`,sections);
       for(const [slug,items] of Object.entries(b.announcements||{}))putLocal(`bwa_announcements_${slug}`,items);
