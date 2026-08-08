@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminManagementController;
+use App\Http\Controllers\AdminOrderController;
 use App\Http\Controllers\CatalogMetadataController;
 use Illuminate\Support\Facades\Route;
 
@@ -28,7 +29,7 @@ Route::middleware(['web','auth'])->prefix('api/admin/manage')->group(function(){
     Route::post('/enrollments',[AdminManagementController::class,'createEnrollment']);
     Route::delete('/enrollments/{enrollment}',[AdminManagementController::class,'deleteEnrollment'])->whereNumber('enrollment');
 
-    Route::patch('/orders/{order}',[AdminManagementController::class,'updateOrder'])->whereNumber('order');
+    Route::patch('/orders/{order}',[AdminOrderController::class,'update'])->whereNumber('order');
 
     Route::post('/coupons',[AdminManagementController::class,'createCoupon']);
     Route::put('/coupons/{coupon}',[AdminManagementController::class,'updateCoupon'])->whereNumber('coupon');
