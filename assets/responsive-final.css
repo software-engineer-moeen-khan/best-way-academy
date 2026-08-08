@@ -1,0 +1,302 @@
+/* Best Way Academy — final mobile/tablet responsive pass (loaded last) */
+html{overflow-x:hidden;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{max-width:100%;overflow-x:hidden}
+*,*::before,*::after{box-sizing:border-box}
+img,video,iframe,svg,canvas{max-width:100%}
+input,select,textarea,button{max-width:100%}
+.shell,.product-shell,.content-shell,.checkout-shell{margin-left:auto;margin-right:auto}
+.site-header>*{min-width:0}
+.course-card,.learning-card,.product-card,.admin-card,.inst-card{min-width:0}
+.admin-table-wrap,.inst-table-wrap{max-width:100%;-webkit-overflow-scrolling:touch}
+
+@media (max-width:1180px){
+  body:not(.checkout-page) .site-header{padding-inline:18px;gap:14px}
+  .site-header .search-wrap{max-width:380px}
+  .desktop-nav{gap:2px}
+  .desktop-nav a{padding-inline:8px}
+  .hero{grid-template-columns:minmax(0,44%) minmax(0,56%)}
+  .hero-copy{margin-left:28px;padding:30px}
+  .course-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .product-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .detail-grid{grid-template-columns:minmax(0,1fr) 340px}
+  .dashboard-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .dashboard-grid,.admin-two-col,.admin-moderation-grid,.admin-marketing-grid{grid-template-columns:1fr}
+  .settings-grid{grid-template-columns:210px minmax(0,1fr)}
+  .messages-layout{grid-template-columns:250px minmax(0,1fr)}
+  .instructor-layout{grid-template-columns:200px minmax(0,1fr)}
+  .inst-grid{grid-template-columns:1fr}
+  .inst-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .insight-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .admin-stat-grid-six{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+
+@media (max-width:960px){
+  .shell,.product-shell,.content-shell,.checkout-shell{width:min(100% - 30px,1240px)}
+  body:not(.checkout-page) .site-header{height:auto;min-height:68px;flex-wrap:wrap;padding-top:10px;padding-bottom:10px}
+  .site-header .search-wrap{order:10;flex:1 0 100%;width:100%;max-width:none;margin:0}
+  .hero{grid-template-columns:1fr;margin-top:18px}
+  .hero-copy{order:2;margin:0;max-width:none;border-radius:0 0 18px 18px;box-shadow:none}
+  .hero-visual{order:1;min-height:300px}
+  .hero-visual img{border-radius:18px 18px 0 0}
+  .course-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ai-banner,.cert,.google-ai,.detail-grid,.detail-content,.list-layout,.contact-grid,.checkout-grid{grid-template-columns:1fr}
+  .enroll-card,.summary-card,.order-card,.side-box{position:static!important;width:100%;max-width:none}
+  .product-grid,.category-grid,.learning-grid,.related-grid,.popular-grid,.career-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .settings-grid{grid-template-columns:1fr}
+  .settings-nav{display:flex;overflow-x:auto;white-space:nowrap;scrollbar-width:thin}
+  .settings-nav a{flex:0 0 auto;border-bottom:0!important;border-right:1px solid #eef0f3}
+  .messages-layout{grid-template-columns:220px minmax(0,1fr)}
+  .practice-layout{grid-template-columns:1fr!important}
+  .practice-nav{display:flex;overflow-x:auto;white-space:nowrap}
+  .practice-nav button{flex:0 0 auto}
+  .dashboard-grid{grid-template-columns:1fr}
+  .checkout-grid{gap:22px}
+  .checkout-page .order-card{order:-1}
+  .checkout-page .checkout-heading h1{font-size:35px}
+  .lesson-content{grid-template-columns:1fr!important}
+  .lesson-actions-panel{position:static!important;border-left:0!important;border-top:1px solid #e5e7eb;padding-left:0!important;padding-top:20px}
+
+  .admin-shell{grid-template-columns:210px minmax(0,1fr)}
+  .admin-main{padding:24px 18px}
+  .admin-stat-grid,.admin-stat-grid-six{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .admin-toolbar{flex-wrap:wrap}
+  .admin-toolbar input{min-width:220px}
+  .admin-dialog-xl{width:min(920px,calc(100% - 24px))}
+  .curr-admin-lesson{grid-template-columns:1fr 1fr}
+  .curr-admin-preview{justify-content:flex-start!important}
+
+  .instructor-layout{grid-template-columns:180px minmax(0,1fr)}
+  .instructor-main{padding:24px 18px}
+}
+
+@media (max-width:780px){
+  .shell,.product-shell,.content-shell,.checkout-shell{width:min(100% - 24px,1240px)}
+  body:not(.checkout-page) .site-header{position:sticky;top:0;z-index:70;padding:9px 12px;gap:8px}
+  .brand{font-size:15px;white-space:nowrap}
+  .brand-mark{width:32px;height:32px;border-radius:8px;flex:none}
+  .desktop-nav,.suite-links{display:none!important}
+  .site-header .login,.site-header .signup{display:none!important}
+  .header-actions{margin-left:auto;gap:5px}
+  .icon-link,.user-pill,.menu-btn{min-width:40px;width:40px!important;height:40px!important;min-height:40px;padding:0!important;display:grid!important;place-items:center}
+  .search-wrap{height:44px}
+  .search-wrap input{font-size:16px}
+  .mobile-nav{position:fixed!important;inset:0!important;top:0!important;height:100dvh;z-index:65;padding:76px 20px 28px!important;background:#fff;overflow-y:auto;overscroll-behavior:contain}
+  .mobile-nav a{min-height:48px;display:flex;align-items:center;font-size:16px}
+  .nav-open{overflow:hidden}
+
+  .promo{padding:7px 12px;font-size:12px;line-height:1.35}
+  .hero{margin-top:0;border-radius:0;min-height:0}
+  .hero-visual{min-height:220px}
+  .hero-visual img{border-radius:0}
+  .hero-copy{padding:26px 18px;border-radius:0}
+  .hero h1{font-size:30px;line-height:1.1}
+  .hero p{font-size:15px}
+  .section{padding:36px 0}
+  .section h2,.ai-banner h2,.cert h2,.google-ai h2{font-size:25px}
+  .course-grid,.skill-panels,.quote-grid,.product-grid,.category-grid,.learning-grid,.popular-grid,.career-grid,.google-cards,.related-grid{grid-template-columns:1fr}
+  .course-grid{gap:20px}
+  .course-card img{width:100%;aspect-ratio:16/9;object-fit:cover}
+  .ai-banner,.cert,.google-ai{padding:26px 18px;border-radius:12px}
+  .tabs,.filter-row,.comm-tabs{overflow-x:auto;flex-wrap:nowrap!important;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .tabs::-webkit-scrollbar,.filter-row::-webkit-scrollbar,.comm-tabs::-webkit-scrollbar{display:none}
+  .tabs>* ,.filter-row>* ,.comm-tabs>*{flex:0 0 auto;white-space:nowrap}
+
+  .catalog-hero,.page-hero,.course-detail-hero{padding:34px 0}
+  .catalog-hero h1,.page-hero h1,.course-detail-hero h1,.content-shell h1{font-size:31px;line-height:1.12}
+  .detail-grid{gap:22px}
+  .enroll-card{box-shadow:0 5px 20px rgba(0,0,0,.14)}
+  .enroll-body,.learn-box,.side-box{padding:19px}
+  .course-actions{grid-template-columns:1fr 1fr}
+  .curriculum>div{grid-template-columns:38px minmax(0,1fr);gap:8px}
+  .curriculum small{grid-column:2}
+  .related-card{display:grid;grid-template-columns:110px minmax(0,1fr);align-items:center}
+  .related-card img{width:110px;height:82px;object-fit:cover}
+
+  .product-page{padding:26px 0 46px}
+  .product-hero{padding:30px 20px;border-radius:12px}
+  .product-hero h1{font-size:31px}
+  .product-card{padding:20px!important}
+  .settings-panel{padding:20px}
+  .settings-nav{border-radius:10px}
+  .setting-row{gap:12px}
+  .messages-layout{grid-template-columns:1fr;min-height:0}
+  .threads{max-height:260px;overflow-y:auto;border-right:0!important;border-bottom:1px solid #e4e7ec}
+  .chat{min-height:520px}
+  .chat-head{position:sticky;top:0;z-index:2}
+  .chat-compose{position:sticky;bottom:0;background:#fff}
+  .practice-panel{padding:20px}
+  .gift-card{grid-template-columns:1fr!important}
+  .order-card2 header,.notification-card header{gap:8px;flex-wrap:wrap}
+  .order-meta{flex-wrap:wrap}
+
+  .list-layout{gap:22px;padding-top:24px}
+  .mini-course{grid-template-columns:100px minmax(0,1fr);gap:12px;padding:12px}
+  .mini-img img{width:100px;height:72px;object-fit:cover}
+  .mini-actions{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .summary-card{padding:18px}
+  .learning-card{height:auto!important}
+  .learning-card img{aspect-ratio:16/9;object-fit:cover}
+  .success-card{padding:28px 18px}
+  .success-actions,.page-hero-actions{display:grid;grid-template-columns:1fr;gap:10px;width:100%}
+
+  .auth-main{padding:24px 12px;align-items:flex-start}
+  .auth-card{width:100%;padding:24px 18px;border-radius:12px}
+  .auth-card h1{font-size:29px}
+  .auth-card input,.contact-form input,.contact-form textarea,.checkout-panel input,.checkout-panel select{font-size:16px}
+
+  .checkout-header{height:64px}
+  .checkout-header .shell,.checkout-footer .shell{width:min(100% - 24px,1180px)}
+  .checkout-security span{display:none}
+  .checkout-main{padding:28px 0 44px}
+  .checkout-heading h1{font-size:31px!important}
+  .checkout-panel{padding:20px 16px}
+  .form-grid{grid-template-columns:1fr!important}
+  .payment-badge{display:none!important}
+  .checkout-footer .shell{flex-direction:column;align-items:flex-start}
+
+  .player-header{height:58px;padding-inline:12px}
+  .player-header .brand{font-size:14px}
+  .player-back{font-size:12px}
+  .lesson-mobile-bar{top:58px}
+  .lesson-stage{height:auto!important;min-height:300px}
+  .stage-overlay{left:18px;right:18px;max-width:none}
+  .stage-overlay h1{font-size:30px}
+  .lesson-content{padding:24px 16px!important}
+  .lesson-points{grid-template-columns:1fr!important}
+  .certificate-wrap{padding:18px 10px}
+  .certificate-card{padding:8px}
+  .certificate-border{min-height:560px;padding:28px 14px;border-width:5px}
+  .certificate-border h1{font-size:31px}
+  .certificate-border h2{font-size:28px;padding-inline:8px}
+  .certificate-meta{flex-direction:column;gap:6px}
+  .certificate-signatures{gap:22px;margin-top:34px}
+  .certificate-actions{display:grid;grid-template-columns:1fr;width:100%}
+
+  .admin-topbar{height:60px;padding:0 10px;gap:8px}
+  .admin-topbar .brand{font-size:14px}
+  .admin-topbar .brand-mark{width:31px;height:31px}
+  .admin-live,.admin-top-actions>a,#adminRefresh{display:none!important}
+  .admin-top-actions{margin-left:auto;gap:5px}
+  .admin-top-button{min-height:38px;padding:7px 9px;font-size:12px}
+  .admin-shell{display:block;min-height:calc(100vh - 60px)}
+  .admin-sidebar{position:sticky;top:60px;height:auto;padding:7px 8px;z-index:35;overflow-x:auto;overflow-y:hidden;border-bottom:1px solid rgba(255,255,255,.12);scrollbar-width:none}
+  .admin-sidebar::-webkit-scrollbar{display:none}
+  .admin-profile{display:none}
+  .admin-sidebar nav{display:flex;gap:5px;min-width:max-content}
+  .admin-sidebar button{width:auto;min-height:42px;padding:9px 11px;white-space:nowrap;flex:none}
+  .admin-main{padding:18px 11px 36px}
+  .admin-heading{flex-direction:column;gap:13px;margin-bottom:18px}
+  .admin-heading h1{font-size:29px}
+  .admin-heading>button{width:100%}
+  .admin-stat-grid,.admin-stat-grid-six{grid-template-columns:1fr 1fr;gap:9px}
+  .admin-stat-grid article{padding:14px}
+  .admin-stat-grid strong{font-size:23px}
+  .admin-toolbar{display:grid;grid-template-columns:1fr;gap:8px}
+  .admin-toolbar input,.admin-toolbar select{width:100%;min-width:0;height:44px}
+  .admin-table-wrap{width:100%;overflow-x:auto;overscroll-behavior-inline:contain;border-radius:8px}
+  .admin-table{min-width:700px}
+  .admin-table-wide{min-width:980px}
+  .admin-table th,.admin-table td{padding:11px 12px}
+  .admin-form-grid{grid-template-columns:1fr}
+  .admin-form-grid .span-2{grid-column:auto}
+  .admin-dialog,.admin-dialog-large,.admin-dialog-xl{width:calc(100% - 16px);max-height:calc(100dvh - 16px);margin:8px auto}
+  .admin-dialog form{padding:16px}
+  .dialog-head{position:sticky;top:-16px;z-index:3;background:#fff;padding-top:16px}
+  .dialog-actions,.admin-form-actions{position:sticky;bottom:-16px;background:#fff;padding-bottom:16px;z-index:3;display:grid;grid-template-columns:1fr 1fr}
+  .dialog-actions button,.admin-form-actions button{width:100%}
+  .curr-admin-section-head{align-items:stretch;flex-direction:column}
+  .curr-section-actions{width:100%;display:grid;grid-template-columns:1fr 1fr}
+  .curr-admin-lesson{grid-template-columns:1fr;gap:8px;padding-block:12px}
+  .curr-admin-preview{justify-content:flex-start!important}
+  .admin-item-card header{flex-direction:column}
+  .admin-message-preview{max-width:280px}
+  .admin-settings-form{padding:16px}
+
+  .instructor-top{height:58px;padding:0 10px;gap:8px}
+  .instructor-top nav{display:none}
+  .instructor-layout{display:block;min-height:calc(100vh - 58px)}
+  .instructor-side{position:sticky;top:58px;height:auto;display:flex;gap:5px;overflow-x:auto;overflow-y:hidden;padding:7px;z-index:25;border-right:0;border-bottom:1px solid #ddd;scrollbar-width:none}
+  .instructor-side::-webkit-scrollbar{display:none}
+  .instructor-side button{width:auto;flex:none;white-space:nowrap;margin:0;min-height:42px}
+  .instructor-main{padding:18px 11px 36px}
+  .inst-heading{flex-direction:column;gap:12px}
+  .inst-heading>button,.inst-heading>.inst-primary{width:100%}
+  .inst-stats{grid-template-columns:1fr 1fr;gap:9px}
+  .inst-grid,.insight-grid{grid-template-columns:1fr}
+  .inst-card{padding:16px}
+  .inst-table{display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .course-admin-row{grid-template-columns:78px minmax(0,1fr)}
+  .course-admin-row img{width:78px;height:55px}
+  .inst-actions{grid-column:1/-1}
+  .perf-row{grid-template-columns:84px minmax(0,1fr) 48px}
+  .lecture-row{grid-template-columns:22px minmax(0,1fr)}
+  .lecture-row button{grid-column:2}
+  .inst-modal{padding:8px}
+  .inst-modal-card{width:100%;max-height:calc(100dvh - 16px);padding:18px}
+}
+
+@media (max-width:520px){
+  .shell,.product-shell,.content-shell,.checkout-shell{width:min(100% - 18px,1240px)}
+  .brand>span:last-child{max-width:150px;overflow:hidden;text-overflow:ellipsis}
+  .hero-copy{padding:22px 12px}
+  .hero h1{font-size:27px}
+  .section{padding:30px 0}
+  .ai-banner,.cert,.google-ai{margin-inline:0;width:100%;padding-inline:14px}
+  .ai-collage{grid-template-columns:1fr}
+  .ai-collage .blue{display:none}
+  .footer-grid{grid-template-columns:1fr!important}
+  .footer-bottom{flex-direction:column;align-items:flex-start;gap:10px}
+  .course-actions{grid-template-columns:1fr}
+  .related-card{grid-template-columns:92px minmax(0,1fr)}
+  .related-card img{width:92px;height:70px}
+  .mini-course{grid-template-columns:86px minmax(0,1fr)}
+  .mini-img img{width:86px;height:64px}
+  .mini-actions{grid-template-columns:1fr}
+  .product-hero{padding:26px 16px}
+  .product-hero h1{font-size:28px}
+  .settings-panel{padding:16px}
+  .setting-row{align-items:flex-start!important;flex-direction:column!important}
+  .chat{min-height:480px}
+  .chat-compose{gap:6px;padding:10px}
+  .chat-compose input{min-width:0}
+  .practice-panel{padding:16px}
+  .checkout-panel{padding-inline:14px}
+  .checkout-item{grid-template-columns:58px minmax(0,1fr)}
+  .checkout-item img{width:58px;height:44px}
+  .payment-option{align-items:flex-start!important}
+  .admin-stat-grid,.admin-stat-grid-six{grid-template-columns:1fr}
+  .admin-top-actions #adminLogout{font-size:0;width:38px;padding:0;position:relative}
+  .admin-top-actions #adminLogout::after{content:'↪';font-size:18px;position:absolute;inset:0;display:grid;place-items:center}
+  .dialog-actions,.admin-form-actions{grid-template-columns:1fr}
+  .admin-actions{align-items:stretch;flex-direction:column}
+  .admin-actions>*{width:100%}
+  .admin-item-card footer{align-items:stretch;flex-direction:column}
+  .admin-message-preview{max-width:220px}
+  .inst-stats{grid-template-columns:1fr}
+  .inst-heading h1{font-size:26px}
+  .coupon-item{align-items:flex-start;flex-direction:column}
+  .perf-row{grid-template-columns:72px minmax(0,1fr) 42px;font-size:11px}
+  .certificate-signatures{grid-template-columns:1fr;gap:28px}
+}
+
+@media (max-width:380px){
+  .brand>span:last-child{max-width:120px}
+  .header-actions{gap:3px}
+  .icon-link,.user-pill,.menu-btn{width:38px!important;min-width:38px;height:38px!important}
+  .catalog-hero h1,.page-hero h1,.course-detail-hero h1,.content-shell h1{font-size:28px}
+  .hero h1{font-size:25px}
+  .product-card,.practice-panel,.settings-panel{padding-inline:14px!important}
+  .admin-main,.instructor-main{padding-inline:8px}
+  .admin-heading h1{font-size:27px}
+  .admin-sidebar button,.instructor-side button{padding-inline:9px;font-size:12px}
+}
+
+@media (hover:none) and (pointer:coarse){
+  a,button,[role="button"],input,select{min-height:44px}
+  .course-card:hover,.learning-card:hover,.category-card:hover,.related-card:hover,.career-grid article:hover{transform:none!important}
+}
+
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto!important}
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+}
