@@ -23,8 +23,20 @@
     }catch(err){if(out){out.textContent=errorText(err);out.classList.remove('success-message')}}
   },true);
 
-  document.addEventListener('click',e=>{
-    const button=e.target instanceof Element?e.target.closest('#applyCoupon'):null;
+  document.addEventListener('click',async e=>{
+    const element=e.target instanceof Element?e.target:null;
+    const userMenu=element?.closest('#userMenu');
+    if(userMenu&&backend()?.available){
+      e.preventDefault();e.stopImmediatePropagation();
+      if(!confirm('Log out of Best Way Academy?'))return;
+      try{await backend().ready;await backend().api('/api/auth/logout',{method:'POST',body:'{}'})}catch{}
+      localStorage.setItem('bwa_user','null');
+      sessionStorage.removeItem('bwa_backend_bootstrapped_v2');
+      location.href='/';
+      return;
+    }
+
+    const button=element?.closest('#applyCoupon');
     if(!button||!backend()?.available)return;
     e.preventDefault();e.stopImmediatePropagation();
     const input=document.querySelector('#couponCode'),message=document.querySelector('#couponMessage');
