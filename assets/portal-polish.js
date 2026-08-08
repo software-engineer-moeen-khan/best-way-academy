@@ -55,13 +55,17 @@
     scope.querySelectorAll('img:not([loading])').forEach(img=>{if(!img.closest('.lesson-stage'))img.loading='lazy'});
   };
   const closeMobileNav=()=>document.querySelectorAll('#mobileNav a,.mobile-nav a').forEach(a=>{if(a.dataset.portalCloseBound)return;a.dataset.portalCloseBound='1';a.addEventListener('click',()=>document.body.classList.remove('nav-open'))});
+  const bindSupportFeedback=()=>{
+    const form=document.querySelector('#contactForm');if(!form||form.dataset.portalFeedbackBound)return;form.dataset.portalFeedbackBound='1';
+    form.addEventListener('submit',()=>setTimeout(()=>{const m=document.querySelector('#contactMessage');if(m){m.textContent='Message checked successfully. Support email delivery is not configured yet.';m.classList.add('success-message')}},0));
+  };
   const markPage=()=>{const key=(document.body.dataset.page||document.body.dataset.dashboardPage||document.body.dataset.playerPage||location.pathname.split('/').filter(Boolean)[0]||'home').replace(/[^a-z0-9-]/gi,'');document.body.classList.add('portal-page-'+key)};
   const ensureFooter=()=>{
     if(document.querySelector('footer,.portal-footer')||document.body.classList.contains('admin-body')||document.body.classList.contains('instructor-app')||document.body.classList.contains('checkout-page')||document.querySelector('.player-layout,.certificate-wrap'))return;
     const f=document.createElement('footer');f.className='portal-footer';f.innerHTML='<div class="portal-footer-inner"><div><div class="brand footer-brand"><span class="brand-mark">B</span><span>Best Way <b>Academy</b></span></div><small>Practical learning for modern careers.</small></div><nav><a href="/courses">Courses</a><a href="/my-learning">My Learning</a><a href="/plans">Plans</a><a href="/contact">Support</a><a href="/privacy">Privacy</a></nav></div>';
     document.body.appendChild(f);
   };
-  const run=root=>{rewriteLinks(root);productionWording(root);enhanceTables(root);improveMedia(root);closeMobileNav();activeNav()};
+  const run=root=>{rewriteLinks(root);productionWording(root);enhanceTables(root);improveMedia(root);closeMobileNav();activeNav();bindSupportFeedback()};
   document.addEventListener('DOMContentLoaded',()=>{
     markPage();run(document);ensureFooter();
     const observer=new MutationObserver(records=>records.forEach(r=>r.addedNodes.forEach(n=>{if(n.nodeType===1)run(n)})));
