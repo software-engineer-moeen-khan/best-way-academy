@@ -5,16 +5,21 @@ namespace Database\Seeders;
 use App\Models\Course;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $admin = User::updateOrCreate(
-            ['email'=>strtolower((string) env('ADMIN_EMAIL','admin@example.com'))],
-            ['name'=>env('ADMIN_NAME','Best Way Academy Admin'),'password'=>Hash::make((string) env('ADMIN_PASSWORD','ChangeMe123!')),'role'=>'admin']
-        );
+        $adminEmail=strtolower((string) env('ADMIN_EMAIL','admin@example.com'));
+        $admin=User::firstOrNew(['email'=>$adminEmail]);
+        $admin->name=(string) env('ADMIN_NAME','Best Way Academy Admin');
+        $admin->role='admin';
+        if(!$admin->exists){
+            $admin->password=Hash::make((string) env('ADMIN_PASSWORD','ChangeMe123!'));
+        }
+        $admin->save();
 
         $courses = [
             'python'=>['Python & Web Development Bootcamp','Development','Go from Python fundamentals to modern web development with practical projects you can add to your portfolio.',4999,4.8,2431,'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1200&q=85','Bestseller',['Python foundations and problem solving','HTML, CSS and JavaScript essentials','Frontend projects and responsive design','APIs, deployment and final project'],['Write clean Python programs from scratch','Build responsive web interfaces','Work with APIs and real project data','Create portfolio-ready applications']],
@@ -41,5 +46,11 @@ class DatabaseSeeder extends Seeder
                 }
             }
         }
+
+        // Keep the welcome coupon server-side so checkout totals cannot be changed only in the browser.
+        DB::table('coupons')->updateOrInsert(
+            ['code'=>'WELCOME20'],
+            ['course_id'=>null,'discount_type'=>'percent','discount_value'=>20,'active'=>true,'updated_at'=>now()]
+        );
     }
 }
