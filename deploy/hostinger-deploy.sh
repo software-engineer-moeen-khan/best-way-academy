@@ -44,6 +44,7 @@ setenv APP_URL "https://$HOSTINGER_DOMAIN"
 setenv APP_TIMEZONE "Asia/Karachi"
 setenv SESSION_SECURE_COOKIE true
 setenv MAIL_FROM_ADDRESS "noreply@$HOSTINGER_DOMAIN"
+chmod 600 .env || true
 
 if "$PHP_BIN" artisan package:discover --ansi >/dev/null 2>&1; then
   log "Laravel package discovery completed directly."
@@ -149,6 +150,24 @@ if [[ -n "$HOSTINGER_API_TOKEN" ]]; then
 fi
 
 "$PHP_BIN" artisan config:cache
+
+log "Verifying Laravel routes and migration state..."
+"$PHP_BIN" artisan route:list --path=api >/dev/null
+"$PHP_BIN" artisan migrate:status >/dev/null
+
+log "Checking live backend health..."
+HEALTH_OK=0
+for attempt in {1..5}; do
+  HEALTH="$(curl -fsS --max-time 12 "https://$HOSTINGER_DOMAIN/api/health" 2>/dev/null || true)"
+  if printf '%s' "$HEALTH" | "$PHP_BIN" -r '$j=json_decode(stream_get_contents(STDIN),true);exit(($j["ok"]??false)===true&&($j["db"]??"")==="connected"?0:1);' 2>/dev/null; then
+    HEALTH_OK=1
+    log "Backend health verified: MySQL connected."
+    break
+  fi
+  log "Waiting for live backend health ($attempt/5)..."
+  sleep 2
+done
+[[ "$HEALTH_OK" -eq 1 ]] || log "Live health check could not be confirmed from this shell; open /api/health in the browser to verify."
 
 log "Deployment complete: https://$HOSTINGER_DOMAIN"
 log "Backend health: https://$HOSTINGER_DOMAIN/api/health"
