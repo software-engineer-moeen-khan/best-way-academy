@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureAccountActive;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -11,7 +12,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Default Laravel web middleware provides sessions, auth and CSRF protection.
+        $middleware->web(append: [EnsureAccountActive::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Use Laravel's production-safe defaults.
