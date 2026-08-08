@@ -35,16 +35,16 @@ $serveHtml=function(string $file){
     $html=file_get_contents($path);
 
     $html=str_replace(['href="assets/','src="assets/'],['href="/assets/','src="/assets/'],$html);
-    $html=preg_replace('/(\/assets\/[A-Za-z0-9_.\/-]+\.(?:css|js))(?:\?v=[^"\']*)?/','$1?v=20260808-11',$html);
+    $html=preg_replace('/(\/assets\/[A-Za-z0-9_.\/-]+\.(?:css|js))(?:\?v=[^"\']*)?/','$1?v=20260808-12',$html);
 
     if(!str_contains($html,'portal-polish.css')){
-        $html=str_ireplace('</head>','  <link rel="stylesheet" href="/assets/portal-polish.css?v=20260808-11">'.PHP_EOL.'</head>',$html);
+        $html=str_ireplace('</head>','  <link rel="stylesheet" href="/assets/portal-polish.css?v=20260808-12">'.PHP_EOL.'</head>',$html);
     }
     if(!str_contains($html,'backend-sync.js')){
-        $html=str_ireplace('</body>','<script src="/assets/backend-sync.js?v=20260808-11"></script>'.PHP_EOL.'</body>',$html);
+        $html=str_ireplace('</body>','<script src="/assets/backend-sync.js?v=20260808-12"></script>'.PHP_EOL.'</body>',$html);
     }
     if(!str_contains($html,'portal-polish.js')){
-        $html=str_ireplace('</body>','<script src="/assets/portal-polish.js?v=20260808-11"></script>'.PHP_EOL.'</body>',$html);
+        $html=str_ireplace('</body>','<script src="/assets/portal-polish.js?v=20260808-12"></script>'.PHP_EOL.'</body>',$html);
     }
 
     return response($html)
@@ -92,3 +92,7 @@ $legacy=[
 Route::get('/{page}.html',function(string $page)use($legacy){
     abort_unless(isset($legacy[$page]),404);$query=request()->getQueryString();return redirect($legacy[$page].($query?'?'.$query:''),301);
 })->where('page','[A-Za-z0-9_-]+');
+
+Route::fallback(function()use($serveHtml){
+    return $serveHtml('404.html')->setStatusCode(404);
+});
