@@ -60,7 +60,7 @@ class DatabaseSeeder extends Seeder
                 ['What helps learners build practical skill?',['Only theory','Practice and feedback','No examples'],'Practice and feedback'],
                 ['When should a completion certificate unlock?',['After course completion','When opening the page','When adding to wishlist'],'After course completion'],
             ];
-            foreach(Course::query()->get() as $course){
+            foreach(Course::query()->whereIn('slug',array_keys($courses))->get() as $course){
                 if(DB::table('assessment_sets')->where('course_id',$course->id)->exists())continue;
                 $assessmentId=DB::table('assessment_sets')->insertGetId([
                     'course_id'=>$course->id,'title'=>'Knowledge Check','type'=>'test',
