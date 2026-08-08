@@ -154,9 +154,13 @@ fi
 "$PHP_BIN" artisan config:cache
 
 log "Verifying Laravel routes and migration state..."
-"$PHP_BIN" artisan route:list --path=api >/dev/null
+ROUTES="$($PHP_BIN artisan route:list --path=api)"
+printf '%s\n' "$ROUTES" | grep -Fq 'api/admin/manage/workspace' || fail "Admin management workspace route is missing."
+printf '%s\n' "$ROUTES" | grep -Fq 'api/categories' || fail "Catalog categories route is missing."
+printf '%s\n' "$ROUTES" | grep -Fq 'api/learning-plans' || fail "Learning plans route is missing."
+printf '%s\n' "$ROUTES" | grep -Fq 'api/assessments/{assessment}/submit' || fail "Assessment submission route is missing."
 "$PHP_BIN" artisan migrate:status >/dev/null
-"$PHP_BIN" -r '$e=parse_ini_file(".env");$dsn="mysql:host=".($e["DB_HOST"]??"localhost").";port=".($e["DB_PORT"]??3306).";dbname=".$e["DB_DATABASE"].";charset=utf8mb4";$pdo=new PDO($dsn,$e["DB_USERNAME"],$e["DB_PASSWORD"],[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);foreach(["users","sessions","auth_attempts","cache","cache_locks"] as $t){$pdo->query("SELECT 1 FROM `$t` LIMIT 1");}echo "Auth/cache database tables verified.\n";'
+"$PHP_BIN" -r '$e=parse_ini_file(".env");$dsn="mysql:host=".($e["DB_HOST"]??"localhost").";port=".($e["DB_PORT"]??3306).";dbname=".$e["DB_DATABASE"].";charset=utf8mb4";$pdo=new PDO($dsn,$e["DB_USERNAME"],$e["DB_PASSWORD"],[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);foreach(["users","sessions","auth_attempts","cache","cache_locks","course_categories","platform_settings","learning_plans","assessment_sets","assessment_questions","assessment_attempts"] as $t){$pdo->query("SELECT 1 FROM `$t` LIMIT 1");}echo "Admin/auth/content database tables verified.\n";'
 
 log "Checking live backend health..."
 HEALTH_OK=0
@@ -174,7 +178,7 @@ done
 
 log "Deployment complete: https://$HOSTINGER_DOMAIN"
 log "Backend health: https://$HOSTINGER_DOMAIN/api/health"
-log "Clean routes active: /courses /dashboard /my-learning /admin /instructor"
+log "Admin management active: /admin (courses, categories, users, enrollments, orders, marketing, plans, assessments, moderation, support, settings)"
 if [[ -f .deploy/admin-credentials.txt ]]; then
   log "Admin credentials saved server-side at: $ROOT/.deploy/admin-credentials.txt (chmod 600)"
 fi
