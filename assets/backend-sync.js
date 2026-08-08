@@ -78,7 +78,13 @@
       for(const [slug,c] of Object.entries(b.courses||{}))courseOverrides[slug]={title:c.title,category:c.category,subtitle:c.subtitle,description:c.description,price:c.price,status:c.status,image:c.image,badge:c.badge};
       courseSnapshot=JSON.parse(JSON.stringify(courseOverrides));
       putLocal('bwa_admin_courses',courseOverrides);
-      for(const [slug,sections] of Object.entries(b.curricula||{}))putLocal(`bwa_curriculum_${slug}`,sections);
+      for(const [slug,sections] of Object.entries(b.curricula||{})){
+        const compatible=(Array.isArray(sections)?sections:[]).map(section=>({
+          title:section?.title||'Course section',
+          lectures:(Array.isArray(section?.lectures)?section.lectures:[]).map(lecture=>typeof lecture==='string'?lecture:(lecture?.title||'Lesson')),
+        }));
+        putLocal(`bwa_curriculum_${slug}`,compatible);
+      }
       for(const [slug,items] of Object.entries(b.announcements||{}))putLocal(`bwa_announcements_${slug}`,items);
       if(['admin','instructor'].includes(currentUser.role))putLocal('bwa_coupons',b.coupons||[]);
       putLocal('bwa_enrollments',b.enrollments||[]);
