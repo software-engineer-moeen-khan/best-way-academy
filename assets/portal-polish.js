@@ -50,10 +50,9 @@
     if(t.closest('.portal-table-scroll')||t.parentElement?.classList.contains('admin-table-wrap'))return;
     const w=document.createElement('div');w.className='portal-table-scroll';t.parentNode.insertBefore(w,t);w.appendChild(t);
   });
-  const improveControls=root=>{
+  const improveMedia=root=>{
     const scope=root.querySelectorAll?root:document;
     scope.querySelectorAll('img:not([loading])').forEach(img=>{if(!img.closest('.lesson-stage'))img.loading='lazy'});
-    scope.querySelectorAll('button').forEach(b=>{if(!b.type&&b.closest('form'))b.type='button'});
   };
   const closeMobileNav=()=>document.querySelectorAll('#mobileNav a,.mobile-nav a').forEach(a=>{if(a.dataset.portalCloseBound)return;a.dataset.portalCloseBound='1';a.addEventListener('click',()=>document.body.classList.remove('nav-open'))});
   const markPage=()=>{const key=(document.body.dataset.page||document.body.dataset.dashboardPage||document.body.dataset.playerPage||location.pathname.split('/').filter(Boolean)[0]||'home').replace(/[^a-z0-9-]/gi,'');document.body.classList.add('portal-page-'+key)};
@@ -62,7 +61,7 @@
     const f=document.createElement('footer');f.className='portal-footer';f.innerHTML='<div class="portal-footer-inner"><div><div class="brand footer-brand"><span class="brand-mark">B</span><span>Best Way <b>Academy</b></span></div><small>Practical learning for modern careers.</small></div><nav><a href="/courses">Courses</a><a href="/my-learning">My Learning</a><a href="/plans">Plans</a><a href="/contact">Support</a><a href="/privacy">Privacy</a></nav></div>';
     document.body.appendChild(f);
   };
-  const run=root=>{rewriteLinks(root);productionWording(root);enhanceTables(root);improveControls(root);closeMobileNav();activeNav()};
+  const run=root=>{rewriteLinks(root);productionWording(root);enhanceTables(root);improveMedia(root);closeMobileNav();activeNav()};
   document.addEventListener('DOMContentLoaded',()=>{
     markPage();run(document);ensureFooter();
     const observer=new MutationObserver(records=>records.forEach(r=>r.addedNodes.forEach(n=>{if(n.nodeType===1)run(n)})));
