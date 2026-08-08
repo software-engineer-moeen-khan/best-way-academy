@@ -5,6 +5,7 @@ use App\Http\Controllers\AdminManagementController;
 use App\Http\Controllers\AdminOrderController;
 use App\Http\Controllers\CatalogMetadataController;
 use App\Http\Controllers\LearningContentController;
+use App\Http\Controllers\SubscriptionController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/api/categories',[CatalogMetadataController::class,'categories']);
@@ -12,6 +13,9 @@ Route::get('/api/platform',[CatalogMetadataController::class,'platform']);
 Route::get('/api/learning-plans',[LearningContentController::class,'plans']);
 
 Route::middleware('auth')->group(function(){
+    Route::get('/api/subscription',[SubscriptionController::class,'current']);
+    Route::post('/api/subscription',[SubscriptionController::class,'start']);
+    Route::delete('/api/subscription',[SubscriptionController::class,'cancel']);
     Route::get('/api/courses/{slug}/assessments',[LearningContentController::class,'assessments']);
     Route::post('/api/assessments/{assessment}/submit',[LearningContentController::class,'submitAssessment'])->whereNumber('assessment');
 
