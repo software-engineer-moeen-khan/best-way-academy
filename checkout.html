@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="/assets/style.css?v=20260808-7">
   <link rel="stylesheet" href="/assets/pages.css?v=20260808-7">
   <link rel="stylesheet" href="/assets/checkout.css?v=20260808-7">
+  <link rel="stylesheet" href="/assets/checkout-coupon.css?rev=20260808-coupon-v1">
   <link rel="stylesheet" href="/assets/responsive-final.css?rev=20260808-responsive-v1">
 </head>
 <body class="checkout-page" data-page="checkout">
@@ -77,6 +78,7 @@
               </div>
 
               <button id="checkoutSubmit" class="checkout-button" type="submit">Complete enrollment</button>
+              <p id="checkoutMessage" class="checkout-coupon-message" aria-live="polite"></p>
               <p class="checkout-trust"><span>🔒</span><span><strong>Protected checkout.</strong> Payment fields are currently a demo interface; no card number is stored by Best Way Academy.</span></p>
             </div>
           </form>
@@ -86,9 +88,18 @@
           <div class="order-card-head"><h2>Your order</h2></div>
           <div id="checkoutItems" class="checkout-items"><p class="checkout-loading">Loading your course…</p></div>
           <div class="order-summary">
+            <div class="checkout-coupon">
+              <label for="checkoutCouponCode">Coupon code</label>
+              <div class="checkout-coupon-row">
+                <input id="checkoutCouponCode" type="text" maxlength="80" autocomplete="off" spellcheck="false" placeholder="Enter coupon code">
+                <button id="checkoutApplyCoupon" type="button">Apply</button>
+              </div>
+              <p id="checkoutCouponMessage" class="checkout-coupon-message" aria-live="polite"></p>
+            </div>
             <div class="order-line"><span>Subtotal</span><strong id="checkoutSubtotal">Rs 0</strong></div>
+            <div id="checkoutDiscountRow" class="order-line discount" hidden><span>Coupon discount</span><strong id="checkoutDiscount">− Rs 0</strong></div>
             <div class="order-line total"><span>Total</span><strong id="checkoutTotal">Rs 0</strong></div>
-            <p class="checkout-price-note">Taxes, if applicable, are included at checkout.</p>
+            <p class="checkout-price-note">Coupons are validated against the current order, dates and usage limits before enrollment is completed.</p>
             <div class="order-benefits">
               <span>✓ Lifetime access to purchased courses</span>
               <span>✓ Certificate of completion</span>
@@ -112,5 +123,6 @@
   <script src="/assets/app.js?v=20260808-7"></script>
   <script src="/assets/admin-overrides.js?v=20260808-7"></script>
   <script src="/assets/checkout-page.js?v=20260808-7"></script>
+  <script src="/assets/checkout-coupon.js?rev=20260808-coupon-v1"></script>
 </body>
 </html>
