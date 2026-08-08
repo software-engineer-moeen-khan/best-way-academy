@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AdminOverviewController;
+use App\Http\Controllers\BootstrapController;
+use App\Http\Controllers\CourseViewController;
 use App\Http\Controllers\InstructorOverviewController;
 use App\Http\Controllers\PlatformController;
 use App\Http\Controllers\SupportController;
@@ -20,13 +22,13 @@ Route::post('/api/auth/register',[PlatformController::class,'register'])->middle
 Route::post('/api/auth/login',[PlatformController::class,'login'])->middleware('throttle:8,1');
 Route::post('/api/contact',[SupportController::class,'store'])->middleware('throttle:5,1');
 Route::get('/api/courses',[PlatformController::class,'courses']);
-Route::get('/api/courses/{slug}',[PlatformController::class,'course']);
+Route::get('/api/courses/{slug}',CourseViewController::class);
 Route::get('/api/courses/{slug}/reviews',[PlatformController::class,'reviews']);
 Route::get('/api/courses/{slug}/questions',[PlatformController::class,'questions']);
 Route::middleware('auth')->group(function(){
     Route::post('/api/auth/logout',[PlatformController::class,'logout']);
     Route::put('/api/profile',[PlatformController::class,'profile'])->middleware('throttle:20,1');
-    Route::get('/api/bootstrap',[PlatformController::class,'bootstrap']);
+    Route::get('/api/bootstrap',BootstrapController::class);
     Route::put('/api/state',[PlatformController::class,'putState'])->middleware('throttle:120,1');
     Route::delete('/api/state',[PlatformController::class,'deleteState'])->middleware('throttle:120,1');
     Route::put('/api/global-state',[PlatformController::class,'putGlobalState'])->middleware('throttle:60,1');
@@ -57,28 +59,28 @@ $serveHtml=function(string $file){
     $html=file_get_contents($path);
 
     $html=str_replace(['href="assets/','src="assets/'],['href="/assets/','src="/assets/'],$html);
-    $html=preg_replace('/(\/assets\/[A-Za-z0-9_.\/-]+\.(?:css|js))(?:\?v=[^"\']*)?/','$1?v=20260808-17',$html);
+    $html=preg_replace('/(\/assets\/[A-Za-z0-9_.\/-]+\.(?:css|js))(?:\?v=[^"\']*)?/','$1?v=20260808-18',$html);
 
     if(!str_contains($html,'portal-polish.css')){
-        $html=str_ireplace('</head>','  <link rel="stylesheet" href="/assets/portal-polish.css?v=20260808-17">'.PHP_EOL.'</head>',$html);
+        $html=str_ireplace('</head>','  <link rel="stylesheet" href="/assets/portal-polish.css?v=20260808-18">'.PHP_EOL.'</head>',$html);
     }
     if(!str_contains($html,'backend-sync.js')){
-        $html=str_ireplace('</body>','<script src="/assets/backend-sync.js?v=20260808-17"></script>'.PHP_EOL.'</body>',$html);
+        $html=str_ireplace('</body>','<script src="/assets/backend-sync.js?v=20260808-18"></script>'.PHP_EOL.'</body>',$html);
     }
     if(!str_contains($html,'backend-actions.js')){
-        $html=str_ireplace('</body>','<script src="/assets/backend-actions.js?v=20260808-17"></script>'.PHP_EOL.'</body>',$html);
+        $html=str_ireplace('</body>','<script src="/assets/backend-actions.js?v=20260808-18"></script>'.PHP_EOL.'</body>',$html);
     }
     if(!str_contains($html,'admin-backend.js')){
-        $html=str_ireplace('</body>','<script src="/assets/admin-backend.js?v=20260808-17"></script>'.PHP_EOL.'</body>',$html);
+        $html=str_ireplace('</body>','<script src="/assets/admin-backend.js?v=20260808-18"></script>'.PHP_EOL.'</body>',$html);
     }
     if(!str_contains($html,'instructor-backend.js')){
-        $html=str_ireplace('</body>','<script src="/assets/instructor-backend.js?v=20260808-17"></script>'.PHP_EOL.'</body>',$html);
+        $html=str_ireplace('</body>','<script src="/assets/instructor-backend.js?v=20260808-18"></script>'.PHP_EOL.'</body>',$html);
     }
     if(!str_contains($html,'clean-route-fixes.js')){
-        $html=str_ireplace('</body>','<script src="/assets/clean-route-fixes.js?v=20260808-17"></script>'.PHP_EOL.'</body>',$html);
+        $html=str_ireplace('</body>','<script src="/assets/clean-route-fixes.js?v=20260808-18"></script>'.PHP_EOL.'</body>',$html);
     }
     if(!str_contains($html,'portal-polish.js')){
-        $html=str_ireplace('</body>','<script src="/assets/portal-polish.js?v=20260808-17"></script>'.PHP_EOL.'</body>',$html);
+        $html=str_ireplace('</body>','<script src="/assets/portal-polish.js?v=20260808-18"></script>'.PHP_EOL.'</body>',$html);
     }
 
     return response($html)
@@ -88,21 +90,36 @@ $serveHtml=function(string $file){
         ->header('Expires','0');
 };
 
+$courseAccess=function(bool $requireCompletion=false): bool {
+    $slug=(string)request()->query('course','python');
+    $course=DB::table('courses')->where('slug',$slug)->first();
+    if(!$course)return false;
+    $user=auth()->user();if(!$user)return false;
+    if($user->role==='admin'||($user->role==='instructor'&&(int)$course->instructor_id===(int)$user->id))return true;
+    $enrollment=DB::table('enrollments')->where('user_id',$user->id)->where('course_id',$course->id)->first();
+    if(!$enrollment)return false;
+    return !$requireCompletion||(int)$enrollment->progress>=100;
+};
+
 Route::get('/',fn()=>$serveHtml('index.html'))->name('home');
 
 $publicPages=[
     'about'=>'about.html','cart'=>'cart.html','categories'=>'categories.html','contact'=>'contact.html','course'=>'course.html',
     'courses'=>'courses.html','faq'=>'faq.html','gift'=>'gift.html','instructor-profile'=>'instructor-profile.html','plans'=>'plans.html',
-    'practice'=>'practice.html','privacy'=>'privacy.html','signup'=>'signup.html','teach'=>'teach.html','terms'=>'terms.html','wishlist'=>'wishlist.html',
+    'privacy'=>'privacy.html','signup'=>'signup.html','teach'=>'teach.html','terms'=>'terms.html','wishlist'=>'wishlist.html',
 ];
 foreach($publicPages as $uri=>$file){Route::get('/'.$uri,fn()=>$serveHtml($file));}
 Route::get('/login',fn()=>$serveHtml('login.html'))->name('login');
 
 $protectedPages=[
-    'account'=>'account.html','certificate'=>'certificate.html','checkout'=>'checkout.html','dashboard'=>'dashboard.html','learn'=>'learn.html',
-    'messages'=>'messages.html','my-learning'=>'my-learning.html','notifications'=>'notifications.html','orders'=>'orders.html','success'=>'success.html',
+    'account'=>'account.html','checkout'=>'checkout.html','dashboard'=>'dashboard.html','messages'=>'messages.html',
+    'my-learning'=>'my-learning.html','notifications'=>'notifications.html','orders'=>'orders.html','success'=>'success.html',
 ];
 foreach($protectedPages as $uri=>$file){Route::get('/'.$uri,fn()=>$serveHtml($file))->middleware('auth');}
+
+Route::get('/learn',function()use($serveHtml,$courseAccess){return $courseAccess()?$serveHtml('learn.html'):$serveHtml('403.html')->setStatusCode(403);})->middleware('auth');
+Route::get('/practice',function()use($serveHtml,$courseAccess){return $courseAccess()?$serveHtml('practice.html'):$serveHtml('403.html')->setStatusCode(403);})->middleware('auth');
+Route::get('/certificate',function()use($serveHtml,$courseAccess){return $courseAccess(true)?$serveHtml('certificate.html'):$serveHtml('403.html')->setStatusCode(403);})->middleware('auth');
 
 Route::get('/admin',function()use($serveHtml){
     if(auth()->user()?->role!=='admin')return $serveHtml('403.html')->setStatusCode(403);
@@ -115,6 +132,7 @@ Route::get('/instructor',function()use($serveHtml){
 
 Route::get('/course/{slug}',fn(string $slug)=>redirect('/course?course='.rawurlencode($slug),302));
 Route::get('/learn/{slug}',fn(string $slug)=>redirect('/learn?course='.rawurlencode($slug),302))->middleware('auth');
+Route::get('/practice/{slug}',fn(string $slug)=>redirect('/practice?course='.rawurlencode($slug),302))->middleware('auth');
 Route::get('/certificate/{slug}',fn(string $slug)=>redirect('/certificate?course='.rawurlencode($slug),302))->middleware('auth');
 
 Route::get('/assets/{path}',function(string $path){
