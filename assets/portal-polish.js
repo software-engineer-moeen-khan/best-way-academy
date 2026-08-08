@@ -54,7 +54,23 @@
     const scope=root.querySelectorAll?root:document;
     scope.querySelectorAll('img:not([loading])').forEach(img=>{if(!img.closest('.lesson-stage'))img.loading='lazy'});
   };
-  const closeMobileNav=()=>document.querySelectorAll('#mobileNav a,.mobile-nav a').forEach(a=>{if(a.dataset.portalCloseBound)return;a.dataset.portalCloseBound='1';a.addEventListener('click',()=>document.body.classList.remove('nav-open'))});
+  const ensureMobileNavigation=()=>{
+    const header=document.querySelector('.site-header');
+    if(!header||document.body.classList.contains('checkout-page')||document.body.classList.contains('admin-body')||document.body.classList.contains('instructor-app')||document.querySelector('.player-layout,.certificate-wrap'))return;
+    let actions=header.querySelector('.header-actions');
+    if(!actions){actions=document.createElement('div');actions.className='header-actions';header.appendChild(actions)}
+    let button=header.querySelector('#globalMenuBtn');
+    if(!button){button=document.createElement('button');button.id='globalMenuBtn';button.className='menu-btn';button.type='button';button.setAttribute('aria-label','Open navigation');button.setAttribute('aria-expanded','false');button.textContent='☰';actions.appendChild(button)}
+    let nav=document.querySelector('#mobileNav');
+    if(!nav){nav=document.createElement('nav');nav.id='mobileNav';nav.className='mobile-nav';nav.setAttribute('aria-label','Mobile navigation');nav.innerHTML='<a href="/">Home</a><a href="/courses">All courses</a><a href="/categories">Categories</a><a href="/plans">Plans</a><a href="/my-learning">My Learning</a><a href="/practice?course=python">Practice</a><a href="/wishlist">Wishlist</a><a href="/cart">Cart</a><a href="/account">Account</a><a href="/contact">Support</a>';header.insertAdjacentElement('afterend',nav)}
+    if(!button.dataset.portalMenuBound){button.dataset.portalMenuBound='1';button.addEventListener('click',()=>{const open=document.body.classList.toggle('nav-open');button.setAttribute('aria-expanded',open?'true':'false');button.setAttribute('aria-label',open?'Close navigation':'Open navigation')})}
+  };
+  const closeMobileNav=()=>document.querySelectorAll('#mobileNav a,.mobile-nav a').forEach(a=>{if(a.dataset.portalCloseBound)return;a.dataset.portalCloseBound='1';a.addEventListener('click',()=>{document.body.classList.remove('nav-open');document.querySelector('#globalMenuBtn')?.setAttribute('aria-expanded','false')})});
+  const bindMobileNavGlobal=()=>{
+    if(window.__bwaMobileNavGlobal)return;window.__bwaMobileNavGlobal=true;
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('nav-open')){document.body.classList.remove('nav-open');document.querySelector('#globalMenuBtn')?.setAttribute('aria-expanded','false')}});
+    window.addEventListener('resize',()=>{if(innerWidth>780&&document.body.classList.contains('nav-open')){document.body.classList.remove('nav-open');document.querySelector('#globalMenuBtn')?.setAttribute('aria-expanded','false')}},{passive:true});
+  };
   const bindSupportFeedback=()=>{
     const form=document.querySelector('#contactForm');if(!form||form.dataset.portalFeedbackBound)return;form.dataset.portalFeedbackBound='1';
     form.addEventListener('submit',()=>setTimeout(()=>{const m=document.querySelector('#contactMessage');if(m){m.textContent='Message checked successfully. Support email delivery is not configured yet.';m.classList.add('success-message')}},0));
@@ -65,9 +81,9 @@
     const f=document.createElement('footer');f.className='portal-footer';f.innerHTML='<div class="portal-footer-inner"><div><div class="brand footer-brand"><span class="brand-mark">B</span><span>Best Way <b>Academy</b></span></div><small>Practical learning for modern careers.</small></div><nav><a href="/courses">Courses</a><a href="/my-learning">My Learning</a><a href="/plans">Plans</a><a href="/contact">Support</a><a href="/privacy">Privacy</a></nav></div>';
     document.body.appendChild(f);
   };
-  const run=root=>{rewriteLinks(root);productionWording(root);enhanceTables(root);improveMedia(root);closeMobileNav();activeNav();bindSupportFeedback()};
+  const run=root=>{rewriteLinks(root);productionWording(root);enhanceTables(root);improveMedia(root);ensureMobileNavigation();closeMobileNav();activeNav();bindSupportFeedback()};
   document.addEventListener('DOMContentLoaded',()=>{
-    markPage();run(document);ensureFooter();
+    markPage();bindMobileNavGlobal();run(document);ensureFooter();
     const observer=new MutationObserver(records=>records.forEach(r=>r.addedNodes.forEach(n=>{if(n.nodeType===1)run(n)})));
     observer.observe(document.body,{childList:true,subtree:true});
     setTimeout(()=>{run(document);ensureFooter()},180);
