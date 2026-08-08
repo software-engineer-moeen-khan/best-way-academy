@@ -42,6 +42,7 @@ setenv APP_ENV production
 setenv APP_DEBUG false
 setenv APP_URL "https://$HOSTINGER_DOMAIN"
 setenv APP_TIMEZONE "Asia/Karachi"
+setenv SESSION_DRIVER database
 setenv SESSION_SECURE_COOKIE true
 setenv MAIL_FROM_ADDRESS "noreply@$HOSTINGER_DOMAIN"
 chmod 600 .env || true
@@ -154,6 +155,7 @@ fi
 log "Verifying Laravel routes and migration state..."
 "$PHP_BIN" artisan route:list --path=api >/dev/null
 "$PHP_BIN" artisan migrate:status >/dev/null
+"$PHP_BIN" -r '$e=parse_ini_file(".env");$dsn="mysql:host=".($e["DB_HOST"]??"localhost").";port=".($e["DB_PORT"]??3306).";dbname=".$e["DB_DATABASE"].";charset=utf8mb4";$pdo=new PDO($dsn,$e["DB_USERNAME"],$e["DB_PASSWORD"],[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);foreach(["users","sessions","auth_attempts"] as $t){$pdo->query("SELECT 1 FROM `$t` LIMIT 1");}echo "Auth database tables verified.\n";'
 
 log "Checking live backend health..."
 HEALTH_OK=0
