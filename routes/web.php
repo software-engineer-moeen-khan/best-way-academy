@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminOverviewController;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BootstrapController;
 use App\Http\Controllers\CourseViewController;
 use App\Http\Controllers\InstructorOverviewController;
@@ -18,17 +19,17 @@ Route::get('/api/health', function(){
         return response()->json(['ok'=>false,'app'=>'Best Way Academy','db'=>'unavailable','time'=>now()->toIso8601String()],503);
     }
 });
-Route::get('/api/session',[PlatformController::class,'session']);
-Route::post('/api/auth/register',[PlatformController::class,'register'])->middleware('throttle:4,1');
-Route::post('/api/auth/login',[PlatformController::class,'login'])->middleware('throttle:8,1');
+Route::get('/api/session',[AuthController::class,'session']);
+Route::post('/api/auth/register',[AuthController::class,'register'])->middleware('throttle:4,1');
+Route::post('/api/auth/login',[AuthController::class,'login'])->middleware('throttle:8,1');
 Route::post('/api/contact',[SupportController::class,'store'])->middleware('throttle:5,1');
 Route::get('/api/courses',[PlatformController::class,'courses']);
 Route::get('/api/courses/{slug}',CourseViewController::class);
 Route::get('/api/courses/{slug}/reviews',[PlatformController::class,'reviews']);
 Route::get('/api/courses/{slug}/questions',[PlatformController::class,'questions']);
 Route::middleware('auth')->group(function(){
-    Route::post('/api/auth/logout',[PlatformController::class,'logout']);
-    Route::put('/api/profile',[PlatformController::class,'profile'])->middleware('throttle:20,1');
+    Route::post('/api/auth/logout',[AuthController::class,'logout']);
+    Route::put('/api/profile',[AuthController::class,'profile'])->middleware('throttle:20,1');
     Route::get('/api/bootstrap',BootstrapController::class);
     Route::put('/api/state',[PlatformController::class,'putState'])->middleware('throttle:120,1');
     Route::delete('/api/state',[PlatformController::class,'deleteState'])->middleware('throttle:120,1');
