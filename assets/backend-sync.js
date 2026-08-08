@@ -71,7 +71,7 @@
       const s=await api('/api/session');backend=true;csrf=s.csrf_token;currentUser=s.user||null;if(!currentUser)return s;
       const b=await api('/api/bootstrap');csrf=b.csrf_token||csrf;syncing=true;
       const protectedStateKeys=new Set(['bwa_user','bwa_enrollments','bwa_orders','bwa_last_order','bwa_admin_courses']);
-      for(const [k,v] of Object.entries(b.states||{})){if(!protectedStateKeys.has(k))putLocal(k,v)}
+      for(const [k,v] of Object.entries(b.states||{})){if(!protectedStateKeys.has(k)&&!k.startsWith('bwa_player_'))putLocal(k,v)}
       if(currentUser.role==='admin')for(const [k,v] of Object.entries(b.global_states||{}))putLocal(k,v);
 
       const courseOverrides={};
@@ -85,6 +85,7 @@
         }));
         putLocal(`bwa_curriculum_${slug}`,compatible);
       }
+      for(const [slug,state] of Object.entries(b.player_states||{}))putLocal(`bwa_player_${slug}`,state);
       for(const [slug,items] of Object.entries(b.announcements||{}))putLocal(`bwa_announcements_${slug}`,items);
       if(['admin','instructor'].includes(currentUser.role))putLocal('bwa_coupons',b.coupons||[]);
       putLocal('bwa_enrollments',b.enrollments||[]);
