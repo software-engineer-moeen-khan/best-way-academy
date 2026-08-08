@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\PlatformController;
+use App\Http\Controllers\SupportController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
@@ -15,6 +16,7 @@ Route::get('/api/health', function(){
 Route::get('/api/session',[PlatformController::class,'session']);
 Route::post('/api/auth/register',[PlatformController::class,'register'])->middleware('throttle:4,1');
 Route::post('/api/auth/login',[PlatformController::class,'login'])->middleware('throttle:8,1');
+Route::post('/api/contact',[SupportController::class,'store'])->middleware('throttle:5,1');
 Route::get('/api/courses',[PlatformController::class,'courses']);
 Route::get('/api/courses/{slug}',[PlatformController::class,'course']);
 Route::get('/api/courses/{slug}/reviews',[PlatformController::class,'reviews']);
@@ -34,13 +36,15 @@ Route::middleware('auth')->group(function(){
     Route::post('/api/questions/{question}/answers',[PlatformController::class,'answer'])->middleware('throttle:30,1');
     Route::get('/api/messages',[PlatformController::class,'messages'])->middleware('throttle:60,1');
     Route::post('/api/messages',[PlatformController::class,'sendMessage'])->middleware('throttle:30,1');
+    Route::get('/api/admin/support-requests',[SupportController::class,'index'])->middleware('throttle:60,1');
+    Route::patch('/api/admin/support-requests/{supportRequest}',[SupportController::class,'updateStatus'])->middleware('throttle:30,1');
     Route::post('/api/instructor/courses/sync',[PlatformController::class,'syncCourseOverrides'])->middleware('throttle:30,1');
     Route::post('/api/instructor/courses/{slug}/curriculum/sync',[PlatformController::class,'syncCurriculum'])->middleware('throttle:30,1');
     Route::post('/api/instructor/courses/{slug}/announcements/sync',[PlatformController::class,'syncAnnouncements'])->middleware('throttle:30,1');
     Route::post('/api/instructor/coupons/sync',[PlatformController::class,'syncCoupons'])->middleware('throttle:30,1');
 });
 
-// API requests should never fall through to an HTML error document.
+Route::any('/api',fn()=>response()->json(['message'=>'API endpoint not found.'],404));
 Route::any('/api/{path}',fn()=>response()->json(['message'=>'API endpoint not found.'],404))->where('path','.*');
 
 $serveHtml=function(string $file){
@@ -49,19 +53,22 @@ $serveHtml=function(string $file){
     $html=file_get_contents($path);
 
     $html=str_replace(['href="assets/','src="assets/'],['href="/assets/','src="/assets/'],$html);
-    $html=preg_replace('/(\/assets\/[A-Za-z0-9_.\/-]+\.(?:css|js))(?:\?v=[^"\']*)?/','$1?v=20260808-15',$html);
+    $html=preg_replace('/(\/assets\/[A-Za-z0-9_.\/-]+\.(?:css|js))(?:\?v=[^"\']*)?/','$1?v=20260808-16',$html);
 
     if(!str_contains($html,'portal-polish.css')){
-        $html=str_ireplace('</head>','  <link rel="stylesheet" href="/assets/portal-polish.css?v=20260808-15">'.PHP_EOL.'</head>',$html);
+        $html=str_ireplace('</head>','  <link rel="stylesheet" href="/assets/portal-polish.css?v=20260808-16">'.PHP_EOL.'</head>',$html);
     }
     if(!str_contains($html,'backend-sync.js')){
-        $html=str_ireplace('</body>','<script src="/assets/backend-sync.js?v=20260808-15"></script>'.PHP_EOL.'</body>',$html);
+        $html=str_ireplace('</body>','<script src="/assets/backend-sync.js?v=20260808-16"></script>'.PHP_EOL.'</body>',$html);
+    }
+    if(!str_contains($html,'backend-actions.js')){
+        $html=str_ireplace('</body>','<script src="/assets/backend-actions.js?v=20260808-16"></script>'.PHP_EOL.'</body>',$html);
     }
     if(!str_contains($html,'clean-route-fixes.js')){
-        $html=str_ireplace('</body>','<script src="/assets/clean-route-fixes.js?v=20260808-15"></script>'.PHP_EOL.'</body>',$html);
+        $html=str_ireplace('</body>','<script src="/assets/clean-route-fixes.js?v=20260808-16"></script>'.PHP_EOL.'</body>',$html);
     }
     if(!str_contains($html,'portal-polish.js')){
-        $html=str_ireplace('</body>','<script src="/assets/portal-polish.js?v=20260808-15"></script>'.PHP_EOL.'</body>',$html);
+        $html=str_ireplace('</body>','<script src="/assets/portal-polish.js?v=20260808-16"></script>'.PHP_EOL.'</body>',$html);
     }
 
     return response($html)
