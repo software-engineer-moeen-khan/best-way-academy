@@ -126,6 +126,7 @@ log "Running database migrations and seeders..."
 "$PHP_BIN" artisan optimize:clear
 "$PHP_BIN" artisan migrate --force
 "$PHP_BIN" artisan db:seed --force
+setenv CACHE_STORE database
 
 log "Publishing Laravel front controller + assets to public_html..."
 find "$PUBLIC_HTML" -maxdepth 1 -type f -name '*.html' -delete
@@ -155,7 +156,7 @@ fi
 log "Verifying Laravel routes and migration state..."
 "$PHP_BIN" artisan route:list --path=api >/dev/null
 "$PHP_BIN" artisan migrate:status >/dev/null
-"$PHP_BIN" -r '$e=parse_ini_file(".env");$dsn="mysql:host=".($e["DB_HOST"]??"localhost").";port=".($e["DB_PORT"]??3306).";dbname=".$e["DB_DATABASE"].";charset=utf8mb4";$pdo=new PDO($dsn,$e["DB_USERNAME"],$e["DB_PASSWORD"],[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);foreach(["users","sessions","auth_attempts"] as $t){$pdo->query("SELECT 1 FROM `$t` LIMIT 1");}echo "Auth database tables verified.\n";'
+"$PHP_BIN" -r '$e=parse_ini_file(".env");$dsn="mysql:host=".($e["DB_HOST"]??"localhost").";port=".($e["DB_PORT"]??3306).";dbname=".$e["DB_DATABASE"].";charset=utf8mb4";$pdo=new PDO($dsn,$e["DB_USERNAME"],$e["DB_PASSWORD"],[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);foreach(["users","sessions","auth_attempts","cache","cache_locks"] as $t){$pdo->query("SELECT 1 FROM `$t` LIMIT 1");}echo "Auth/cache database tables verified.\n";'
 
 log "Checking live backend health..."
 HEALTH_OK=0
