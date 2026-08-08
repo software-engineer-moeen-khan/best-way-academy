@@ -27,6 +27,7 @@ for c in php php84 php83 php82; do
   fi
 done
 [[ -n "$PHP_BIN" ]] || fail "PHP 8.2+ CLI is required."
+PHP_WEB_VERSION="$($PHP_BIN -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')"
 COMPOSER_BIN="$(command -v composer2 || command -v composer || true)"
 [[ -n "$COMPOSER_BIN" ]] || fail "Composer 2 is required. Hostinger Web/Cloud normally provides composer2."
 command -v curl >/dev/null 2>&1 || fail "curl is required."
@@ -62,10 +63,11 @@ if [[ -z "$DB_DATABASE" || -z "$DB_USERNAME" || -z "$DB_PASSWORD" ]]; then
   fi
   [[ -n "$HOSTINGER_API_TOKEN" ]] || fail "A Hostinger API token is required only for first-time automatic DB creation."
 
-  log "Setting website PHP to 8.2 through Hostinger API (best effort)..."
+  log "Setting website PHP to $PHP_WEB_VERSION through Hostinger API (best effort)..."
+  PHP_VERSION_BODY="$($PHP_BIN -r 'echo json_encode(["version"=>$argv[1]],JSON_UNESCAPED_SLASHES);' "$PHP_WEB_VERSION")"
   curl -fsS -X PATCH "$API_BASE/api/hosting/v1/accounts/$HOSTINGER_USERNAME/websites/$HOSTINGER_DOMAIN/php/version" \
     -H "Authorization: Bearer $HOSTINGER_API_TOKEN" -H 'Content-Type: application/json' \
-    --data '{"version":"8.2"}' >/dev/null || true
+    --data "$PHP_VERSION_BODY" >/dev/null || true
 
   DB_SUFFIX="bwa_academy"
   DB_USER_SUFFIX="bwa_app"
@@ -124,7 +126,6 @@ log "Running database migrations and seeders..."
 "$PHP_BIN" artisan db:seed --force
 
 log "Publishing Laravel front controller + assets to public_html..."
-# Remove all stale static page files. Pages are now served only through Laravel routes.
 find "$PUBLIC_HTML" -maxdepth 1 -type f -name '*.html' -delete
 rm -rf "$PUBLIC_HTML/assets"
 cp -a "$ROOT/assets" "$PUBLIC_HTML/assets"
