@@ -73,8 +73,14 @@ $protectedPages=[
 ];
 foreach($protectedPages as $uri=>$file){Route::get('/'.$uri,fn()=>$serveHtml($file))->middleware('auth');}
 
-Route::get('/admin',function()use($serveHtml){abort_unless(auth()->user()?->role==='admin',403);return $serveHtml('admin.html');})->middleware('auth');
-Route::get('/instructor',function()use($serveHtml){abort_unless(in_array(auth()->user()?->role,['admin','instructor'],true),403);return $serveHtml('instructor.html');})->middleware('auth');
+Route::get('/admin',function()use($serveHtml){
+    if(auth()->user()?->role!=='admin')return $serveHtml('403.html')->setStatusCode(403);
+    return $serveHtml('admin.html');
+})->middleware('auth');
+Route::get('/instructor',function()use($serveHtml){
+    if(!in_array(auth()->user()?->role,['admin','instructor'],true))return $serveHtml('403.html')->setStatusCode(403);
+    return $serveHtml('instructor.html');
+})->middleware('auth');
 
 Route::get('/course/{slug}',fn(string $slug)=>redirect('/course?course='.rawurlencode($slug),302));
 Route::get('/learn/{slug}',fn(string $slug)=>redirect('/learn?course='.rawurlencode($slug),302))->middleware('auth');
