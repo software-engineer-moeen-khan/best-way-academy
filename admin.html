@@ -6,7 +6,7 @@
   <meta name="description" content="Best Way Academy administration console">
   <title>Admin Console — Best Way Academy</title>
   <link rel="stylesheet" href="assets/style.css">
-  <link rel="stylesheet" href="assets/admin.css">
+  <link rel="stylesheet" href="assets/admin-console.css">
 </head>
 <body class="admin-body">
   <header class="admin-topbar">
@@ -30,7 +30,7 @@
         <button data-tab="enrollments"><span>✓</span> Enrollments</button>
         <button data-tab="orders"><span>₨</span> Orders</button>
         <button data-tab="marketing"><span>✦</span> Marketing</button>
-        <button data-tab="moderation"><span>★</span> Reviews & Q&amp;A</button>
+        <button data-tab="moderation"><span>★</span> Reviews &amp; Q&amp;A</button>
         <button data-tab="support"><span>?</span> Support</button>
         <button data-tab="settings"><span>⚙</span> Settings</button>
       </nav>
@@ -59,44 +59,24 @@
       </section>
 
       <section class="admin-section" data-panel="courses">
-        <div class="admin-heading">
-          <div><p class="eyebrow">CONTENT</p><h1>Courses</h1><p>Create, publish, price and manage complete course curriculum.</p></div>
-          <button id="addCourseBtn" class="admin-primary">+ Add course</button>
-        </div>
-        <div class="admin-toolbar">
-          <input id="courseSearch" type="search" placeholder="Search courses…">
-          <select id="courseStatusFilter"><option value="">All statuses</option><option value="published">Published</option><option value="draft">Draft</option><option value="hidden">Hidden</option></select>
-          <select id="courseCategoryFilter"><option value="">All categories</option></select>
-        </div>
+        <div class="admin-heading"><div><p class="eyebrow">CONTENT</p><h1>Courses</h1><p>Create, publish, price and manage complete course curriculum.</p></div><button id="addCourseBtn" class="admin-primary">+ Add course</button></div>
+        <div class="admin-toolbar"><input id="courseSearch" type="search" placeholder="Search courses…"><select id="courseStatusFilter"><option value="">All statuses</option><option value="published">Published</option><option value="draft">Draft</option><option value="hidden">Hidden</option></select><select id="courseCategoryFilter"><option value="">All categories</option></select></div>
         <div class="admin-card admin-table-wrap"><table class="admin-table admin-table-wide"><thead><tr><th>Course</th><th>Category</th><th>Instructor</th><th>Curriculum</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead><tbody id="adminCoursesBody"></tbody></table><div id="adminCoursesEmpty" class="admin-empty" hidden>No courses found.</div></div>
       </section>
 
       <section class="admin-section" data-panel="categories">
-        <div class="admin-heading">
-          <div><p class="eyebrow">TAXONOMY</p><h1>Course categories</h1><p>Create and organize the categories shown across the academy catalog.</p></div>
-          <button id="addCategoryBtn" class="admin-primary">+ Add category</button>
-        </div>
+        <div class="admin-heading"><div><p class="eyebrow">TAXONOMY</p><h1>Course categories</h1><p>Create and organize the categories shown across the academy catalog.</p></div><button id="addCategoryBtn" class="admin-primary">+ Add category</button></div>
         <div class="admin-card admin-table-wrap"><table class="admin-table"><thead><tr><th>Category</th><th>Slug</th><th>Courses</th><th>Status</th><th>Order</th><th>Actions</th></tr></thead><tbody id="adminCategoriesBody"></tbody></table><div id="adminCategoriesEmpty" class="admin-empty" hidden>No categories yet.</div></div>
       </section>
 
       <section class="admin-section" data-panel="users">
-        <div class="admin-heading">
-          <div><p class="eyebrow">PEOPLE</p><h1>Users & roles</h1><p>Manage students, instructors, administrators, account status and password resets.</p></div>
-          <button id="addUserBtn" class="admin-primary">+ Add user</button>
-        </div>
-        <div class="admin-toolbar">
-          <input id="userSearch" type="search" placeholder="Search name or email…">
-          <select id="userRoleFilter"><option value="">All roles</option><option value="student">Students</option><option value="instructor">Instructors</option><option value="admin">Admins</option></select>
-          <select id="userStatusFilter"><option value="">All statuses</option><option value="active">Active</option><option value="suspended">Suspended</option></select>
-        </div>
+        <div class="admin-heading"><div><p class="eyebrow">PEOPLE</p><h1>Users &amp; roles</h1><p>Manage students, instructors, administrators, account status and password resets.</p></div><button id="addUserBtn" class="admin-primary">+ Add user</button></div>
+        <div class="admin-toolbar"><input id="userSearch" type="search" placeholder="Search name or email…"><select id="userRoleFilter"><option value="">All roles</option><option value="student">Students</option><option value="instructor">Instructors</option><option value="admin">Admins</option></select><select id="userStatusFilter"><option value="">All statuses</option><option value="active">Active</option><option value="suspended">Suspended</option></select></div>
         <div class="admin-card admin-table-wrap"><table class="admin-table admin-table-wide"><thead><tr><th>User</th><th>Role</th><th>Status</th><th>Enrollments</th><th>Orders</th><th>Spent</th><th>Joined</th><th></th></tr></thead><tbody id="adminUsersBody"></tbody></table><div id="adminUsersEmpty" class="admin-empty" hidden>No matching users.</div></div>
       </section>
 
       <section class="admin-section" data-panel="enrollments">
-        <div class="admin-heading">
-          <div><p class="eyebrow">LEARNING ACCESS</p><h1>Enrollments</h1><p>Manually grant or revoke learner access and review course progress.</p></div>
-          <button id="addEnrollmentBtn" class="admin-primary">+ Enroll student</button>
-        </div>
+        <div class="admin-heading"><div><p class="eyebrow">LEARNING ACCESS</p><h1>Enrollments</h1><p>Manually grant or revoke learner access and review course progress.</p></div><button id="addEnrollmentBtn" class="admin-primary">+ Enroll student</button></div>
         <div class="admin-toolbar"><input id="enrollmentSearch" type="search" placeholder="Search student or course…"></div>
         <div class="admin-card admin-table-wrap"><table class="admin-table admin-table-wide"><thead><tr><th>Student</th><th>Course</th><th>Progress</th><th>Enrolled</th><th>Completion</th><th></th></tr></thead><tbody id="adminEnrollmentsBody"></tbody></table><div id="adminEnrollmentsEmpty" class="admin-empty" hidden>No enrollments found.</div></div>
       </section>
@@ -109,18 +89,12 @@
 
       <section class="admin-section" data-panel="marketing">
         <div class="admin-heading"><div><p class="eyebrow">GROWTH</p><h1>Marketing</h1><p>Manage promotion codes and course announcements.</p></div></div>
-        <div class="admin-two-col admin-marketing-grid">
-          <section class="admin-card"><div class="admin-card-head"><h2>Coupons</h2><button id="addCouponBtn">+ New coupon</button></div><div id="adminCouponsList"></div></section>
-          <section class="admin-card"><div class="admin-card-head"><h2>Announcements</h2><button id="addAnnouncementBtn">+ New announcement</button></div><div id="adminAnnouncementsList"></div></section>
-        </div>
+        <div class="admin-two-col admin-marketing-grid"><section class="admin-card"><div class="admin-card-head"><h2>Coupons</h2><button id="addCouponBtn">+ New coupon</button></div><div id="adminCouponsList"></div></section><section class="admin-card"><div class="admin-card-head"><h2>Announcements</h2><button id="addAnnouncementBtn">+ New announcement</button></div><div id="adminAnnouncementsList"></div></section></div>
       </section>
 
       <section class="admin-section" data-panel="moderation">
-        <div class="admin-heading"><div><p class="eyebrow">COMMUNITY</p><h1>Reviews & Q&amp;A</h1><p>Moderate course reviews and learner questions.</p></div></div>
-        <div class="admin-moderation-grid">
-          <section class="admin-card"><div class="admin-card-head"><h2>Reviews</h2><span id="reviewCount" class="admin-counter">0</span></div><div id="adminReviewsList"></div></section>
-          <section class="admin-card"><div class="admin-card-head"><h2>Questions</h2><span id="questionCount" class="admin-counter">0</span></div><div id="adminQuestionsList"></div></section>
-        </div>
+        <div class="admin-heading"><div><p class="eyebrow">COMMUNITY</p><h1>Reviews &amp; Q&amp;A</h1><p>Moderate course reviews and learner questions.</p></div></div>
+        <div class="admin-moderation-grid"><section class="admin-card"><div class="admin-card-head"><h2>Reviews</h2><span id="reviewCount" class="admin-counter">0</span></div><div id="adminReviewsList"></div></section><section class="admin-card"><div class="admin-card-head"><h2>Questions</h2><span id="questionCount" class="admin-counter">0</span></div><div id="adminQuestionsList"></div></section></div>
       </section>
 
       <section class="admin-section" data-panel="support">
@@ -131,68 +105,26 @@
 
       <section class="admin-section" data-panel="settings">
         <div class="admin-heading"><div><p class="eyebrow">PLATFORM</p><h1>Academy settings</h1><p>Control core academy defaults and registration behavior.</p></div></div>
-        <form id="adminSettingsForm" class="admin-card admin-settings-form">
-          <div class="admin-form-grid">
-            <label>Academy name<input name="site_name" required maxlength="120"></label>
-            <label>Support email<input name="support_email" type="email" required maxlength="190"></label>
-            <label>Currency code<input name="currency" required maxlength="10" placeholder="PKR"></label>
-            <label>Currency symbol<input name="currency_symbol" required maxlength="10" placeholder="Rs"></label>
-            <label>Default new course status<select name="default_course_status"><option value="draft">Draft</option><option value="hidden">Hidden</option><option value="published">Published</option></select></label>
-            <label class="admin-check"><input name="allow_registration" type="checkbox"> <span><b>Allow public registration</b><small>Visitors can create learner accounts from Sign up.</small></span></label>
-          </div>
-          <div class="admin-form-actions"><button class="admin-primary" type="submit">Save settings</button></div>
-        </form>
+        <form id="adminSettingsForm" class="admin-card admin-settings-form"><div class="admin-form-grid"><label>Academy name<input name="site_name" required maxlength="120"></label><label>Support email<input name="support_email" type="email" required maxlength="190"></label><label>Currency code<input name="currency" required maxlength="10" placeholder="PKR"></label><label>Currency symbol<input name="currency_symbol" required maxlength="10" placeholder="Rs"></label><label>Default new course status<select name="default_course_status"><option value="draft">Draft</option><option value="hidden">Hidden</option><option value="published">Published</option></select></label><label class="admin-check"><input name="allow_registration" type="checkbox"> <span><b>Allow public registration</b><small>Visitors can create learner accounts from Sign up.</small></span></label></div><div class="admin-form-actions"><button class="admin-primary" type="submit">Save settings</button></div></form>
       </section>
     </main>
   </div>
 
-  <dialog id="courseDialog" class="admin-dialog admin-dialog-large">
-    <form id="courseForm">
-      <div class="dialog-head"><div><p class="eyebrow">COURSE MANAGEMENT</p><h2 id="courseDialogTitle">Add course</h2></div><button type="button" data-close-dialog="courseDialog" aria-label="Close">×</button></div>
-      <input type="hidden" name="id">
-      <div class="admin-form-grid">
-        <label class="span-2">Course title<input name="title" required maxlength="255"></label>
-        <label>Slug<input name="slug" maxlength="120" placeholder="auto-from-title"></label>
-        <label>Category<select name="category" required></select></label>
-        <label>Instructor<select name="instructor_id"></select></label>
-        <label>Price (PKR)<input name="price" type="number" min="0" max="10000000" required></label>
-        <label>Status<select name="status"><option value="draft">Draft</option><option value="published">Published</option><option value="hidden">Hidden</option></select></label>
-        <label>Badge<input name="badge" maxlength="80" placeholder="Bestseller"></label>
-        <label class="span-2">Thumbnail / image URL<input name="image" type="url" maxlength="2000" placeholder="https://…"></label>
-        <label class="span-2">Subtitle<textarea name="subtitle" rows="2" maxlength="2000"></textarea></label>
-        <label class="span-2">Description<textarea name="description" rows="5" maxlength="30000"></textarea></label>
-        <label class="span-2">What students will learn <small>One outcome per line</small><textarea name="learn" rows="4"></textarea></label>
-        <label class="span-2">Course modules <small>One module name per line</small><textarea name="modules" rows="4"></textarea></label>
-      </div>
-      <div class="dialog-actions"><button type="button" class="admin-outline" data-close-dialog="courseDialog">Cancel</button><button type="submit" class="admin-primary">Save course</button></div>
-    </form>
-  </dialog>
+  <dialog id="courseDialog" class="admin-dialog admin-dialog-large"><form id="courseForm"><div class="dialog-head"><div><p class="eyebrow">COURSE MANAGEMENT</p><h2 id="courseDialogTitle">Add course</h2></div><button type="button" data-close-dialog="courseDialog" aria-label="Close">×</button></div><input type="hidden" name="id"><div class="admin-form-grid"><label class="span-2">Course title<input name="title" required maxlength="255"></label><label>Slug<input name="slug" maxlength="120" placeholder="auto-from-title"></label><label>Category<select name="category" required></select></label><label>Instructor<select name="instructor_id"></select></label><label>Price (PKR)<input name="price" type="number" min="0" max="10000000" required></label><label>Status<select name="status"><option value="draft">Draft</option><option value="published">Published</option><option value="hidden">Hidden</option></select></label><label>Badge<input name="badge" maxlength="80" placeholder="Bestseller"></label><label class="span-2">Thumbnail / image URL<input name="image" type="url" maxlength="2000" placeholder="https://…"></label><label class="span-2">Subtitle<textarea name="subtitle" rows="2" maxlength="2000"></textarea></label><label class="span-2">Description<textarea name="description" rows="5" maxlength="30000"></textarea></label><label class="span-2">What students will learn <small>One outcome per line</small><textarea name="learn" rows="4"></textarea></label><label class="span-2">Course modules <small>One module name per line</small><textarea name="modules" rows="4"></textarea></label></div><div class="dialog-actions"><button type="button" class="admin-outline" data-close-dialog="courseDialog">Cancel</button><button type="submit" class="admin-primary">Save course</button></div></form></dialog>
 
-  <dialog id="categoryDialog" class="admin-dialog">
-    <form id="categoryForm"><div class="dialog-head"><div><p class="eyebrow">CATEGORY</p><h2 id="categoryDialogTitle">Add category</h2></div><button type="button" data-close-dialog="categoryDialog">×</button></div><input type="hidden" name="id"><label>Name<input name="name" required maxlength="120"></label><label>Slug<input name="slug" maxlength="140" placeholder="auto-from-name"></label><label>Description<textarea name="description" rows="3" maxlength="3000"></textarea></label><div class="admin-form-grid"><label>Icon / emoji<input name="icon" maxlength="80" placeholder="💻"></label><label>Display order<input name="position" type="number" min="0" max="10000" value="0"></label></div><label class="admin-check"><input name="active" type="checkbox" checked> <span><b>Active category</b><small>Available when creating or editing courses.</small></span></label><div class="dialog-actions"><button type="button" class="admin-outline" data-close-dialog="categoryDialog">Cancel</button><button type="submit" class="admin-primary">Save category</button></div></form>
-  </dialog>
+  <dialog id="categoryDialog" class="admin-dialog"><form id="categoryForm"><div class="dialog-head"><div><p class="eyebrow">CATEGORY</p><h2 id="categoryDialogTitle">Add category</h2></div><button type="button" data-close-dialog="categoryDialog">×</button></div><input type="hidden" name="id"><label>Name<input name="name" required maxlength="120"></label><label>Slug<input name="slug" maxlength="140" placeholder="auto-from-name"></label><label>Description<textarea name="description" rows="3" maxlength="3000"></textarea></label><div class="admin-form-grid"><label>Icon / emoji<input name="icon" maxlength="80" placeholder="💻"></label><label>Display order<input name="position" type="number" min="0" max="10000" value="0"></label></div><label class="admin-check"><input name="active" type="checkbox" checked> <span><b>Active category</b><small>Available when creating or editing courses.</small></span></label><div class="dialog-actions"><button type="button" class="admin-outline" data-close-dialog="categoryDialog">Cancel</button><button type="submit" class="admin-primary">Save category</button></div></form></dialog>
 
-  <dialog id="userDialog" class="admin-dialog">
-    <form id="userForm"><div class="dialog-head"><div><p class="eyebrow">ACCOUNT</p><h2 id="userDialogTitle">Add user</h2></div><button type="button" data-close-dialog="userDialog">×</button></div><input type="hidden" name="id"><label>Name<input name="name" required maxlength="120"></label><label>Email<input name="email" type="email" required maxlength="190"></label><div class="admin-form-grid"><label>Role<select name="role"><option value="student">Student</option><option value="instructor">Instructor</option><option value="admin">Administrator</option></select></label><label>Status<select name="status"><option value="active">Active</option><option value="suspended">Suspended</option></select></label></div><label>Password <small id="userPasswordHint">Required for new users.</small><input name="password" type="password" minlength="8" maxlength="200" autocomplete="new-password"></label><div class="dialog-actions"><button type="button" class="admin-outline" data-close-dialog="userDialog">Cancel</button><button type="submit" class="admin-primary">Save user</button></div></form>
-  </dialog>
+  <dialog id="userDialog" class="admin-dialog"><form id="userForm"><div class="dialog-head"><div><p class="eyebrow">ACCOUNT</p><h2 id="userDialogTitle">Add user</h2></div><button type="button" data-close-dialog="userDialog">×</button></div><input type="hidden" name="id"><label>Name<input name="name" required maxlength="120"></label><label>Email<input name="email" type="email" required maxlength="190"></label><div class="admin-form-grid"><label>Role<select name="role"><option value="student">Student</option><option value="instructor">Instructor</option><option value="admin">Administrator</option></select></label><label>Status<select name="status"><option value="active">Active</option><option value="suspended">Suspended</option></select></label></div><label>Password <small id="userPasswordHint">Required for new users.</small><input name="password" type="password" minlength="8" maxlength="200" autocomplete="new-password"></label><div class="dialog-actions"><button type="button" class="admin-outline" data-close-dialog="userDialog">Cancel</button><button type="submit" class="admin-primary">Save user</button></div></form></dialog>
 
-  <dialog id="enrollmentDialog" class="admin-dialog">
-    <form id="enrollmentForm"><div class="dialog-head"><div><p class="eyebrow">ENROLLMENT</p><h2>Enroll student</h2></div><button type="button" data-close-dialog="enrollmentDialog">×</button></div><label>Student<select name="user_id" required></select></label><label>Course<select name="course_id" required></select></label><div class="dialog-actions"><button type="button" class="admin-outline" data-close-dialog="enrollmentDialog">Cancel</button><button type="submit" class="admin-primary">Grant access</button></div></form>
-  </dialog>
+  <dialog id="enrollmentDialog" class="admin-dialog"><form id="enrollmentForm"><div class="dialog-head"><div><p class="eyebrow">ENROLLMENT</p><h2>Enroll student</h2></div><button type="button" data-close-dialog="enrollmentDialog">×</button></div><label>Student<select name="user_id" required></select></label><label>Course<select name="course_id" required></select></label><div class="dialog-actions"><button type="button" class="admin-outline" data-close-dialog="enrollmentDialog">Cancel</button><button type="submit" class="admin-primary">Grant access</button></div></form></dialog>
 
-  <dialog id="couponDialog" class="admin-dialog">
-    <form id="couponForm"><div class="dialog-head"><div><p class="eyebrow">PROMOTION</p><h2 id="couponDialogTitle">New coupon</h2></div><button type="button" data-close-dialog="couponDialog">×</button></div><input type="hidden" name="id"><div class="admin-form-grid"><label>Code<input name="code" required maxlength="80" placeholder="WELCOME20"></label><label>Course<select name="course_id"><option value="">All courses</option></select></label><label>Discount type<select name="discount_type"><option value="percent">Percentage</option><option value="fixed">Fixed PKR</option></select></label><label>Discount value<input name="discount_value" type="number" min="1" required></label><label>Starts at<input name="starts_at" type="datetime-local"></label><label>Ends at<input name="ends_at" type="datetime-local"></label><label>Maximum uses<input name="max_uses" type="number" min="1" placeholder="Unlimited"></label></div><label class="admin-check"><input name="active" type="checkbox" checked> <span><b>Coupon active</b><small>Can be used during checkout when all other conditions match.</small></span></label><div class="dialog-actions"><button type="button" class="admin-outline" data-close-dialog="couponDialog">Cancel</button><button type="submit" class="admin-primary">Save coupon</button></div></form>
-  </dialog>
+  <dialog id="couponDialog" class="admin-dialog"><form id="couponForm"><div class="dialog-head"><div><p class="eyebrow">PROMOTION</p><h2 id="couponDialogTitle">New coupon</h2></div><button type="button" data-close-dialog="couponDialog">×</button></div><input type="hidden" name="id"><div class="admin-form-grid"><label>Code<input name="code" required maxlength="80" placeholder="WELCOME20"></label><label>Course<select name="course_id"><option value="">All courses</option></select></label><label>Discount type<select name="discount_type"><option value="percent">Percentage</option><option value="fixed">Fixed PKR</option></select></label><label>Discount value<input name="discount_value" type="number" min="1" required></label><label>Starts at<input name="starts_at" type="datetime-local"></label><label>Ends at<input name="ends_at" type="datetime-local"></label><label>Maximum uses<input name="max_uses" type="number" min="1" placeholder="Unlimited"></label></div><label class="admin-check"><input name="active" type="checkbox" checked> <span><b>Coupon active</b><small>Can be used during checkout when all other conditions match.</small></span></label><div class="dialog-actions"><button type="button" class="admin-outline" data-close-dialog="couponDialog">Cancel</button><button type="submit" class="admin-primary">Save coupon</button></div></form></dialog>
 
-  <dialog id="announcementDialog" class="admin-dialog">
-    <form id="announcementForm"><div class="dialog-head"><div><p class="eyebrow">COMMUNICATION</p><h2>New announcement</h2></div><button type="button" data-close-dialog="announcementDialog">×</button></div><label>Course<select name="course_id" required></select></label><label>Title<input name="title" required maxlength="255"></label><label>Message<textarea name="body" rows="6" required maxlength="10000"></textarea></label><div class="dialog-actions"><button type="button" class="admin-outline" data-close-dialog="announcementDialog">Cancel</button><button type="submit" class="admin-primary">Publish announcement</button></div></form>
-  </dialog>
+  <dialog id="announcementDialog" class="admin-dialog"><form id="announcementForm"><div class="dialog-head"><div><p class="eyebrow">COMMUNICATION</p><h2>New announcement</h2></div><button type="button" data-close-dialog="announcementDialog">×</button></div><label>Course<select name="course_id" required></select></label><label>Title<input name="title" required maxlength="255"></label><label>Message<textarea name="body" rows="6" required maxlength="10000"></textarea></label><div class="dialog-actions"><button type="button" class="admin-outline" data-close-dialog="announcementDialog">Cancel</button><button type="submit" class="admin-primary">Publish announcement</button></div></form></dialog>
 
-  <dialog id="curriculumDialog" class="admin-dialog admin-dialog-xl">
-    <form id="curriculumForm"><div class="dialog-head"><div><p class="eyebrow">CURRICULUM BUILDER</p><h2 id="curriculumDialogTitle">Course curriculum</h2></div><button type="button" data-close-dialog="curriculumDialog">×</button></div><input type="hidden" name="course_id"><div class="curriculum-admin-help">Build sections and lessons in learning order. Preview lessons are visible before enrollment.</div><div id="curriculumAdminBuilder"></div><button type="button" id="addCurriculumSection" class="admin-outline">+ Add section</button><div class="dialog-actions"><button type="button" class="admin-outline" data-close-dialog="curriculumDialog">Cancel</button><button type="submit" class="admin-primary">Save curriculum</button></div></form>
-  </dialog>
+  <dialog id="curriculumDialog" class="admin-dialog admin-dialog-xl"><form id="curriculumForm"><div class="dialog-head"><div><p class="eyebrow">CURRICULUM BUILDER</p><h2 id="curriculumDialogTitle">Course curriculum</h2></div><button type="button" data-close-dialog="curriculumDialog">×</button></div><input type="hidden" name="course_id"><div class="curriculum-admin-help">Build sections and lessons in learning order. Preview lessons are visible before enrollment.</div><div id="curriculumAdminBuilder"></div><button type="button" id="addCurriculumSection" class="admin-outline">+ Add section</button><div class="dialog-actions"><button type="button" class="admin-outline" data-close-dialog="curriculumDialog">Cancel</button><button type="submit" class="admin-primary">Save curriculum</button></div></form></dialog>
 
   <div id="adminToast" class="admin-toast" role="status" aria-live="polite"></div>
-  <script src="assets/admin.js"></script>
+  <script src="assets/admin-console.js"></script>
 </body>
 </html>
