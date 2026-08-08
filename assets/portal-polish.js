@@ -60,10 +60,11 @@
     let actions=header.querySelector('.header-actions');
     if(!actions){actions=document.createElement('div');actions.className='header-actions';header.appendChild(actions)}
     let button=header.querySelector('#globalMenuBtn');
+    const createdButton=!button;
     if(!button){button=document.createElement('button');button.id='globalMenuBtn';button.className='menu-btn';button.type='button';button.setAttribute('aria-label','Open navigation');button.setAttribute('aria-expanded','false');button.textContent='☰';actions.appendChild(button)}
     let nav=document.querySelector('#mobileNav');
     if(!nav){nav=document.createElement('nav');nav.id='mobileNav';nav.className='mobile-nav';nav.setAttribute('aria-label','Mobile navigation');nav.innerHTML='<a href="/">Home</a><a href="/courses">All courses</a><a href="/categories">Categories</a><a href="/plans">Plans</a><a href="/my-learning">My Learning</a><a href="/practice?course=python">Practice</a><a href="/wishlist">Wishlist</a><a href="/cart">Cart</a><a href="/account">Account</a><a href="/contact">Support</a>';header.insertAdjacentElement('afterend',nav)}
-    if(!button.dataset.portalMenuBound){button.dataset.portalMenuBound='1';button.addEventListener('click',()=>{const open=document.body.classList.toggle('nav-open');button.setAttribute('aria-expanded',open?'true':'false');button.setAttribute('aria-label',open?'Close navigation':'Open navigation')})}
+    if(createdButton&&!button.dataset.portalMenuBound){button.dataset.portalMenuBound='1';button.addEventListener('click',()=>{const open=document.body.classList.toggle('nav-open');button.setAttribute('aria-expanded',open?'true':'false');button.setAttribute('aria-label',open?'Close navigation':'Open navigation')})}
   };
   const closeMobileNav=()=>document.querySelectorAll('#mobileNav a,.mobile-nav a').forEach(a=>{if(a.dataset.portalCloseBound)return;a.dataset.portalCloseBound='1';a.addEventListener('click',()=>{document.body.classList.remove('nav-open');document.querySelector('#globalMenuBtn')?.setAttribute('aria-expanded','false')})});
   const bindMobileNavGlobal=()=>{
