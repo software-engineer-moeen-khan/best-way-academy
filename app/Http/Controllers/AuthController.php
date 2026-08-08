@@ -6,12 +6,32 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    private function attemptKey(Request $request,string $kind,string $email): string
+    {
+        return hash('sha256',$kind.'|'.strtolower(trim($email)).'|'.($request->ip()?:'unknown'));
+    }
+
+    private function enforceLoginLimit(Request $request,string $email): string
+    {
+        $key=$this->attemptKey($request,'login',$email);
+        DB::table('auth_attempts')->where('key_hash',$key)->where('attempted_at','<',now()->subMinutes(15))->delete();
+        $recent=DB::table('auth_attempts')->where('key_hash',$key)->where('attempted_at','>=',now()->subMinute())->count();
+        abort_if($recent>=8,429,'Too many sign-in attempts. Please wait one minute and try again.');
+        return $key;
+    }
+
+    private function recordFailedLogin(string $key): void
+    {
+        DB::table('auth_attempts')->insert(['key_hash'=>$key,'kind'=>'login','attempted_at'=>now()]);
+    }
+
     public function session(Request $request): JsonResponse
     {
         return response()->json([
@@ -36,7 +56,7 @@ class AuthController extends Controller
             'role'=>'student',
         ]);
 
-        Auth::login($user, false);
+        Auth::login($user,false);
         $request->session()->regenerate();
 
         return response()->json([
@@ -54,6 +74,7 @@ class AuthController extends Controller
         ]);
 
         $email=strtolower(trim($data['email']));
+        $attemptKey=$this->enforceLoginLimit($request,$email);
         $user=User::where('email',$email)->first();
         $valid=false;
 
@@ -66,12 +87,12 @@ class AuthController extends Controller
         }
 
         if(!$user||!$valid){
+            $this->recordFailedLogin($attemptKey);
             throw ValidationException::withMessages(['email'=>'The provided credentials are incorrect.']);
         }
 
-        // Avoid persistent "remember me" writes on shared hosting. The normal
-        // encrypted Laravel session is enough for the academy sign-in flow.
-        Auth::login($user, false);
+        DB::table('auth_attempts')->where('key_hash',$attemptKey)->delete();
+        Auth::login($user,false);
         $request->session()->regenerate();
 
         return response()->json([
