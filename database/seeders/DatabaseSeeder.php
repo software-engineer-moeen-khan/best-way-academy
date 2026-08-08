@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 
 class DatabaseSeeder extends Seeder
 {
@@ -31,7 +32,6 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($courses as $slug=>$c) {
-            // Seed only missing catalog records. Existing production edits must survive future deploys.
             $course=Course::firstOrCreate(['slug'=>$slug],[
                 'instructor_id'=>$admin->id,'title'=>$c[0],'category'=>$c[1],'subtitle'=>$c[2],'description'=>$c[2],
                 'price'=>$c[3],'status'=>'published','rating'=>$c[4],'students_count'=>$c[5],'image'=>$c[6],'badge'=>$c[7],
@@ -47,10 +47,34 @@ class DatabaseSeeder extends Seeder
             }
         }
 
-        // Keep the welcome coupon server-side so checkout totals cannot be changed only in the browser.
         DB::table('coupons')->updateOrInsert(
             ['code'=>'WELCOME20'],
             ['course_id'=>null,'discount_type'=>'percent','discount_value'=>20,'active'=>true,'updated_at'=>now()]
         );
+
+        if(Schema::hasTable('assessment_sets')&&Schema::hasTable('assessment_questions')){
+            $defaultQuestions=[
+                ['What is the best first step when solving a new technical problem?',['Guess immediately','Understand the requirements','Skip testing'],'Understand the requirements'],
+                ['Which approach improves maintainability?',['Clear modular structure','Duplicated code','No naming conventions'],'Clear modular structure'],
+                ['What should you do before deployment?',['Remove backups','Ignore errors','Test critical flows'],'Test critical flows'],
+                ['What helps learners build practical skill?',['Only theory','Practice and feedback','No examples'],'Practice and feedback'],
+                ['When should a completion certificate unlock?',['After course completion','When opening the page','When adding to wishlist'],'After course completion'],
+            ];
+            foreach(Course::query()->get() as $course){
+                if(DB::table('assessment_sets')->where('course_id',$course->id)->exists())continue;
+                $assessmentId=DB::table('assessment_sets')->insertGetId([
+                    'course_id'=>$course->id,'title'=>'Knowledge Check','type'=>'test',
+                    'instructions'=>'Answer the questions to review the key learning habits used throughout this course.',
+                    'passing_score'=>70,'active'=>true,'position'=>1,'created_at'=>now(),'updated_at'=>now(),
+                ]);
+                foreach($defaultQuestions as $i=>$q){
+                    DB::table('assessment_questions')->insert([
+                        'assessment_id'=>$assessmentId,'prompt'=>$q[0],
+                        'options'=>json_encode($q[1],JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE),
+                        'correct_answer'=>$q[2],'position'=>$i+1,'created_at'=>now(),'updated_at'=>now(),
+                    ]);
+                }
+            }
+        }
     }
 }
