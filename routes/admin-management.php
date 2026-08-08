@@ -5,12 +5,10 @@ use App\Http\Controllers\AdminOrderController;
 use App\Http\Controllers\CatalogMetadataController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('web')->group(function(){
-    Route::get('/api/categories',[CatalogMetadataController::class,'categories']);
-    Route::get('/api/platform',[CatalogMetadataController::class,'platform']);
-});
+Route::get('/api/categories',[CatalogMetadataController::class,'categories']);
+Route::get('/api/platform',[CatalogMetadataController::class,'platform']);
 
-Route::middleware(['web','auth'])->prefix('api/admin/manage')->group(function(){
+Route::middleware('auth')->prefix('api/admin/manage')->group(function(){
     Route::get('/workspace',[AdminManagementController::class,'workspace']);
 
     Route::post('/courses',[AdminManagementController::class,'createCourse']);
