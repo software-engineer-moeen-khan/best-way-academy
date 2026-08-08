@@ -52,6 +52,9 @@ Route::middleware('auth')->group(function(){
     Route::post('/api/instructor/coupons/sync',[PlatformController::class,'syncCoupons'])->middleware('throttle:30,1');
 });
 
+// Load catalog metadata and the full admin management API before the generic API 404 route.
+require base_path('routes/admin-management.php');
+
 Route::any('/api',fn()=>response()->json(['message'=>'API endpoint not found.'],404));
 Route::any('/api/{path}',fn()=>response()->json(['message'=>'API endpoint not found.'],404))->where('path','.*');
 
@@ -61,28 +64,28 @@ $serveHtml=function(string $file){
     $html=file_get_contents($path);
 
     $html=str_replace(['href="assets/','src="assets/'],['href="/assets/','src="/assets/'],$html);
-    $html=preg_replace('/(\/assets\/[A-Za-z0-9_.\/-]+\.(?:css|js))(?:\?v=[^"\']*)?/','$1?v=20260808-18',$html);
+    $html=preg_replace('/(\/assets\/[A-Za-z0-9_.\/-]+\.(?:css|js))(?:\?v=[^"\']*)?/','$1?v=20260808-19',$html);
 
     if(!str_contains($html,'portal-polish.css')){
-        $html=str_ireplace('</head>','  <link rel="stylesheet" href="/assets/portal-polish.css?v=20260808-18">'.PHP_EOL.'</head>',$html);
+        $html=str_ireplace('</head>','  <link rel="stylesheet" href="/assets/portal-polish.css?v=20260808-19">'.PHP_EOL.'</head>',$html);
     }
     if(!str_contains($html,'backend-sync.js')){
-        $html=str_ireplace('</body>','<script src="/assets/backend-sync.js?v=20260808-18"></script>'.PHP_EOL.'</body>',$html);
+        $html=str_ireplace('</body>','<script src="/assets/backend-sync.js?v=20260808-19"></script>'.PHP_EOL.'</body>',$html);
     }
     if(!str_contains($html,'backend-actions.js')){
-        $html=str_ireplace('</body>','<script src="/assets/backend-actions.js?v=20260808-18"></script>'.PHP_EOL.'</body>',$html);
+        $html=str_ireplace('</body>','<script src="/assets/backend-actions.js?v=20260808-19"></script>'.PHP_EOL.'</body>',$html);
     }
     if(!str_contains($html,'admin-backend.js')){
-        $html=str_ireplace('</body>','<script src="/assets/admin-backend.js?v=20260808-18"></script>'.PHP_EOL.'</body>',$html);
+        $html=str_ireplace('</body>','<script src="/assets/admin-backend.js?v=20260808-19"></script>'.PHP_EOL.'</body>',$html);
     }
     if(!str_contains($html,'instructor-backend.js')){
-        $html=str_ireplace('</body>','<script src="/assets/instructor-backend.js?v=20260808-18"></script>'.PHP_EOL.'</body>',$html);
+        $html=str_ireplace('</body>','<script src="/assets/instructor-backend.js?v=20260808-19"></script>'.PHP_EOL.'</body>',$html);
     }
     if(!str_contains($html,'clean-route-fixes.js')){
-        $html=str_ireplace('</body>','<script src="/assets/clean-route-fixes.js?v=20260808-18"></script>'.PHP_EOL.'</body>',$html);
+        $html=str_ireplace('</body>','<script src="/assets/clean-route-fixes.js?v=20260808-19"></script>'.PHP_EOL.'</body>',$html);
     }
     if(!str_contains($html,'portal-polish.js')){
-        $html=str_ireplace('</body>','<script src="/assets/portal-polish.js?v=20260808-18"></script>'.PHP_EOL.'</body>',$html);
+        $html=str_ireplace('</body>','<script src="/assets/portal-polish.js?v=20260808-19"></script>'.PHP_EOL.'</body>',$html);
     }
 
     return response($html)
