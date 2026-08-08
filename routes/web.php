@@ -21,7 +21,7 @@ Route::get('/api/health', function(){
 });
 Route::get('/api/session',[AuthController::class,'session']);
 Route::post('/api/auth/register',[AuthController::class,'register'])->middleware('throttle:4,1');
-Route::post('/api/auth/login',[AuthController::class,'login'])->middleware('throttle:8,1');
+Route::post('/api/auth/login',[AuthController::class,'login']);
 Route::post('/api/contact',[SupportController::class,'store'])->middleware('throttle:5,1');
 Route::get('/api/courses',[PlatformController::class,'courses']);
 Route::get('/api/courses/{slug}',CourseViewController::class);
