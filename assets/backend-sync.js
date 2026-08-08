@@ -22,8 +22,12 @@
   const readLocal=(k,d=null)=>{try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch{return d}};
 
   async function pushKey(k,v){
-    if(!backend||!currentUser||syncing||!k.startsWith('bwa_')||canonicalKeys.has(k))return;
+    if(!backend||!currentUser||syncing||!k.startsWith('bwa_'))return;
     try{
+      if(k==='bwa_admin_courses'&&['admin','instructor'].includes(currentUser.role)){
+        await api('/api/instructor/courses/sync',{method:'POST',body:JSON.stringify({courses:JSON.parse(v||'{}')||{}})});return;
+      }
+      if(canonicalKeys.has(k))return;
       if(k.startsWith('bwa_curriculum_')&&['admin','instructor'].includes(currentUser.role)){
         const slug=k.replace('bwa_curriculum_','');
         await api(`/api/instructor/courses/${encodeURIComponent(slug)}/curriculum/sync`,{method:'POST',body:JSON.stringify({sections:JSON.parse(v||'[]')||[]})});return;
