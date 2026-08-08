@@ -13,6 +13,6 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        require base_path('routes/admin-management.php');
+        // Application services are bootstrapped here.
     }
 }
