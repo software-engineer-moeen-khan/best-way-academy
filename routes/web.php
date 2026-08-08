@@ -114,10 +114,18 @@ foreach($publicPages as $uri=>$file){Route::get('/'.$uri,fn()=>$serveHtml($file)
 Route::get('/login',fn()=>$serveHtml('login.html'))->name('login');
 
 $protectedPages=[
-    'account'=>'account.html','checkout'=>'checkout.html','dashboard'=>'dashboard.html','messages'=>'messages.html',
-    'my-learning'=>'my-learning.html','notifications'=>'notifications.html','orders'=>'orders.html','success'=>'success.html',
+    'account'=>'account.html','checkout'=>'checkout.html','messages'=>'messages.html','my-learning'=>'my-learning.html',
+    'notifications'=>'notifications.html','orders'=>'orders.html','success'=>'success.html',
 ];
 foreach($protectedPages as $uri=>$file){Route::get('/'.$uri,fn()=>$serveHtml($file))->middleware('auth');}
+
+Route::get('/dashboard',function()use($serveHtml){
+    return match(auth()->user()?->role){
+        'admin'=>redirect('/admin'),
+        'instructor'=>redirect('/instructor'),
+        default=>$serveHtml('dashboard.html'),
+    };
+})->middleware('auth');
 
 Route::get('/learn',function()use($serveHtml,$courseAccess){return $courseAccess()?$serveHtml('learn.html'):$serveHtml('403.html')->setStatusCode(403);})->middleware('auth');
 Route::get('/practice',function()use($serveHtml,$courseAccess){return $courseAccess()?$serveHtml('practice.html'):$serveHtml('403.html')->setStatusCode(403);})->middleware('auth');
