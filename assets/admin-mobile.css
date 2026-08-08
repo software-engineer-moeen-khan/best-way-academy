@@ -1,0 +1,145 @@
+/* Best Way Academy — Admin Console mobile/tablet layer */
+.admin-mobile-only{display:none!important}
+.admin-table td::before{display:none}
+
+@media (max-width:960px){
+  .admin-topbar{padding-inline:14px}
+  .admin-shell{grid-template-columns:190px minmax(0,1fr)}
+  .admin-sidebar{padding-inline:8px}
+  .admin-main{padding:22px 16px 38px}
+  .admin-heading h1{font-size:31px}
+  .admin-stat-grid,.admin-stat-grid-six{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .admin-two-col,.admin-marketing-grid,.admin-moderation-grid{grid-template-columns:1fr}
+  .admin-toolbar{flex-wrap:wrap}
+  .admin-toolbar input{min-width:220px}
+  .admin-dialog-xl{width:min(900px,calc(100% - 22px))}
+  .curr-admin-lesson{grid-template-columns:1fr 1fr}
+}
+
+@media (max-width:780px){
+  .admin-body{background:#f7f8fb}
+  .admin-topbar{height:58px;padding:0 10px;gap:8px}
+  .admin-topbar .brand{font-size:14px;min-width:0}
+  .admin-topbar .brand>span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:185px}
+  .admin-topbar .brand-mark{width:31px;height:31px;flex:none}
+  .admin-live,.admin-top-actions>a,#adminRefresh{display:none!important}
+  .admin-top-actions{margin-left:auto;gap:5px}
+  .admin-top-button{min-height:38px;padding:7px 10px;font-size:12px}
+
+  .admin-shell{display:block;min-height:calc(100vh - 58px)}
+  .admin-sidebar{position:sticky;top:58px;height:auto;z-index:38;padding:7px 8px;background:#202230;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;border-bottom:1px solid rgba(255,255,255,.09)}
+  .admin-sidebar::-webkit-scrollbar{display:none}
+  .admin-profile{display:none}
+  .admin-sidebar nav{display:flex;gap:5px;min-width:max-content}
+  .admin-sidebar button{flex:0 0 auto;width:auto;min-height:42px;padding:9px 11px;white-space:nowrap;border-radius:8px}
+  .admin-sidebar button span{width:auto;min-width:17px}
+
+  .admin-main{padding:17px 10px 40px}
+  .admin-section{min-width:0}
+  .admin-heading{flex-direction:column;gap:13px;margin-bottom:17px}
+  .admin-heading>div{width:100%}
+  .admin-heading h1{font-size:28px;line-height:1.08;margin-top:4px}
+  .admin-heading p{font-size:13px;line-height:1.5}
+  .admin-heading>button{width:100%;min-height:46px}
+  .admin-notice{font-size:12px;padding:11px 12px}
+
+  .admin-stat-grid,.admin-stat-grid-six{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:14px}
+  .admin-stat-grid article{padding:13px 12px;border-radius:10px}
+  .admin-stat-grid span{font-size:9px;letter-spacing:.045em}
+  .admin-stat-grid strong{font-size:23px;margin:6px 0 2px}
+  .admin-stat-grid small{font-size:10px;line-height:1.35;display:block}
+
+  .admin-card{border-radius:10px;box-shadow:0 2px 10px rgba(16,24,40,.035)}
+  .admin-card-head{padding:13px 12px;flex-wrap:wrap}
+  .admin-card-head h2{font-size:15px}
+  .admin-list-row{padding:12px;align-items:flex-start;flex-direction:column}
+  .admin-progress{width:100%}
+
+  .admin-toolbar{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:10px}
+  .admin-toolbar input,.admin-toolbar select{width:100%;min-width:0;height:46px;font-size:16px}
+  .admin-toolbar input[type=search]{-webkit-appearance:none}
+
+  .admin-table-wrap{width:100%;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-inline:contain}
+  .admin-table{min-width:680px}
+  .admin-table-wide{min-width:940px}
+  .admin-table th,.admin-table td{padding:11px 12px}
+
+  .admin-settings-form{padding:15px}
+  .admin-form-grid{grid-template-columns:1fr;gap:0}
+  .admin-form-grid .span-2{grid-column:auto}
+  .admin-dialog input,.admin-dialog select,.admin-dialog textarea,.admin-settings-form input,.admin-settings-form select,.admin-settings-form textarea{font-size:16px}
+
+  .admin-dialog,.admin-dialog-large,.admin-dialog-xl{width:calc(100% - 14px);max-width:none;max-height:calc(100dvh - 14px);margin:7px auto;border-radius:12px}
+  .admin-dialog form{padding:15px}
+  .dialog-head{position:sticky;top:-15px;z-index:4;background:#fff;margin-bottom:14px;padding:15px 0 12px}
+  .dialog-head h2{font-size:20px}
+  .dialog-head button{min-width:44px;min-height:44px;display:grid;place-items:center;margin:-8px -6px 0 0}
+  .dialog-actions,.admin-form-actions{position:sticky;bottom:-15px;z-index:4;background:#fff;margin-top:16px;padding:12px 0 15px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .dialog-actions button,.admin-form-actions button{width:100%;min-height:46px}
+
+  .curriculum-admin-help{font-size:11px;line-height:1.5}
+  .curr-admin-section{border-radius:9px}
+  .curr-admin-section-head{align-items:stretch;flex-direction:column;padding:10px}
+  .curr-admin-section-head input{width:100%;font-size:16px!important}
+  .curr-section-actions{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  .curr-section-actions button{min-height:42px}
+  .curr-admin-lessons{padding:8px}
+  .curr-admin-lesson{grid-template-columns:1fr;gap:8px;padding:11px 0}
+  .curr-admin-lesson input{height:44px!important;font-size:16px!important}
+  .curr-admin-preview{justify-content:flex-start!important;min-height:36px}
+
+  .admin-item-card{padding:13px 12px}
+  .admin-item-card header{flex-direction:column;gap:8px}
+  .admin-item-card footer{align-items:stretch;flex-direction:column}
+  .admin-item-card footer .admin-actions{width:100%}
+  .admin-actions{gap:7px}
+  .admin-actions .admin-small,.admin-actions select{min-height:40px}
+  .admin-message-preview{max-width:none}
+  .admin-toast{left:10px;right:10px;bottom:10px;width:auto}
+}
+
+/* Phone: convert generated admin tables into readable cards. JS supplies data-label. */
+@media (max-width:620px){
+  .admin-main{padding-inline:9px}
+  .admin-stat-grid,.admin-stat-grid-six{grid-template-columns:1fr 1fr}
+  .admin-table-wrap{overflow:visible;background:transparent;border:0;box-shadow:none}
+  .admin-table,.admin-table-wide{display:block;min-width:0;width:100%;background:transparent;border:0}
+  .admin-table thead{display:none}
+  .admin-table tbody{display:grid;gap:10px;width:100%}
+  .admin-table tr{display:block;background:#fff;border:1px solid #e1e5ea;border-radius:11px;padding:7px 11px;box-shadow:0 2px 9px rgba(16,24,40,.035)}
+  .admin-table td{display:grid;grid-template-columns:minmax(90px,34%) minmax(0,1fr);gap:10px;align-items:start;width:100%;padding:8px 0;border-bottom:1px solid #f0f2f5;font-size:12px;white-space:normal;overflow-wrap:anywhere}
+  .admin-table td:last-child{border-bottom:0}
+  .admin-table td::before{content:attr(data-label);display:block;color:#667085;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;padding-top:2px}
+  .admin-table td[data-label=""]::before{content:'Actions'}
+  .admin-table .admin-course-cell{min-width:0;display:grid;grid-template-columns:58px minmax(0,1fr);gap:9px}
+  .admin-table .admin-course-cell img,.admin-table .admin-course-placeholder{width:58px;height:42px}
+  .admin-table .admin-actions{width:100%;display:grid;grid-template-columns:1fr 1fr}
+  .admin-table .admin-actions>*{width:100%;min-width:0;min-height:40px}
+  .admin-table .admin-progress-cell{min-width:0;width:100%}
+  .admin-table .admin-progress-cell div{width:100%}
+  .admin-table .status-pill{justify-self:start}
+  .admin-empty{background:#fff;border:1px dashed #d0d5dd;border-radius:10px;padding:24px 14px}
+
+  .admin-marketing-grid,.admin-moderation-grid,.admin-two-col{gap:10px}
+  .admin-check{padding:10px}
+  .admin-settings-form .admin-form-actions{grid-template-columns:1fr}
+}
+
+@media (max-width:430px){
+  .admin-topbar .brand>span:last-child{max-width:150px}
+  .admin-stat-grid,.admin-stat-grid-six{grid-template-columns:1fr}
+  .admin-stat-grid article{display:grid;grid-template-columns:1fr auto;column-gap:12px;align-items:center}
+  .admin-stat-grid article span,.admin-stat-grid article small{grid-column:1}
+  .admin-stat-grid article strong{grid-column:2;grid-row:1/3;margin:0;font-size:24px;text-align:right}
+  .admin-sidebar button{padding-inline:10px;font-size:12px}
+  .admin-heading h1{font-size:26px}
+  .admin-card-head button{min-height:40px}
+  .admin-table td{grid-template-columns:84px minmax(0,1fr);gap:8px}
+  .dialog-actions,.admin-form-actions{grid-template-columns:1fr}
+  .curr-section-actions{grid-template-columns:1fr}
+}
+
+@media (hover:none) and (pointer:coarse){
+  .admin-sidebar button,.admin-primary,.admin-outline,.admin-danger,.admin-small,.admin-top-button,.admin-card-head button{min-height:44px}
+  .admin-table tbody tr:hover{background:#fff}
+}
