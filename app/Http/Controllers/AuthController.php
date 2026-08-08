@@ -32,6 +32,27 @@ class AuthController extends Controller
         DB::table('auth_attempts')->insert(['key_hash'=>$key,'kind'=>'login','attempted_at'=>now()]);
     }
 
+    private function roleDashboard(User $user): string
+    {
+        return match ($user->role) {
+            'admin' => '/admin',
+            'instructor' => '/instructor',
+            default => '/dashboard',
+        };
+    }
+
+    private function postLoginRedirect(Request $request,User $user): string
+    {
+        $fallback=$this->roleDashboard($user);
+        $intended=$request->session()->pull('url.intended');
+        if(!$intended)return $fallback;
+
+        $path=parse_url((string)$intended,PHP_URL_PATH)?:'/';
+        if(in_array($path,['/dashboard','/dashboard.html'],true))return $fallback;
+
+        return (string)$intended;
+    }
+
     public function session(Request $request): JsonResponse
     {
         return response()->json([
@@ -62,7 +83,7 @@ class AuthController extends Controller
         return response()->json([
             'user'=>$user->only(['id','name','email','role']),
             'csrf_token'=>csrf_token(),
-            'redirect'=>$request->session()->pull('url.intended','/dashboard'),
+            'redirect'=>$this->postLoginRedirect($request,$user),
         ],201);
     }
 
@@ -98,7 +119,7 @@ class AuthController extends Controller
         return response()->json([
             'user'=>$user->only(['id','name','email','role']),
             'csrf_token'=>csrf_token(),
-            'redirect'=>$request->session()->pull('url.intended','/dashboard'),
+            'redirect'=>$this->postLoginRedirect($request,$user),
         ]);
     }
 
