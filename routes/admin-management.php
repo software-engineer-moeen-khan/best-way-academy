@@ -5,6 +5,7 @@ use App\Http\Controllers\AdminManagementController;
 use App\Http\Controllers\AdminPaymentOrderController;
 use App\Http\Controllers\CatalogMetadataController;
 use App\Http\Controllers\CouponController;
+use App\Http\Controllers\CourseAccessLinkController;
 use App\Http\Controllers\EasypaisaPaymentController;
 use App\Http\Controllers\LearningContentController;
 use App\Http\Controllers\SubscriptionController;
@@ -19,6 +20,7 @@ Route::get('/api/payment/easypaisa/qr',[EasypaisaPaymentController::class,'qr'])
 Route::middleware('auth')->group(function(){
     Route::post('/api/coupons/quote',[CouponController::class,'quote'])->middleware('throttle:30,1');
     Route::post('/api/checkout/easypaisa',[EasypaisaPaymentController::class,'submit'])->middleware('throttle:10,1');
+    Route::get('/api/course-access-links',[CourseAccessLinkController::class,'learner'])->middleware('throttle:60,1');
     Route::get('/api/subscription',[SubscriptionController::class,'current']);
     Route::post('/api/subscription',[SubscriptionController::class,'start']);
     Route::delete('/api/subscription',[SubscriptionController::class,'cancel']);
@@ -28,6 +30,8 @@ Route::middleware('auth')->group(function(){
     Route::prefix('api/admin/manage')->group(function(){
         Route::get('/workspace',[AdminManagementController::class,'workspace']);
         Route::get('/extras',[AdminExtrasController::class,'index']);
+        Route::get('/course-links',[CourseAccessLinkController::class,'adminIndex']);
+        Route::put('/course-links/{course}',[CourseAccessLinkController::class,'adminUpdate'])->whereNumber('course');
 
         Route::post('/courses',[AdminManagementController::class,'createCourse']);
         Route::put('/courses/{course}',[AdminManagementController::class,'updateCourse'])->whereNumber('course');
