@@ -26,6 +26,12 @@ class CourseAccessLinkController extends Controller
 
     private function storedLink(object $course): ?string
     {
+        $direct = trim((string) ($course->course_link ?? ''));
+        if ($direct !== '') {
+            return $this->safeStoredLink($direct);
+        }
+
+        // Backward compatibility for links stored before the dedicated courses.course_link column.
         $value = DB::table('platform_settings')
             ->where('key', $this->settingKey((int) $course->id))
             ->value('value');
@@ -33,10 +39,12 @@ class CourseAccessLinkController extends Controller
         if ($value !== null) {
             $decoded = json_decode((string) $value, true);
             $link = is_string($decoded) ? trim($decoded) : trim((string) $value);
-            return $this->safeStoredLink($link);
+            $safe = $this->safeStoredLink($link);
+            if ($safe) {
+                return $safe;
+            }
         }
 
-        // Backward compatibility for links saved by the earlier metadata-based implementation.
         $meta = $this->metadata($course);
         return $this->safeStoredLink(trim((string) ($meta['course_link'] ?? '')));
     }
@@ -61,8 +69,6 @@ class CourseAccessLinkController extends Controller
             throw ValidationException::withMessages(['course_link' => 'Enter a valid course link.']);
         }
 
-        // Keep the field flexible for web, internal and app/deep links, but never allow
-        // executable/browser-local schemes that could run code or expose local resources.
         if (preg_match('/^(javascript|data|vbscript|file|about):/i', $value)) {
             throw ValidationException::withMessages(['course_link' => 'This link type is not allowed.']);
         }
@@ -79,7 +85,6 @@ class CourseAccessLinkController extends Controller
             return $value;
         }
 
-        // Allow admins to paste common links without the protocol, e.g. www.example.com/course.
         if (preg_match('/^(?:www\.)?[a-z0-9-]+(?:\.[a-z0-9-]+)+(?::\d{1,5})?(?:[\/?#].*)?$/i', $value)) {
             $normalized = 'https://'.$value;
             if (filter_var($normalized, FILTER_VALIDATE_URL)) {
@@ -98,7 +103,7 @@ class CourseAccessLinkController extends Controller
             ->join('courses as c', 'c.id', '=', 'e.course_id')
             ->where('e.user_id', $request->user()->id)
             ->orderByDesc('e.updated_at')
-            ->select('c.id', 'c.slug', 'c.title', 'c.metadata', 'e.progress', 'e.enrolled_at', 'e.created_at as enrollment_created_at')
+            ->select('c.id', 'c.slug', 'c.title', 'c.course_link', 'c.metadata', 'e.progress', 'e.enrolled_at', 'e.created_at as enrollment_created_at')
             ->get()
             ->map(function ($course) {
                 return [
@@ -120,7 +125,7 @@ class CourseAccessLinkController extends Controller
     {
         abort_unless($request->user()?->role === 'admin', 403);
 
-        $links = DB::table('courses')->orderBy('id')->get(['id', 'metadata'])->mapWithKeys(function ($course) {
+        $links = DB::table('courses')->orderBy('id')->get(['id', 'course_link', 'metadata'])->mapWithKeys(function ($course) {
             return [(string) $course->id => $this->storedLink($course)];
         });
 
@@ -140,25 +145,35 @@ class CourseAccessLinkController extends Controller
         ]);
 
         $link = $this->cleanLink($data['course_link'] ?? null);
-        $key = $this->settingKey($course);
 
-        if ($link === null) {
-            DB::table('platform_settings')->where('key', $key)->delete();
-        } else {
-            DB::table('platform_settings')->updateOrInsert(
-                ['key' => $key],
-                [
-                    'value' => json_encode($link, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
-                    'updated_at' => now(),
-                    'created_at' => now(),
-                ]
-            );
-        }
+        DB::transaction(function () use ($course, $link) {
+            DB::table('courses')->where('id', $course)->update([
+                'course_link' => $link,
+                'updated_at' => now(),
+            ]);
+
+            // Keep old storage synchronized for safe rollback/backward compatibility.
+            $key = $this->settingKey($course);
+            if ($link === null) {
+                DB::table('platform_settings')->where('key', $key)->delete();
+            } else {
+                DB::table('platform_settings')->updateOrInsert(
+                    ['key' => $key],
+                    [
+                        'value' => json_encode($link, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+                        'updated_at' => now(),
+                        'created_at' => now(),
+                    ]
+                );
+            }
+        });
+
+        $saved = trim((string) DB::table('courses')->where('id', $course)->value('course_link'));
 
         return response()->json([
             'ok' => true,
             'course_id' => $course,
-            'course_link' => $link,
-        ]);
+            'course_link' => $saved !== '' ? $saved : null,
+        ])->header('Cache-Control', 'no-store, no-cache, must-revalidate');
     }
 }
