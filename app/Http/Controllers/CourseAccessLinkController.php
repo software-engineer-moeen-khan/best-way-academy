@@ -44,7 +44,7 @@ class CourseAccessLinkController extends Controller
             ->join('courses as c', 'c.id', '=', 'e.course_id')
             ->where('e.user_id', $request->user()->id)
             ->orderByDesc('e.updated_at')
-            ->select('c.id', 'c.slug', 'c.title', 'c.metadata')
+            ->select('c.id', 'c.slug', 'c.title', 'c.metadata', 'e.progress', 'e.enrolled_at', 'e.created_at as enrollment_created_at')
             ->get()
             ->map(function ($course) {
                 $meta = $this->metadata($course);
@@ -55,6 +55,8 @@ class CourseAccessLinkController extends Controller
                     'slug' => $course->slug,
                     'title' => $course->title,
                     'course_link' => $link !== '' ? $link : null,
+                    'progress' => (int) ($course->progress ?? 0),
+                    'enrolled_at' => $course->enrolled_at ?: $course->enrollment_created_at,
                 ];
             })
             ->values();
