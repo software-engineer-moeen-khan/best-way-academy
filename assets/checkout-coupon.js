@@ -28,6 +28,8 @@ function setSubmitMessage(text,type=''){
   el.textContent=text||'';el.classList.remove('success','error');if(type)el.classList.add(type);
 }
 
+function emit(name,detail={}){document.dispatchEvent(new CustomEvent(name,{detail}))}
+
 function resetQuote(){
   const subtotal=subtotalFromPage(),row=$('#checkoutDiscountRow');
   if(row)row.hidden=true;
@@ -35,6 +37,7 @@ function resetQuote(){
   const total=$('#checkoutTotal');if(total)total.textContent=money(subtotal);
   const button=$('#checkoutSubmit');if(button&&!button.disabled)button.textContent=`Complete enrollment · ${money(subtotal)}`;
   appliedCode='';remove('bwa_pending_discount');
+  emit('bwa:coupon-reset',{subtotal,total:subtotal});
 }
 
 async function backend(){
@@ -79,6 +82,7 @@ async function applyCoupon(code,quiet=false){
     write('bwa_pending_discount',{code:appliedCode});
     const detail=coupon.applies_to&&coupon.applies_to!=='Entire order'?` Applies to ${coupon.applies_to}.`:'';
     setMessage(`${appliedCode} applied. You save ${money(discount)}.${detail}`,'success');
+    emit('bwa:coupon-applied',{code:appliedCode,subtotal,discount,total,coupon,course_slugs:slugs});
   }catch(err){
     resetQuote();
     const text=err?.data?.errors?Object.values(err.data.errors).flat().join(' '):(err?.message||'Coupon could not be applied.');
