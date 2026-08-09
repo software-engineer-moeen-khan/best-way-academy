@@ -63,25 +63,26 @@ class AdminExternalCourseController extends Controller
         ];
     }
 
-    private function validated(Request $request): array
+    private function validated(Request $request,bool $requireLink): array
     {
+        $linkRule=$requireLink?['required','string','max:2048']:['sometimes','required','string','max:2048'];
         $data=$request->validate([
             'title'=>['required','string','max:255'],'slug'=>['nullable','string','max:120'],
             'category'=>['required','string','max:120'],'subtitle'=>['nullable','string','max:2000'],
             'description'=>['nullable','string','max:30000'],'price'=>['required','integer','min:0','max:10000000'],
             'status'=>['required','string','in:published,hidden,draft'],'image'=>['nullable','string','max:2000'],
             'badge'=>['nullable','string','max:80'],'instructor_id'=>['nullable','integer'],
-            'course_link'=>['required','string','max:2048'],
+            'course_link'=>$linkRule,
             'learn'=>['nullable','array','max:30'],'learn.*'=>['string','max:500'],
             'modules'=>['nullable','array','max:100'],'modules.*'=>['string','max:500'],
         ]);
-        $data['course_link']=$this->cleanLink($data['course_link']??null);
+        if(array_key_exists('course_link',$data))$data['course_link']=$this->cleanLink($data['course_link']);
         return $data;
     }
 
     public function create(Request $request): JsonResponse
     {
-        $admin=$this->admin($request);$data=$this->validated($request);
+        $admin=$this->admin($request);$data=$this->validated($request,true);
         abort_unless(DB::table('course_categories')->where('name',$data['category'])->where('active',true)->exists(),422,'Choose an active category.');
         $instructorId=$data['instructor_id']??$admin->id;
         $instructor=DB::table('users')->where('id',$instructorId)->first();
@@ -102,7 +103,7 @@ class AdminExternalCourseController extends Controller
     public function update(Request $request,int $course): JsonResponse
     {
         $this->admin($request);$existing=DB::table('courses')->where('id',$course)->first();abort_unless($existing,404);
-        $data=$this->validated($request);
+        $data=$this->validated($request,false);
         abort_unless(DB::table('course_categories')->where('name',$data['category'])->where('active',true)->exists(),422,'Choose an active category.');
         $instructorId=$data['instructor_id']??null;
         if($instructorId){$instructor=DB::table('users')->where('id',$instructorId)->first();abort_unless($instructor&&in_array($instructor->role,['admin','instructor'],true),422,'Choose a valid instructor.');}
@@ -112,7 +113,7 @@ class AdminExternalCourseController extends Controller
         DB::table('courses')->where('id',$course)->update([
             'instructor_id'=>$instructorId,'slug'=>$slug,'title'=>trim($data['title']),'category'=>$data['category'],
             'subtitle'=>$data['subtitle']??null,'description'=>$data['description']??null,'price'=>$data['price'],'status'=>$data['status'],
-            'image'=>$data['image']??null,'badge'=>$data['badge']??null,'course_link'=>$data['course_link'],
+            'image'=>$data['image']??null,'badge'=>$data['badge']??null,'course_link'=>$data['course_link']??$existing->course_link,
             'metadata'=>json_encode(['learn'=>$data['learn']??[],'modules'=>$data['modules']??[]],JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE),'updated_at'=>now(),
         ]);
         return response()->json(['ok'=>true,'course'=>$this->payload(DB::table('courses')->where('id',$course)->first())])
