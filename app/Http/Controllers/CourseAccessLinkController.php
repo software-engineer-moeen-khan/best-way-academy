@@ -9,6 +9,11 @@ use Illuminate\Validation\ValidationException;
 
 class CourseAccessLinkController extends Controller
 {
+    private function settingKey(int $courseId): string
+    {
+        return 'course_link_'.$courseId;
+    }
+
     private function metadata(object $course): array
     {
         if (is_array($course->metadata ?? null)) {
@@ -17,6 +22,24 @@ class CourseAccessLinkController extends Controller
 
         $decoded = json_decode((string) ($course->metadata ?? ''), true);
         return is_array($decoded) ? $decoded : [];
+    }
+
+    private function storedLink(object $course): ?string
+    {
+        $value = DB::table('platform_settings')
+            ->where('key', $this->settingKey((int) $course->id))
+            ->value('value');
+
+        if ($value !== null) {
+            $decoded = json_decode((string) $value, true);
+            $link = is_string($decoded) ? trim($decoded) : trim((string) $value);
+            return $link !== '' ? $link : null;
+        }
+
+        // Backward compatibility for links saved by the earlier metadata-based implementation.
+        $meta = $this->metadata($course);
+        $legacy = trim((string) ($meta['course_link'] ?? ''));
+        return $legacy !== '' ? $legacy : null;
     }
 
     private function cleanLink(?string $value): ?string
@@ -47,14 +70,11 @@ class CourseAccessLinkController extends Controller
             ->select('c.id', 'c.slug', 'c.title', 'c.metadata', 'e.progress', 'e.enrolled_at', 'e.created_at as enrollment_created_at')
             ->get()
             ->map(function ($course) {
-                $meta = $this->metadata($course);
-                $link = trim((string) ($meta['course_link'] ?? ''));
-
                 return [
                     'id' => (int) $course->id,
                     'slug' => $course->slug,
                     'title' => $course->title,
-                    'course_link' => $link !== '' ? $link : null,
+                    'course_link' => $this->storedLink($course),
                     'progress' => (int) ($course->progress ?? 0),
                     'enrolled_at' => $course->enrolled_at ?: $course->enrollment_created_at,
                 ];
@@ -70,8 +90,7 @@ class CourseAccessLinkController extends Controller
         abort_unless($request->user()?->role === 'admin', 403);
 
         $links = DB::table('courses')->orderBy('id')->get(['id', 'metadata'])->mapWithKeys(function ($course) {
-            $meta = $this->metadata($course);
-            return [(string) $course->id => trim((string) ($meta['course_link'] ?? '')) ?: null];
+            return [(string) $course->id => $this->storedLink($course)];
         });
 
         return response()->json(['links' => $links])
@@ -90,14 +109,25 @@ class CourseAccessLinkController extends Controller
         ]);
 
         $link = $this->cleanLink($data['course_link'] ?? null);
-        $meta = $this->metadata($row);
-        $meta['course_link'] = $link;
+        $key = $this->settingKey($course);
 
-        DB::table('courses')->where('id', $course)->update([
-            'metadata' => json_encode($meta, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
-            'updated_at' => now(),
+        if ($link === null) {
+            DB::table('platform_settings')->where('key', $key)->delete();
+        } else {
+            DB::table('platform_settings')->updateOrInsert(
+                ['key' => $key],
+                [
+                    'value' => json_encode($link, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+                    'updated_at' => now(),
+                    'created_at' => now(),
+                ]
+            );
+        }
+
+        return response()->json([
+            'ok' => true,
+            'course_id' => $course,
+            'course_link' => $link,
         ]);
-
-        return response()->json(['ok' => true, 'course_id' => $course, 'course_link' => $link]);
     }
 }
