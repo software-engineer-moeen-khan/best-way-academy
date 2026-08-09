@@ -61,22 +61,88 @@ DB_USERNAME="$(envget DB_USERNAME)"
 DB_PASSWORD="$(envget DB_PASSWORD)"
 HOSTINGER_API_TOKEN="${HOSTINGER_API_TOKEN:-}"
 
-# Verify existing credentials before Laravel touches DB-backed cache/sessions/migrations.
-if [[ -n "$DB_DATABASE" && -n "$DB_USERNAME" && -n "$DB_PASSWORD" ]]; then
-  log "Verifying existing MySQL credentials from .env..."
-  if ! "$PHP_BIN" -r '$dsn="mysql:host=localhost;port=3306;dbname=".$argv[1].";charset=utf8mb4";try{$pdo=new PDO($dsn,$argv[2],$argv[3],[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);$pdo->query("SELECT 1");exit(0);}catch(Throwable $e){exit(1);}' "$DB_DATABASE" "$DB_USERNAME" "$DB_PASSWORD" >/dev/null 2>&1; then
-    fail "Saved MySQL credentials are invalid. Run: chmod +x deploy/hostinger-fix-db-access.sh && ./deploy/hostinger-fix-db-access.sh ; then run this deploy again."
-  fi
-  log "Existing MySQL credentials verified; no database password prompt is required."
-fi
-
-if [[ -z "$DB_DATABASE" || -z "$DB_USERNAME" || -z "$DB_PASSWORD" ]]; then
+ensure_hostinger_token(){
   if [[ -z "$HOSTINGER_API_TOKEN" ]]; then
-    printf 'Hostinger API token (input hidden; used only for setup): '
+    printf 'Hostinger API token (input hidden; used only for setup/recovery): '
     read -rs HOSTINGER_API_TOKEN
     printf '\n'
   fi
-  [[ -n "$HOSTINGER_API_TOKEN" ]] || fail "A Hostinger API token is required only for first-time automatic DB creation."
+  [[ -n "$HOSTINGER_API_TOKEN" ]] || fail "Hostinger API token is required to create or recover database access."
+}
+
+verify_mysql(){
+  "$PHP_BIN" -r '$dsn="mysql:host=localhost;port=3306;dbname=".$argv[1].";charset=utf8mb4";try{$pdo=new PDO($dsn,$argv[2],$argv[3],[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);$pdo->query("SELECT 1");exit(0);}catch(Throwable $e){exit(1);}' "$1" "$2" "$3" >/dev/null 2>&1
+}
+
+list_hostinger_databases(){
+  ensure_hostinger_token
+  curl -fsS "$API_BASE/api/hosting/v1/accounts/$HOSTINGER_USERNAME/databases?domain=$HOSTINGER_DOMAIN&per_page=100" \
+    -H "Authorization: Bearer $HOSTINGER_API_TOKEN"
+}
+
+resolve_existing_academy_db(){
+  local json="$1" current_name="${DB_DATABASE:-}"
+  local resolved=""
+  if [[ -n "$current_name" ]]; then
+    resolved="$(printf '%s' "$json" | N="$current_name" "$PHP_BIN" -r '$j=json_decode(stream_get_contents(STDIN),true);$rows=$j["data"]??$j;if(!is_array($rows))$rows=[];foreach($rows as $d){if(($d["name"]??"")===getenv("N")){echo ($d["name"]??"")."\n".($d["user"]??"");break;}}' 2>/dev/null || true)"
+  fi
+  if [[ -z "$resolved" ]]; then
+    resolved="$(printf '%s' "$json" | D="$HOSTINGER_DOMAIN" "$PHP_BIN" -r '$j=json_decode(stream_get_contents(STDIN),true);$rows=$j["data"]??$j;if(!is_array($rows))$rows=[];foreach($rows as $d){$n=$d["name"]??"";if((($d["domain"]??"")===getenv("D") || ($d["domain"]??"")==="") && str_ends_with($n,"_bwa_academy")){echo $n."\n".($d["user"]??"");break;}}' 2>/dev/null || true)"
+  fi
+  [[ -n "$resolved" ]] || return 1
+  DB_DATABASE="$(printf '%s\n' "$resolved" | sed -n '1p')"
+  DB_USERNAME="$(printf '%s\n' "$resolved" | sed -n '2p')"
+  [[ -n "$DB_DATABASE" && -n "$DB_USERNAME" ]]
+}
+
+recover_existing_db_access(){
+  ensure_hostinger_token
+  local existing new_password body connected=0
+  existing="$(list_hostinger_databases)" || fail "Could not list Hostinger databases for recovery."
+  resolve_existing_academy_db "$existing" || fail "Could not resolve the existing Best Way Academy database."
+
+  new_password="$($PHP_BIN -r 'echo rtrim(strtr(base64_encode(random_bytes(27)),"+/","AZ"),"=")."aA9!";')"
+  body="$($PHP_BIN -r 'echo json_encode(["password"=>$argv[1]],JSON_UNESCAPED_SLASHES);' "$new_password")"
+
+  log "Repairing MySQL credentials through Hostinger API..."
+  curl -fsS -X PATCH "$API_BASE/api/hosting/v1/accounts/$HOSTINGER_USERNAME/databases/$DB_DATABASE/change-password" \
+    -H "Authorization: Bearer $HOSTINGER_API_TOKEN" \
+    -H 'Content-Type: application/json' -H 'Accept: application/json' \
+    --data "$body" >/dev/null || fail "Hostinger rejected the database password reset request."
+
+  DB_PASSWORD="$new_password"
+  setenv DB_CONNECTION mysql
+  setenv DB_HOST localhost
+  setenv DB_PORT 3306
+  setenv DB_DATABASE "$DB_DATABASE"
+  setenv DB_USERNAME "$DB_USERNAME"
+  setenv DB_PASSWORD "$DB_PASSWORD"
+  chmod 600 .env || true
+
+  log "Waiting for repaired MySQL credentials to become active..."
+  for attempt in {1..15}; do
+    if verify_mysql "$DB_DATABASE" "$DB_USERNAME" "$DB_PASSWORD"; then connected=1; break; fi
+    sleep 2
+  done
+  unset new_password body
+  [[ "$connected" -eq 1 ]] || fail "Hostinger reset the password, but MySQL still rejected the repaired credentials."
+  log "MySQL credentials repaired and verified automatically."
+}
+
+# Existing credentials: use them if valid; otherwise repair them automatically.
+if [[ -n "$DB_DATABASE" && -n "$DB_USERNAME" && -n "$DB_PASSWORD" ]]; then
+  log "Verifying existing MySQL credentials from .env..."
+  if verify_mysql "$DB_DATABASE" "$DB_USERNAME" "$DB_PASSWORD"; then
+    log "Existing MySQL credentials verified; no database password prompt is required."
+  else
+    log "Saved MySQL credentials are stale; automatic Hostinger recovery will run."
+    recover_existing_db_access
+  fi
+fi
+
+# Missing DB config: discover an existing academy DB and recover it, or create it once.
+if [[ -z "$DB_DATABASE" || -z "$DB_USERNAME" || -z "$DB_PASSWORD" ]]; then
+  ensure_hostinger_token
 
   log "Setting website PHP to $PHP_WEB_VERSION through Hostinger API (best effort)..."
   PHP_VERSION_BODY="$($PHP_BIN -r 'echo json_encode(["version"=>$argv[1]],JSON_UNESCAPED_SLASHES);' "$PHP_WEB_VERSION")"
@@ -84,41 +150,50 @@ if [[ -z "$DB_DATABASE" || -z "$DB_USERNAME" || -z "$DB_PASSWORD" ]]; then
     -H "Authorization: Bearer $HOSTINGER_API_TOKEN" -H 'Content-Type: application/json' \
     --data "$PHP_VERSION_BODY" >/dev/null || true
 
-  DB_SUFFIX="bwa_academy"
-  DB_USER_SUFFIX="bwa_app"
-  DB_PASSWORD="$($PHP_BIN -r 'echo rtrim(strtr(base64_encode(random_bytes(24)),"+/","AZ"),"=")."aA9!";')"
-
-  EXISTING="$(curl -fsS "$API_BASE/api/hosting/v1/accounts/$HOSTINGER_USERNAME/databases?domain=$HOSTINGER_DOMAIN&per_page=100" -H "Authorization: Bearer $HOSTINGER_API_TOKEN" || true)"
-  DB_DATABASE="$(printf '%s' "$EXISTING" | D="$HOSTINGER_DOMAIN" "$PHP_BIN" -r '$j=json_decode(stream_get_contents(STDIN),true);$rows=$j["data"]??$j;if(!is_array($rows))$rows=[];foreach($rows as $d){$n=$d["name"]??"";if(($d["domain"]??"")==getenv("D") && str_ends_with($n,"_bwa_academy")){echo $n;break;}}' 2>/dev/null || true)"
-  DB_USERNAME="$(printf '%s' "$EXISTING" | D="$HOSTINGER_DOMAIN" "$PHP_BIN" -r '$j=json_decode(stream_get_contents(STDIN),true);$rows=$j["data"]??$j;if(!is_array($rows))$rows=[];foreach($rows as $d){$n=$d["name"]??"";if(($d["domain"]??"")==getenv("D") && str_ends_with($n,"_bwa_academy")){echo $d["user"]??"";break;}}' 2>/dev/null || true)"
-
-  if [[ -z "$DB_DATABASE" || -z "$DB_USERNAME" ]]; then
+  EXISTING="$(list_hostinger_databases || true)"
+  if resolve_existing_academy_db "$EXISTING"; then
+    log "Existing academy database found; syncing credentials automatically."
+    recover_existing_db_access
+  else
+    DB_SUFFIX="bwa_academy"
+    DB_USER_SUFFIX="bwa_app"
+    DB_PASSWORD="$($PHP_BIN -r 'echo rtrim(strtr(base64_encode(random_bytes(24)),"+/","AZ"),"=")."aA9!";')"
     log "Creating MySQL database/user through Hostinger API..."
     BODY="$($PHP_BIN -r 'echo json_encode(["name"=>$argv[1],"user"=>$argv[2],"password"=>$argv[3],"website_domain"=>$argv[4]],JSON_UNESCAPED_SLASHES);' "$DB_SUFFIX" "$DB_USER_SUFFIX" "$DB_PASSWORD" "$HOSTINGER_DOMAIN")"
     curl -fsS -X POST "$API_BASE/api/hosting/v1/accounts/$HOSTINGER_USERNAME/databases" \
       -H "Authorization: Bearer $HOSTINGER_API_TOKEN" -H 'Content-Type: application/json' --data "$BODY" >/dev/null
+
+    DB_DATABASE=""; DB_USERNAME=""
     for attempt in {1..10}; do
       sleep 2
-      CREATED="$(curl -fsS "$API_BASE/api/hosting/v1/accounts/$HOSTINGER_USERNAME/databases?domain=$HOSTINGER_DOMAIN&per_page=100" -H "Authorization: Bearer $HOSTINGER_API_TOKEN")"
-      DB_DATABASE="$(printf '%s' "$CREATED" | D="$HOSTINGER_DOMAIN" "$PHP_BIN" -r '$j=json_decode(stream_get_contents(STDIN),true);$rows=$j["data"]??$j;if(!is_array($rows))$rows=[];foreach($rows as $d){$n=$d["name"]??"";if(($d["domain"]??"")==getenv("D") && str_ends_with($n,"_bwa_academy")){echo $n;break;}}')"
-      DB_USERNAME="$(printf '%s' "$CREATED" | D="$HOSTINGER_DOMAIN" "$PHP_BIN" -r '$j=json_decode(stream_get_contents(STDIN),true);$rows=$j["data"]??$j;if(!is_array($rows))$rows=[];foreach($rows as $d){$n=$d["name"]??"";if(($d["domain"]??"")==getenv("D") && str_ends_with($n,"_bwa_academy")){echo $d["user"]??"";break;}}')"
-      [[ -n "$DB_DATABASE" && -n "$DB_USERNAME" ]] && break
+      CREATED="$(list_hostinger_databases)"
+      if resolve_existing_academy_db "$CREATED"; then break; fi
       log "Waiting for Hostinger database provisioning ($attempt/10)..."
     done
-  else
-    printf 'Existing database detected. Database password (input hidden): '
-    read -rs DB_PASSWORD
-    printf '\n'
-  fi
+    [[ -n "$DB_DATABASE" && -n "$DB_USERNAME" ]] || fail "Could not resolve newly created database credentials."
+    setenv DB_CONNECTION mysql
+    setenv DB_HOST localhost
+    setenv DB_PORT 3306
+    setenv DB_DATABASE "$DB_DATABASE"
+    setenv DB_USERNAME "$DB_USERNAME"
+    setenv DB_PASSWORD "$DB_PASSWORD"
 
-  [[ -n "$DB_DATABASE" && -n "$DB_USERNAME" && -n "$DB_PASSWORD" ]] || fail "Could not resolve database credentials."
-  setenv DB_CONNECTION mysql
-  setenv DB_HOST localhost
-  setenv DB_PORT 3306
-  setenv DB_DATABASE "$DB_DATABASE"
-  setenv DB_USERNAME "$DB_USERNAME"
-  setenv DB_PASSWORD "$DB_PASSWORD"
+    CREATED_OK=0
+    for attempt in {1..15}; do
+      if verify_mysql "$DB_DATABASE" "$DB_USERNAME" "$DB_PASSWORD"; then CREATED_OK=1; break; fi
+      sleep 2
+    done
+    [[ "$CREATED_OK" -eq 1 ]] || fail "New database was created but MySQL credentials are not active yet."
+    log "New MySQL database credentials verified."
+  fi
 fi
+
+# Re-read final values using the dotenv-safe reader and verify once more before Laravel DB work.
+DB_DATABASE="$(envget DB_DATABASE)"
+DB_USERNAME="$(envget DB_USERNAME)"
+DB_PASSWORD="$(envget DB_PASSWORD)"
+[[ -n "$DB_DATABASE" && -n "$DB_USERNAME" && -n "$DB_PASSWORD" ]] || fail "Final DB configuration is incomplete in .env."
+verify_mysql "$DB_DATABASE" "$DB_USERNAME" "$DB_PASSWORD" || fail "Final MySQL credential verification failed before migrations."
 
 APP_KEY="$(envget APP_KEY)"
 if [[ -z "$APP_KEY" ]]; then "$PHP_BIN" artisan key:generate --force; fi
