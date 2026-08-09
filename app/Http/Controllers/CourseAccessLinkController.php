@@ -33,13 +33,21 @@ class CourseAccessLinkController extends Controller
         if ($value !== null) {
             $decoded = json_decode((string) $value, true);
             $link = is_string($decoded) ? trim($decoded) : trim((string) $value);
-            return $link !== '' ? $link : null;
+            return $this->safeStoredLink($link);
         }
 
         // Backward compatibility for links saved by the earlier metadata-based implementation.
         $meta = $this->metadata($course);
-        $legacy = trim((string) ($meta['course_link'] ?? ''));
-        return $legacy !== '' ? $legacy : null;
+        return $this->safeStoredLink(trim((string) ($meta['course_link'] ?? '')));
+    }
+
+    private function safeStoredLink(?string $value): ?string
+    {
+        try {
+            return $this->cleanLink($value);
+        } catch (ValidationException) {
+            return null;
+        }
     }
 
     private function cleanLink(?string $value): ?string
@@ -49,16 +57,39 @@ class CourseAccessLinkController extends Controller
             return null;
         }
 
-        if (mb_strlen($value) > 2048 || ! filter_var($value, FILTER_VALIDATE_URL)) {
-            throw ValidationException::withMessages(['course_link' => 'Enter a valid course URL.']);
+        if (mb_strlen($value) > 2048 || preg_match('/[\x00-\x1F\x7F]/u', $value)) {
+            throw ValidationException::withMessages(['course_link' => 'Enter a valid course link.']);
         }
 
-        $scheme = strtolower((string) parse_url($value, PHP_URL_SCHEME));
-        if (! in_array($scheme, ['http', 'https'], true)) {
-            throw ValidationException::withMessages(['course_link' => 'Course link must start with http:// or https://.']);
+        // Keep the field flexible for web, internal and app/deep links, but never allow
+        // executable/browser-local schemes that could run code or expose local resources.
+        if (preg_match('/^(javascript|data|vbscript|file|about):/i', $value)) {
+            throw ValidationException::withMessages(['course_link' => 'This link type is not allowed.']);
         }
 
-        return $value;
+        if (str_starts_with($value, '/') || str_starts_with($value, '#') || str_starts_with($value, '?')) {
+            return $value;
+        }
+
+        if (preg_match('/^([a-z][a-z0-9+.-]*):/i', $value, $match)) {
+            $scheme = strtolower($match[1]);
+            if (in_array($scheme, ['http', 'https'], true) && ! filter_var($value, FILTER_VALIDATE_URL)) {
+                throw ValidationException::withMessages(['course_link' => 'Enter a valid web link.']);
+            }
+            return $value;
+        }
+
+        // Allow admins to paste common links without the protocol, e.g. www.example.com/course.
+        if (preg_match('/^(?:www\.)?[a-z0-9-]+(?:\.[a-z0-9-]+)+(?::\d{1,5})?(?:[\/?#].*)?$/i', $value)) {
+            $normalized = 'https://'.$value;
+            if (filter_var($normalized, FILTER_VALIDATE_URL)) {
+                return $normalized;
+            }
+        }
+
+        throw ValidationException::withMessages([
+            'course_link' => 'Enter a web link, internal path, or supported app/deep link.',
+        ]);
     }
 
     public function learner(Request $request): JsonResponse
