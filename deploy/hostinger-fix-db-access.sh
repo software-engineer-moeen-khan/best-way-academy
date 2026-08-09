@@ -10,6 +10,7 @@ fail(){ printf '\033[1;31m[BWA ERROR]\033[0m %s\n' "$*" >&2; exit 1; }
 cd "$ROOT"
 [[ -f .env ]] || fail ".env was not found. Run this from the deployed project after at least one deploy attempt."
 [[ -f deploy/env-set.php ]] || fail "deploy/env-set.php is missing."
+[[ -f deploy/env-get.php ]] || fail "deploy/env-get.php is missing. Pull the latest main branch first."
 
 PHP_BIN=""
 for c in php php84 php83 php82; do
@@ -35,7 +36,7 @@ fi
 [[ -n "$HOSTINGER_USERNAME" ]] || read -rp "Hostinger account username (u123456789): " HOSTINGER_USERNAME
 
 setenv(){ "$PHP_BIN" deploy/env-set.php .env "$1" "$2"; }
-envget(){ "$PHP_BIN" -r '$e=parse_ini_file($argv[1]);echo $e[$argv[2]]??"";' .env "$1" 2>/dev/null || true; }
+envget(){ "$PHP_BIN" deploy/env-get.php .env "$1" 2>/dev/null || true; }
 
 DB_DATABASE="$(envget DB_DATABASE)"
 DB_USERNAME="$(envget DB_USERNAME)"
@@ -52,8 +53,6 @@ log "Resolving the existing Hostinger database..."
 EXISTING="$(curl -fsS "$API_BASE/api/hosting/v1/accounts/$HOSTINGER_USERNAME/databases?domain=$HOSTINGER_DOMAIN&per_page=100" \
   -H "Authorization: Bearer $HOSTINGER_API_TOKEN")" || fail "Could not list Hostinger databases. Check the API token and account."
 
-# Prefer the database currently configured when Hostinger confirms it exists; otherwise
-# discover the academy database from the account response.
 MATCHED_DATABASE=""
 if [[ -n "$DB_DATABASE" ]]; then
   MATCHED_DATABASE="$(printf '%s' "$EXISTING" | N="$DB_DATABASE" "$PHP_BIN" -r '$j=json_decode(stream_get_contents(STDIN),true);$rows=$j["data"]??$j;if(!is_array($rows))$rows=[];foreach($rows as $d){if(($d["name"]??"")===getenv("N")){echo $d["name"]??"";break;}}')"
@@ -79,7 +78,6 @@ curl -fsS -X PATCH "$API_BASE/api/hosting/v1/accounts/$HOSTINGER_USERNAME/databa
   -H 'Accept: application/json' \
   --data "$BODY" >/dev/null || fail "Hostinger rejected the database password reset request."
 
-# env-set.php removes duplicate active keys so stale DB credentials cannot override these values.
 setenv DB_CONNECTION mysql
 setenv DB_HOST localhost
 setenv DB_PORT 3306
@@ -88,9 +86,7 @@ setenv DB_USERNAME "$DB_USERNAME"
 setenv DB_PASSWORD "$NEW_DB_PASSWORD"
 chmod 600 .env || true
 
-# Re-read the exact values that Laravel/normal deploy will use. A live connection is the
-# source of truth; strict shell-string equality is intentionally avoided because INI parsing
-# may normalize representation while preserving the effective value.
+# Read the exact values through the same dotenv-safe reader used by normal deploy.
 EFFECTIVE_DB_DATABASE="$(envget DB_DATABASE)"
 EFFECTIVE_DB_USERNAME="$(envget DB_USERNAME)"
 EFFECTIVE_DB_PASSWORD="$(envget DB_PASSWORD)"
