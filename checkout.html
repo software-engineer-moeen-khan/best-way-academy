@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="/assets/pages.css?v=20260808-7">
   <link rel="stylesheet" href="/assets/checkout.css?v=20260808-7">
   <link rel="stylesheet" href="/assets/checkout-coupon.css?rev=20260808-coupon-v1">
+  <link rel="stylesheet" href="/assets/easypaisa-checkout.css?rev=20260809-easypaisa-v1">
   <link rel="stylesheet" href="/assets/responsive-final.css?rev=20260808-responsive-v1">
 </head>
 <body class="checkout-page" data-page="checkout">
@@ -61,6 +62,11 @@
                   <input type="radio" name="payment" value="wallet">
                   <span><b>Digital Wallet</b><small>Wallet payment option</small></span>
                 </label>
+                <label id="easypaisaMethodOption" class="payment-option easypaisa-method" hidden>
+                  <input type="radio" name="payment" value="easypaisa">
+                  <span><b>EasyPaisa QR</b><small>Scan the academy QR and submit your transaction reference</small></span>
+                  <span class="payment-badge easypaisa-badge">QR</span>
+                </label>
               </div>
 
               <div id="cardFields" class="card-fields">
@@ -79,7 +85,7 @@
 
               <button id="checkoutSubmit" class="checkout-button" type="submit">Complete enrollment</button>
               <p id="checkoutMessage" class="checkout-coupon-message" aria-live="polite"></p>
-              <p class="checkout-trust"><span>🔒</span><span><strong>Protected checkout.</strong> Payment fields are currently a demo interface; no card number is stored by Best Way Academy.</span></p>
+              <p class="checkout-trust"><span>🔒</span><span><strong>Protected checkout.</strong> EasyPaisa QR payments require administrator verification before course access is granted.</span></p>
             </div>
           </form>
         </section>
@@ -99,9 +105,31 @@
             <div class="order-line"><span>Subtotal</span><strong id="checkoutSubtotal">Rs 0</strong></div>
             <div id="checkoutDiscountRow" class="order-line discount" hidden><span>Coupon discount</span><strong id="checkoutDiscount">− Rs 0</strong></div>
             <div class="order-line total"><span>Total</span><strong id="checkoutTotal">Rs 0</strong></div>
-            <p class="checkout-price-note">Coupons are validated against the current order, dates and usage limits before enrollment is completed.</p>
+
+            <section id="easypaisaPanel" class="easypaisa-panel" hidden aria-live="polite">
+              <div class="easypaisa-panel-head">
+                <div><span class="easypaisa-kicker">EASYPAISA PAYMENT</span><h3>Scan QR to pay</h3></div>
+                <span class="easypaisa-secure">Manual verification</span>
+              </div>
+              <p>Scan this QR in EasyPaisa and send the exact discounted amount shown below.</p>
+              <div class="easypaisa-amount"><span>Amount to send</span><strong id="easypaisaAmount">Rs 0</strong></div>
+              <div class="easypaisa-qr-wrap">
+                <img id="easypaisaQrImage" alt="EasyPaisa payment QR code" hidden>
+                <div id="easypaisaQrMissing" class="easypaisa-qr-missing" hidden>EasyPaisa QR has not been configured by the academy yet.</div>
+              </div>
+              <label class="easypaisa-reference">Transaction / Reference ID
+                <input id="easypaisaReference" type="text" maxlength="120" autocomplete="off" placeholder="Enter EasyPaisa transaction/reference ID">
+              </label>
+              <ol class="easypaisa-steps">
+                <li>Scan the QR and send the exact amount.</li>
+                <li>Copy your EasyPaisa transaction/reference ID.</li>
+                <li>Enter it above and press “Submit payment for verification”.</li>
+              </ol>
+            </section>
+
+            <p class="checkout-price-note">Coupons are validated against the current order, dates and usage limits before payment is submitted.</p>
             <div class="order-benefits">
-              <span>✓ Lifetime access to purchased courses</span>
+              <span>✓ Lifetime access after verified payment</span>
               <span>✓ Certificate of completion</span>
               <span>✓ Learn across desktop and mobile</span>
               <span>✓ Progress saved to your account</span>
@@ -123,6 +151,7 @@
   <script src="/assets/app.js?v=20260808-7"></script>
   <script src="/assets/admin-overrides.js?v=20260808-7"></script>
   <script src="/assets/checkout-page.js?v=20260808-7"></script>
-  <script src="/assets/checkout-coupon.js?rev=20260808-coupon-v1"></script>
+  <script src="/assets/checkout-coupon.js?rev=20260809-coupon-v2"></script>
+  <script src="/assets/easypaisa-checkout.js?rev=20260809-easypaisa-v1"></script>
 </body>
 </html>
