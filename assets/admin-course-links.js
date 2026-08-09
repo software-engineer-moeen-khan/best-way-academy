@@ -42,7 +42,6 @@ function setFormLink(id=''){
   input.value=id?(linkMap[String(id)]||''):'';
 }
 
-// Arm the follow-up save only for the actual Add/Edit Course form submission.
 document.addEventListener('submit',e=>{
   if(!(e.target instanceof HTMLFormElement)||e.target.id!=='courseForm')return;
   installField();
@@ -50,29 +49,42 @@ document.addEventListener('submit',e=>{
   pendingLink=String(e.target.elements.course_link?.value||'').trim();
 },true);
 
-// Existing course save controller keeps the legacy metadata shape. Persist the access link
-// immediately after that save succeeds so the rest of the course form remains unchanged.
+// The legacy course controller rewrites metadata on create/edit/publish/hide. Restore the
+// secure external access link immediately after every course mutation so it can never be lost.
 window.fetch=async function(input,init={}){
   const url=typeof input==='string'?input:(input?.url||'');
   const method=String(init?.method||input?.method||'GET').toUpperCase();
-  const isCourseSave=saveArmed&&['POST','PUT'].includes(method)&&/\/api\/admin\/manage\/courses(?:\/\d+)?(?:\?.*)?$/.test(url);
-  const response=await nativeFetch(input,init);
-  if(!isCourseSave)return response;
+  const match=url.match(/\/api\/admin\/manage\/courses(?:\/(\d+))?(?:\?.*)?$/);
+  const isCourseMutation=!!match&&['POST','PUT'].includes(method);
+  let existingId=match?.[1]?Number(match[1]):0;
+  let linkToKeep=null;
 
+  if(isCourseMutation){
+    if(saveArmed)linkToKeep=pendingLink;
+    else if(existingId){
+      if(!Object.prototype.hasOwnProperty.call(linkMap,String(existingId)))await loadLinks();
+      linkToKeep=Object.prototype.hasOwnProperty.call(linkMap,String(existingId))?(linkMap[String(existingId)]||''):null;
+    }
+  }
+
+  const response=await nativeFetch(input,init);
+  if(!isCourseMutation)return response;
+
+  const wasFormSave=saveArmed;
   saveArmed=false;
-  if(!response.ok)return response;
+  if(!response.ok||linkToKeep===null)return response;
 
   try{
     const payload=await response.clone().json();
-    const courseId=Number(payload?.course?.id||0);
+    const courseId=Number(payload?.course?.id||existingId||0);
     if(!courseId)throw new Error('Saved course ID was not returned.');
     const b=await bridge();
     if(!b)throw new Error('Backend bridge is unavailable.');
-    await b.api(`/api/admin/manage/course-links/${courseId}`,{method:'PUT',body:JSON.stringify({course_link:pendingLink})});
-    linkMap[String(courseId)]=pendingLink;
+    await b.api(`/api/admin/manage/course-links/${courseId}`,{method:'PUT',body:JSON.stringify({course_link:linkToKeep})});
+    linkMap[String(courseId)]=linkToKeep;
   }catch(e){
     console.error('[BWA course link save]',e);
-    setTimeout(()=>toast(`Course was saved, but its access link could not be saved: ${e.message}`,true),0);
+    if(wasFormSave)setTimeout(()=>toast(`Course was saved, but its access link could not be saved: ${e.message}`,true),0);
   }
   return response;
 };
