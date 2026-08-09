@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminOverviewController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BootstrapController;
+use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CourseViewController;
 use App\Http\Controllers\InstructorOverviewController;
 use App\Http\Controllers\PlatformController;
@@ -35,7 +36,7 @@ Route::middleware('auth')->group(function(){
     Route::delete('/api/state',[PlatformController::class,'deleteState'])->middleware('throttle:120,1');
     Route::put('/api/global-state',[PlatformController::class,'putGlobalState'])->middleware('throttle:60,1');
     Route::delete('/api/global-state',[PlatformController::class,'deleteGlobalState'])->middleware('throttle:60,1');
-    Route::post('/api/checkout',[PlatformController::class,'checkout'])->middleware('throttle:10,1');
+    Route::post('/api/checkout',CheckoutController::class)->middleware('throttle:10,1');
     Route::post('/api/courses/{slug}/progress/sync',[ProgressController::class,'sync'])->middleware('throttle:120,1');
     Route::post('/api/courses/{slug}/reviews',[PlatformController::class,'storeReview'])->middleware('throttle:10,1');
     Route::post('/api/courses/{slug}/questions',[PlatformController::class,'storeQuestion'])->middleware('throttle:20,1');
