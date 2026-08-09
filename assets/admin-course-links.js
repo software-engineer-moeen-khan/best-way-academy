@@ -22,7 +22,7 @@ function installField(){
   if(!form||form.elements.course_link)return;
   const label=document.createElement('label');
   label.className='span-2 admin-course-link-field';
-  label.innerHTML='Course link <small>Required. Students receive this link only after payment/access is approved.</small><input name="course_link" type="url" inputmode="url" required maxlength="2048" placeholder="https://your-course-platform.com/course/..." autocomplete="off">';
+  label.innerHTML='Course link <small>Required. Web, internal and app/deep links are supported. Students receive it only after payment/access is approved.</small><input name="course_link" type="text" inputmode="url" required maxlength="2048" placeholder="https://... · www... · /path · whatsapp://..." autocomplete="off">';
   const image=form.elements.image?.closest('label');
   if(image)image.insertAdjacentElement('afterend',label);else form.querySelector('.admin-form-grid')?.appendChild(label);
 }
@@ -89,9 +89,10 @@ async function saveCourseWithLink(form){
       method:'PUT',
       body:JSON.stringify({course_link:link}),
     });
-    if(!saved?.ok||saved?.course_link!==link)throw new Error('Course Link could not be verified after saving.');
+    if(!saved?.ok||!saved?.course_link)throw new Error('Course Link could not be verified after saving.');
 
-    linkMap[String(courseId)]=link;
+    linkMap[String(courseId)]=saved.course_link;
+    form.elements.course_link.value=saved.course_link;
     form.closest('dialog')?.close();
     toast(id?'Course and link updated successfully.':'Course and link created successfully.');
     setTimeout(()=>$('#adminRefresh')?.click(),80);
