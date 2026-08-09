@@ -57,6 +57,18 @@ DB_DATABASE="$($PHP_BIN -r '$e=parse_ini_file(".env");echo $e["DB_DATABASE"]??""
 DB_USERNAME="$($PHP_BIN -r '$e=parse_ini_file(".env");echo $e["DB_USERNAME"]??"";' 2>/dev/null || true)"
 DB_PASSWORD="$($PHP_BIN -r '$e=parse_ini_file(".env");echo $e["DB_PASSWORD"]??"";' 2>/dev/null || true)"
 HOSTINGER_API_TOKEN="${HOSTINGER_API_TOKEN:-}"
+
+# If a complete DB configuration already exists, verify it before Laravel touches
+# cache/sessions/migrations. A bad saved password should never lead into another
+# ambiguous password prompt during a normal deploy.
+if [[ -n "$DB_DATABASE" && -n "$DB_USERNAME" && -n "$DB_PASSWORD" ]]; then
+  log "Verifying existing MySQL credentials from .env..."
+  if ! "$PHP_BIN" -r '$dsn="mysql:host=localhost;port=3306;dbname=".$argv[1].";charset=utf8mb4";try{$pdo=new PDO($dsn,$argv[2],$argv[3],[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);$pdo->query("SELECT 1");exit(0);}catch(Throwable $e){exit(1);}' "$DB_DATABASE" "$DB_USERNAME" "$DB_PASSWORD" >/dev/null 2>&1; then
+    fail "Saved MySQL credentials are invalid. Run: chmod +x deploy/hostinger-fix-db-access.sh && ./deploy/hostinger-fix-db-access.sh ; then run this deploy again."
+  fi
+  log "Existing MySQL credentials verified; no database password prompt is required."
+fi
+
 if [[ -z "$DB_DATABASE" || -z "$DB_USERNAME" || -z "$DB_PASSWORD" ]]; then
   if [[ -z "$HOSTINGER_API_TOKEN" ]]; then
     printf 'Hostinger API token (input hidden; used only for setup): '
