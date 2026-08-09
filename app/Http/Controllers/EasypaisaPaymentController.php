@@ -29,9 +29,11 @@ class EasypaisaPaymentController extends Controller
         if(Schema::hasTable('payment_assets')){
             $asset=DB::table('payment_assets')->where('key',self::QR_KEY)->first();
             if($asset){
-                return response($asset->content,200,[
+                $content=base64_decode((string)$asset->content_base64,true);
+                abort_unless($content!==false&&$content!=='',404,'EasyPaisa payment QR is invalid.');
+                return response($content,200,[
                     'Content-Type'=>$asset->mime_type?:'image/png',
-                    'Content-Length'=>(string)$asset->size_bytes,
+                    'Content-Length'=>(string)strlen($content),
                     'Cache-Control'=>'private, no-cache, max-age=0, must-revalidate',
                     'X-Content-Type-Options'=>'nosniff',
                     'Content-Disposition'=>'inline; filename="easypaisa-qr"',
@@ -39,7 +41,6 @@ class EasypaisaPaymentController extends Controller
             }
         }
 
-        // Backward-compatible fallback for an older filesystem QR.
         $path=$this->legacyQrPath();
         abort_unless($path,404,'EasyPaisa payment QR is not configured.');
         return Storage::disk('public')->response($path,null,[
@@ -63,22 +64,22 @@ class EasypaisaPaymentController extends Controller
         abort_unless($content!==false&&strlen($content)>0,422,'The selected QR image is empty or unreadable.');
 
         $mime=(string)($file->getMimeType()?:'');
-        $allowed=['image/jpeg','image/png','image/webp'];
-        abort_unless(in_array($mime,$allowed,true),422,'QR image must be JPG, PNG or WebP.');
+        abort_unless(in_array($mime,['image/jpeg','image/png','image/webp'],true),422,'QR image must be JPG, PNG or WebP.');
 
-        DB::table('payment_assets')->updateOrInsert(
-            ['key'=>self::QR_KEY],
-            [
-                'mime_type'=>$mime,
-                'original_name'=>Str::limit((string)$file->getClientOriginalName(),255,''),
-                'size_bytes'=>strlen($content),
-                'content'=>$content,
-                'updated_at'=>now(),
-                'created_at'=>DB::raw('COALESCE(created_at, CURRENT_TIMESTAMP)'),
-            ]
-        );
+        $values=[
+            'mime_type'=>$mime,
+            'original_name'=>Str::limit((string)$file->getClientOriginalName(),255,''),
+            'size_bytes'=>strlen($content),
+            'content_base64'=>base64_encode($content),
+            'updated_at'=>now(),
+        ];
+        $existing=DB::table('payment_assets')->where('key',self::QR_KEY)->exists();
+        if($existing){
+            DB::table('payment_assets')->where('key',self::QR_KEY)->update($values);
+        }else{
+            DB::table('payment_assets')->insert(['key'=>self::QR_KEY,'created_at'=>now(),...$values]);
+        }
 
-        // Clean up the old filesystem copy if one existed.
         $this->deleteLegacyQr();
 
         return response()->json([
