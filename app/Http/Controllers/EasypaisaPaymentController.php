@@ -5,29 +5,45 @@ namespace App\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 
 class EasypaisaPaymentController extends Controller
 {
+    private const QR_KEY = 'easypaisa_qr';
+
     public function config(): JsonResponse
     {
-        $path=$this->qrPath();
+        $enabled=$this->hasQr();
         return response()->json([
-            'enabled'=>$path!==null,
-            'qr_url'=>$path?'/api/payment/easypaisa/qr':null,
+            'enabled'=>$enabled,
+            'qr_url'=>$enabled?'/api/payment/easypaisa/qr':null,
             'method'=>'easypaisa',
             'label'=>'EasyPaisa QR',
-        ]);
+        ])->header('Cache-Control','no-store, no-cache, must-revalidate');
     }
 
     public function qr()
     {
-        $path=$this->qrPath();
+        if(Schema::hasTable('payment_assets')){
+            $asset=DB::table('payment_assets')->where('key',self::QR_KEY)->first();
+            if($asset){
+                return response($asset->content,200,[
+                    'Content-Type'=>$asset->mime_type?:'image/png',
+                    'Content-Length'=>(string)$asset->size_bytes,
+                    'Cache-Control'=>'private, no-cache, max-age=0, must-revalidate',
+                    'X-Content-Type-Options'=>'nosniff',
+                    'Content-Disposition'=>'inline; filename="easypaisa-qr"',
+                ]);
+            }
+        }
+
+        // Backward-compatible fallback for an older filesystem QR.
+        $path=$this->legacyQrPath();
         abort_unless($path,404,'EasyPaisa payment QR is not configured.');
         return Storage::disk('public')->response($path,null,[
-            'Cache-Control'=>'private, max-age=300',
+            'Cache-Control'=>'private, no-cache, max-age=0, must-revalidate',
             'X-Content-Type-Options'=>'nosniff',
         ]);
     }
@@ -35,27 +51,49 @@ class EasypaisaPaymentController extends Controller
     public function uploadQr(Request $request): JsonResponse
     {
         abort_unless($request->user()?->role==='admin',403);
-        $data=$request->validate([
-            'qr'=>['required','image','mimes:jpeg,jpg,png,webp','max:5120'],
+        abort_unless(Schema::hasTable('payment_assets'),503,'Payment storage is not ready. Please run the latest database migrations.');
+
+        $request->validate([
+            'qr'=>['required','file','image','mimes:jpeg,jpg,png,webp','max:3072'],
         ]);
-        foreach(['jpg','jpeg','png','webp'] as $ext){
-            Storage::disk('public')->delete('payments/easypaisa-qr.'.$ext);
-        }
-        $file=$data['qr'];
-        $ext=strtolower($file->getClientOriginalExtension()?:'jpg');
-        if($ext==='jpeg')$ext='jpg';
-        $path=$file->storeAs('payments','easypaisa-qr.'.$ext,'public');
-        abort_unless($path,500,'Payment QR could not be saved.');
-        return response()->json(['ok'=>true,'qr_url'=>'/api/payment/easypaisa/qr']);
+
+        $file=$request->file('qr');
+        abort_unless($file&&$file->isValid(),422,'The selected QR image could not be uploaded.');
+        $content=file_get_contents($file->getRealPath());
+        abort_unless($content!==false&&strlen($content)>0,422,'The selected QR image is empty or unreadable.');
+
+        $mime=(string)($file->getMimeType()?:'');
+        $allowed=['image/jpeg','image/png','image/webp'];
+        abort_unless(in_array($mime,$allowed,true),422,'QR image must be JPG, PNG or WebP.');
+
+        DB::table('payment_assets')->updateOrInsert(
+            ['key'=>self::QR_KEY],
+            [
+                'mime_type'=>$mime,
+                'original_name'=>Str::limit((string)$file->getClientOriginalName(),255,''),
+                'size_bytes'=>strlen($content),
+                'content'=>$content,
+                'updated_at'=>now(),
+                'created_at'=>DB::raw('COALESCE(created_at, CURRENT_TIMESTAMP)'),
+            ]
+        );
+
+        // Clean up the old filesystem copy if one existed.
+        $this->deleteLegacyQr();
+
+        return response()->json([
+            'ok'=>true,
+            'enabled'=>true,
+            'qr_url'=>'/api/payment/easypaisa/qr?rev='.now()->timestamp,
+        ]);
     }
 
     public function removeQr(Request $request): JsonResponse
     {
         abort_unless($request->user()?->role==='admin',403);
-        foreach(['jpg','jpeg','png','webp'] as $ext){
-            Storage::disk('public')->delete('payments/easypaisa-qr.'.$ext);
-        }
-        return response()->json(['ok'=>true]);
+        if(Schema::hasTable('payment_assets'))DB::table('payment_assets')->where('key',self::QR_KEY)->delete();
+        $this->deleteLegacyQr();
+        return response()->json(['ok'=>true,'enabled'=>false]);
     }
 
     public function submit(Request $request): JsonResponse
@@ -67,7 +105,7 @@ class EasypaisaPaymentController extends Controller
             'payment_reference'=>['required','string','min:4','max:120'],
         ]);
 
-        abort_unless($this->qrPath(),422,'EasyPaisa QR payment is not configured yet.');
+        abort_unless($this->hasQr(),422,'EasyPaisa QR payment is not configured yet.');
         $slugs=array_values(array_unique(array_filter(array_map(fn($v)=>trim((string)$v),$data['course_slugs']))));
         $courses=DB::table('courses')->whereIn('slug',$slugs)->where('status','published')->get();
         abort_if($courses->count()!==count($slugs),422,'One or more selected courses are unavailable.');
@@ -148,12 +186,23 @@ class EasypaisaPaymentController extends Controller
         ],201);
     }
 
-    private function qrPath(): ?string
+    private function hasQr(): bool
+    {
+        if(Schema::hasTable('payment_assets')&&DB::table('payment_assets')->where('key',self::QR_KEY)->exists())return true;
+        return $this->legacyQrPath()!==null;
+    }
+
+    private function legacyQrPath(): ?string
     {
         foreach(['jpg','jpeg','png','webp'] as $ext){
             $path='payments/easypaisa-qr.'.$ext;
             if(Storage::disk('public')->exists($path))return $path;
         }
         return null;
+    }
+
+    private function deleteLegacyQr(): void
+    {
+        foreach(['jpg','jpeg','png','webp'] as $ext)Storage::disk('public')->delete('payments/easypaisa-qr.'.$ext);
     }
 }
