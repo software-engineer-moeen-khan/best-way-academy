@@ -15,7 +15,7 @@ return new class extends Migration
                 $table->string('mime_type', 100);
                 $table->string('original_name', 255)->nullable();
                 $table->unsignedBigInteger('size_bytes')->default(0);
-                $table->longBlob('content');
+                $table->longText('content_base64');
                 $table->timestamps();
             });
         }
