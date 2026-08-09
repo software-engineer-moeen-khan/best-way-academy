@@ -64,31 +64,31 @@ $serveHtml=function(string $file){
     $html=file_get_contents($path);
 
     $html=str_replace(['href="assets/','src="assets/'],['href="/assets/','src="/assets/'],$html);
-    $html=preg_replace('/(\/assets\/[A-Za-z0-9_.\/-]+\.(?:css|js))(?:\?v=[^"\']*)?/','$1?v=20260810-27',$html);
+    $html=preg_replace('/(\/assets\/[A-Za-z0-9_.\/-]+\.(?:css|js))(?:\?v=[^"\']*)?/','$1?v=20260810-28',$html);
 
     if(!str_contains($html,'portal-polish.css')){
-        $html=str_ireplace('</head>','  <link rel="stylesheet" href="/assets/portal-polish.css?v=20260810-27">'.PHP_EOL.'</head>',$html);
+        $html=str_ireplace('</head>','  <link rel="stylesheet" href="/assets/portal-polish.css?v=20260810-28">'.PHP_EOL.'</head>',$html);
     }
     if(!str_contains($html,'responsive-final.css')){
-        $html=str_ireplace('</head>','  <link rel="stylesheet" href="/assets/responsive-final.css?v=20260810-27">'.PHP_EOL.'</head>',$html);
+        $html=str_ireplace('</head>','  <link rel="stylesheet" href="/assets/responsive-final.css?v=20260810-28">'.PHP_EOL.'</head>',$html);
     }
     if(!str_contains($html,'backend-sync.js')){
-        $html=str_ireplace('</body>','<script src="/assets/backend-sync.js?v=20260810-27"></script>'.PHP_EOL.'</body>',$html);
+        $html=str_ireplace('</body>','<script src="/assets/backend-sync.js?v=20260810-28"></script>'.PHP_EOL.'</body>',$html);
     }
     if(!str_contains($html,'backend-actions.js')){
-        $html=str_ireplace('</body>','<script src="/assets/backend-actions.js?v=20260810-27"></script>'.PHP_EOL.'</body>',$html);
+        $html=str_ireplace('</body>','<script src="/assets/backend-actions.js?v=20260810-28"></script>'.PHP_EOL.'</body>',$html);
     }
     if(!str_contains($html,'admin-backend.js')){
-        $html=str_ireplace('</body>','<script src="/assets/admin-backend.js?v=20260810-27"></script>'.PHP_EOL.'</body>',$html);
+        $html=str_ireplace('</body>','<script src="/assets/admin-backend.js?v=20260810-28"></script>'.PHP_EOL.'</body>',$html);
     }
     if(!str_contains($html,'instructor-backend.js')){
-        $html=str_ireplace('</body>','<script src="/assets/instructor-backend.js?v=20260810-27"></script>'.PHP_EOL.'</body>',$html);
+        $html=str_ireplace('</body>','<script src="/assets/instructor-backend.js?v=20260810-28"></script>'.PHP_EOL.'</body>',$html);
     }
     if(!str_contains($html,'clean-route-fixes.js')){
-        $html=str_ireplace('</body>','<script src="/assets/clean-route-fixes.js?v=20260810-27"></script>'.PHP_EOL.'</body>',$html);
+        $html=str_ireplace('</body>','<script src="/assets/clean-route-fixes.js?v=20260810-28"></script>'.PHP_EOL.'</body>',$html);
     }
     if(!str_contains($html,'portal-polish.js')){
-        $html=str_ireplace('</body>','<script src="/assets/portal-polish.js?v=20260810-27"></script>'.PHP_EOL.'</body>',$html);
+        $html=str_ireplace('</body>','<script src="/assets/portal-polish.js?v=20260810-28"></script>'.PHP_EOL.'</body>',$html);
     }
 
     return response($html)
