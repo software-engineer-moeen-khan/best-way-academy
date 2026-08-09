@@ -37,17 +37,35 @@ async function bridge(){
 }
 
 async function loadLinks(){
-  try{
-    const b=await bridge();
-    const out=await b.api('/api/admin/manage/course-links');
-    linkMap=out.links||{};
-  }catch(e){console.warn('[BWA course links]',e.message)}
+  const b=await bridge();
+  const out=await b.api('/api/admin/manage/course-links');
+  linkMap=out.links||{};
+  return linkMap;
 }
 
-function setFormLink(id=''){
+function setFormLink(id='',valueOverride){
   installField();
-  const input=$('#courseForm [name=course_link]');if(!input)return;
-  input.value=id?(linkMap[String(id)]||''):'';
+  const form=$('#courseForm'),input=form?.elements.course_link;if(!input)return;
+  const value=valueOverride!==undefined?valueOverride:(id?(linkMap[String(id)]||''):'');
+  input.value=value||'';
+}
+
+async function fillEditLink(id){
+  id=String(id||'');
+  if(!id)return;
+  try{
+    // Always reload from MySQL when Edit opens; never trust stale browser state.
+    await loadLinks();
+    const value=linkMap[id]||'';
+    [0,60,180].forEach(delay=>setTimeout(()=>{
+      const form=$('#courseForm'),dialog=$('#courseDialog');
+      if(!form||!dialog?.open)return;
+      if(String(form.elements.id?.value||'')!==id)return;
+      setFormLink(id,value);
+    },delay));
+  }catch(e){
+    console.warn('[BWA course link reload]',e.message);
+  }
 }
 
 function payloadFromForm(form){
@@ -92,7 +110,12 @@ async function saveCourseWithLink(form){
     if(!saved?.ok||!saved?.course_link)throw new Error('Course Link could not be verified after saving.');
 
     linkMap[String(courseId)]=saved.course_link;
-    form.elements.course_link.value=saved.course_link;
+    setFormLink(String(courseId),saved.course_link);
+
+    // Verify the link can be read back from MySQL before reporting success.
+    await loadLinks();
+    if(!linkMap[String(courseId)])throw new Error('Course Link was not found after database verification.');
+
     form.closest('dialog')?.close();
     toast(id?'Course and link updated successfully.':'Course and link created successfully.');
     setTimeout(()=>$('#adminRefresh')?.click(),80);
@@ -103,8 +126,7 @@ async function saveCourseWithLink(form){
   }
 }
 
-// This capture handler owns Add/Edit Course saving so the course and access link are both
-// confirmed before the dialog closes. It intentionally runs before the legacy admin.js handler.
+// Own Add/Edit Course submission so success is shown only after link persistence is verified.
 document.addEventListener('submit',e=>{
   if(!(e.target instanceof HTMLFormElement)||e.target.id!=='courseForm')return;
   e.preventDefault();
@@ -116,15 +138,29 @@ document.addEventListener('click',e=>{
   const edit=e.target.closest?.('[data-course-edit]');
   if(edit){
     const id=edit.dataset.courseEdit;
-    setTimeout(async()=>{
-      if(!Object.prototype.hasOwnProperty.call(linkMap,String(id)))await loadLinks();
-      setFormLink(id);
-    },0);
+    setTimeout(()=>fillEditLink(id),0);
     return;
   }
-  if(e.target.closest?.('#addCourseBtn'))setTimeout(()=>setFormLink(''),0);
+  if(e.target.closest?.('#addCourseBtn'))setTimeout(()=>setFormLink('',''),0);
 },true);
 
-async function init(){installField();await loadLinks()}
+function watchDialog(){
+  const dialog=$('#courseDialog'),form=$('#courseForm');
+  if(!dialog||!form)return;
+  const observer=new MutationObserver(()=>{
+    if(!dialog.open)return;
+    setTimeout(()=>{
+      const id=String(form.elements.id?.value||'');
+      if(id)fillEditLink(id);else setFormLink('','');
+    },0);
+  });
+  observer.observe(dialog,{attributes:true,attributeFilter:['open']});
+}
+
+async function init(){
+  installField();
+  watchDialog();
+  try{await loadLinks()}catch(e){console.warn('[BWA course links]',e.message)}
+}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
