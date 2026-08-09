@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminExternalCourseController;
 use App\Http\Controllers\AdminExtrasController;
 use App\Http\Controllers\AdminManagementController;
 use App\Http\Controllers\AdminPaymentOrderController;
@@ -33,8 +34,8 @@ Route::middleware('auth')->group(function(){
         Route::get('/course-links',[CourseAccessLinkController::class,'adminIndex']);
         Route::put('/course-links/{course}',[CourseAccessLinkController::class,'adminUpdate'])->whereNumber('course');
 
-        Route::post('/courses',[AdminManagementController::class,'createCourse']);
-        Route::put('/courses/{course}',[AdminManagementController::class,'updateCourse'])->whereNumber('course');
+        Route::post('/courses',[AdminExternalCourseController::class,'create']);
+        Route::put('/courses/{course}',[AdminExternalCourseController::class,'update'])->whereNumber('course');
         Route::delete('/courses/{course}',[AdminManagementController::class,'deleteCourse'])->whereNumber('course');
         Route::get('/courses/{course}/curriculum',[AdminManagementController::class,'getCurriculum'])->whereNumber('course');
         Route::put('/courses/{course}/curriculum',[AdminManagementController::class,'updateCurriculum'])->whereNumber('course');
