@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="Secure checkout at Best Way Academy">
+  <meta name="description" content="Secure EasyPaisa checkout at Best Way Academy">
   <title>Checkout — Best Way Academy</title>
-  <link rel="stylesheet" href="/assets/style.css?v=20260808-7">
-  <link rel="stylesheet" href="/assets/pages.css?v=20260808-7">
-  <link rel="stylesheet" href="/assets/checkout.css?v=20260808-7">
-  <link rel="stylesheet" href="/assets/checkout-coupon.css?rev=20260808-coupon-v1">
-  <link rel="stylesheet" href="/assets/easypaisa-checkout.css?rev=20260809-easypaisa-v1">
-  <link rel="stylesheet" href="/assets/responsive-final.css?rev=20260808-responsive-v1">
+  <link rel="stylesheet" href="/assets/style.css?v=20260810-22">
+  <link rel="stylesheet" href="/assets/pages.css?v=20260810-22">
+  <link rel="stylesheet" href="/assets/checkout.css?v=20260810-22">
+  <link rel="stylesheet" href="/assets/checkout-coupon.css?rev=20260810-coupon-v3">
+  <link rel="stylesheet" href="/assets/easypaisa-checkout.css?rev=20260810-easypaisa-v2">
+  <link rel="stylesheet" href="/assets/responsive-final.css?rev=20260810-responsive-v2">
 </head>
 <body class="checkout-page" data-page="checkout">
   <header class="checkout-header">
@@ -28,7 +28,7 @@
       <div class="checkout-heading">
         <p class="eyebrow">CHECKOUT</p>
         <h1>Complete your enrollment</h1>
-        <p>Review your order and billing details. Your enrollment will be saved securely to your Best Way Academy account.</p>
+        <p>Apply your coupon, pay the discounted amount through EasyPaisa QR, then submit the transaction reference for verification.</p>
       </div>
 
       <div class="checkout-grid">
@@ -48,44 +48,17 @@
 
             <div class="checkout-section">
               <h2>Payment method</h2>
-              <div class="payment-methods">
-                <label class="payment-option">
-                  <input type="radio" name="payment" value="card" checked>
-                  <span><b>Credit / Debit Card</b><small>Visa, Mastercard and supported cards</small></span>
-                  <span class="payment-badge">CARD</span>
-                </label>
-                <label class="payment-option">
-                  <input type="radio" name="payment" value="bank">
-                  <span><b>Bank Transfer</b><small>Manual bank transfer option</small></span>
-                </label>
-                <label class="payment-option">
-                  <input type="radio" name="payment" value="wallet">
-                  <span><b>Digital Wallet</b><small>Wallet payment option</small></span>
-                </label>
-                <label id="easypaisaMethodOption" class="payment-option easypaisa-method" hidden>
-                  <input type="radio" name="payment" value="easypaisa">
-                  <span><b>EasyPaisa QR</b><small>Scan the academy QR and submit your transaction reference</small></span>
+              <div class="payment-methods easypaisa-only-method">
+                <label id="easypaisaMethodOption" class="payment-option easypaisa-method">
+                  <input type="radio" name="payment" value="easypaisa" checked>
+                  <span><b>EasyPaisa QR</b><small>Apply a valid coupon, scan the QR and submit your transaction reference</small></span>
                   <span class="payment-badge easypaisa-badge">QR</span>
                 </label>
               </div>
 
-              <div id="cardFields" class="card-fields">
-                <label>Card number
-                  <input type="text" inputmode="numeric" autocomplete="cc-number" placeholder="1234 5678 9012 3456">
-                </label>
-                <div class="form-grid">
-                  <label>Expiry
-                    <input type="text" autocomplete="cc-exp" placeholder="MM/YY">
-                  </label>
-                  <label>CVV
-                    <input type="text" inputmode="numeric" autocomplete="cc-csc" placeholder="123">
-                  </label>
-                </div>
-              </div>
-
-              <button id="checkoutSubmit" class="checkout-button" type="submit">Complete enrollment</button>
+              <button id="checkoutSubmit" class="checkout-button" type="submit" disabled>Apply coupon to continue</button>
               <p id="checkoutMessage" class="checkout-coupon-message" aria-live="polite"></p>
-              <p class="checkout-trust"><span>🔒</span><span><strong>Protected checkout.</strong> EasyPaisa QR payments require administrator verification before course access is granted.</span></p>
+              <p class="checkout-trust"><span>🔒</span><span><strong>EasyPaisa verification.</strong> Course access is granted only after an administrator verifies the submitted payment, unless the coupon makes the order free.</span></p>
             </div>
           </form>
         </section>
@@ -127,7 +100,7 @@
               </ol>
             </section>
 
-            <p class="checkout-price-note">Coupons are validated against the current order, dates and usage limits before payment is submitted.</p>
+            <p class="checkout-price-note">The coupon and payable amount are validated again by the server when payment is submitted.</p>
             <div class="order-benefits">
               <span>✓ Lifetime access after verified payment</span>
               <span>✓ Certificate of completion</span>
@@ -144,14 +117,14 @@
   <footer class="checkout-footer">
     <div class="shell">
       <div class="brand footer-brand"><span class="brand-mark">B</span><span>Best Way <b>Academy</b></span></div>
-      <small>© 2026 Best Way Academy · Secure learner checkout</small>
+      <small>© 2026 Best Way Academy · EasyPaisa learner checkout</small>
     </div>
   </footer>
 
-  <script src="/assets/app.js?v=20260808-7"></script>
-  <script src="/assets/admin-overrides.js?v=20260808-7"></script>
-  <script src="/assets/checkout-page.js?v=20260808-7"></script>
-  <script src="/assets/checkout-coupon.js?rev=20260809-coupon-v2"></script>
-  <script src="/assets/easypaisa-checkout.js?rev=20260809-easypaisa-v1"></script>
+  <script src="/assets/app.js?v=20260810-22"></script>
+  <script src="/assets/admin-overrides.js?v=20260810-22"></script>
+  <script src="/assets/checkout-page.js?v=20260810-22"></script>
+  <script src="/assets/checkout-coupon.js?rev=20260810-coupon-v3"></script>
+  <script src="/assets/easypaisa-checkout.js?rev=20260810-easypaisa-v2"></script>
 </body>
 </html>
