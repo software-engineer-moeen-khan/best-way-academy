@@ -71,6 +71,8 @@ curl -fsS -X PATCH "$API_BASE/api/hosting/v1/accounts/$HOSTINGER_USERNAME/databa
   -H 'Accept: application/json' \
   --data "$BODY" >/dev/null || fail "Hostinger rejected the database password reset request."
 
+# env-set.php removes duplicate active keys, so stale DB credentials cannot remain
+# later in the file and override the newly recovered values.
 setenv DB_CONNECTION mysql
 setenv DB_HOST localhost
 setenv DB_PORT 3306
@@ -79,19 +81,28 @@ setenv DB_USERNAME "$DB_USERNAME"
 setenv DB_PASSWORD "$NEW_DB_PASSWORD"
 chmod 600 .env || true
 
+# Critical: verify exactly what the next deploy/Laravel process will read from .env,
+# not merely the in-memory password generated above.
+EFFECTIVE_DB_DATABASE="$(envget DB_DATABASE)"
+EFFECTIVE_DB_USERNAME="$(envget DB_USERNAME)"
+EFFECTIVE_DB_PASSWORD="$(envget DB_PASSWORD)"
+[[ "$EFFECTIVE_DB_DATABASE" == "$DB_DATABASE" ]] || fail ".env database name verification failed."
+[[ "$EFFECTIVE_DB_USERNAME" == "$DB_USERNAME" ]] || fail ".env database username verification failed."
+[[ "$EFFECTIVE_DB_PASSWORD" == "$NEW_DB_PASSWORD" ]] || fail ".env database password verification failed."
+
 log "Waiting for the new MySQL credentials to become active..."
 CONNECTED=0
 for attempt in {1..12}; do
-  if "$PHP_BIN" -r '$dsn="mysql:host=localhost;port=3306;dbname=".$argv[1].";charset=utf8mb4";try{$pdo=new PDO($dsn,$argv[2],$argv[3],[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);$pdo->query("SELECT 1");exit(0);}catch(Throwable $e){exit(1);}' "$DB_DATABASE" "$DB_USERNAME" "$NEW_DB_PASSWORD" >/dev/null 2>&1; then
+  if "$PHP_BIN" -r '$dsn="mysql:host=localhost;port=3306;dbname=".$argv[1].";charset=utf8mb4";try{$pdo=new PDO($dsn,$argv[2],$argv[3],[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);$pdo->query("SELECT 1");exit(0);}catch(Throwable $e){exit(1);}' "$EFFECTIVE_DB_DATABASE" "$EFFECTIVE_DB_USERNAME" "$EFFECTIVE_DB_PASSWORD" >/dev/null 2>&1; then
     CONNECTED=1
     break
   fi
   sleep 2
 done
 
-unset BODY NEW_DB_PASSWORD HOSTINGER_API_TOKEN
-[[ "$CONNECTED" -eq 1 ]] || fail "Password was reset but MySQL did not accept the new credentials yet. Wait one minute and run this helper again."
+unset BODY NEW_DB_PASSWORD EFFECTIVE_DB_PASSWORD HOSTINGER_API_TOKEN
+[[ "$CONNECTED" -eq 1 ]] || fail "Password was reset but the credentials read back from .env were not accepted. Wait one minute and run this helper again."
 
 "$PHP_BIN" artisan optimize:clear >/dev/null 2>&1 || true
-log "MySQL connection verified successfully. Existing database/data were preserved."
+log "MySQL connection verified successfully using the credentials re-read from .env. Existing database/data were preserved."
 log "Now run: ./deploy/hostinger-deploy.sh"
