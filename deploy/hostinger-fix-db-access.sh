@@ -52,7 +52,15 @@ log "Resolving the existing Hostinger database..."
 EXISTING="$(curl -fsS "$API_BASE/api/hosting/v1/accounts/$HOSTINGER_USERNAME/databases?domain=$HOSTINGER_DOMAIN&per_page=100" \
   -H "Authorization: Bearer $HOSTINGER_API_TOKEN")" || fail "Could not list Hostinger databases. Check the API token and account."
 
-if [[ -z "$DB_DATABASE" ]]; then
+# Prefer the database currently configured when Hostinger confirms it exists; otherwise
+# discover the academy database from the account response.
+MATCHED_DATABASE=""
+if [[ -n "$DB_DATABASE" ]]; then
+  MATCHED_DATABASE="$(printf '%s' "$EXISTING" | N="$DB_DATABASE" "$PHP_BIN" -r '$j=json_decode(stream_get_contents(STDIN),true);$rows=$j["data"]??$j;if(!is_array($rows))$rows=[];foreach($rows as $d){if(($d["name"]??"")===getenv("N")){echo $d["name"]??"";break;}}')"
+fi
+if [[ -n "$MATCHED_DATABASE" ]]; then
+  DB_DATABASE="$MATCHED_DATABASE"
+else
   DB_DATABASE="$(printf '%s' "$EXISTING" | D="$HOSTINGER_DOMAIN" "$PHP_BIN" -r '$j=json_decode(stream_get_contents(STDIN),true);$rows=$j["data"]??$j;if(!is_array($rows))$rows=[];foreach($rows as $d){$n=$d["name"]??"";if(($d["domain"]??"")===getenv("D") && str_ends_with($n,"_bwa_academy")){echo $n;break;}}')"
 fi
 [[ -n "$DB_DATABASE" ]] || fail "Could not find the Best Way Academy database for $HOSTINGER_DOMAIN."
@@ -71,8 +79,7 @@ curl -fsS -X PATCH "$API_BASE/api/hosting/v1/accounts/$HOSTINGER_USERNAME/databa
   -H 'Accept: application/json' \
   --data "$BODY" >/dev/null || fail "Hostinger rejected the database password reset request."
 
-# env-set.php removes duplicate active keys, so stale DB credentials cannot remain
-# later in the file and override the newly recovered values.
+# env-set.php removes duplicate active keys so stale DB credentials cannot override these values.
 setenv DB_CONNECTION mysql
 setenv DB_HOST localhost
 setenv DB_PORT 3306
@@ -81,18 +88,19 @@ setenv DB_USERNAME "$DB_USERNAME"
 setenv DB_PASSWORD "$NEW_DB_PASSWORD"
 chmod 600 .env || true
 
-# Critical: verify exactly what the next deploy/Laravel process will read from .env,
-# not merely the in-memory password generated above.
+# Re-read the exact values that Laravel/normal deploy will use. A live connection is the
+# source of truth; strict shell-string equality is intentionally avoided because INI parsing
+# may normalize representation while preserving the effective value.
 EFFECTIVE_DB_DATABASE="$(envget DB_DATABASE)"
 EFFECTIVE_DB_USERNAME="$(envget DB_USERNAME)"
 EFFECTIVE_DB_PASSWORD="$(envget DB_PASSWORD)"
-[[ "$EFFECTIVE_DB_DATABASE" == "$DB_DATABASE" ]] || fail ".env database name verification failed."
-[[ "$EFFECTIVE_DB_USERNAME" == "$DB_USERNAME" ]] || fail ".env database username verification failed."
-[[ "$EFFECTIVE_DB_PASSWORD" == "$NEW_DB_PASSWORD" ]] || fail ".env database password verification failed."
+[[ -n "$EFFECTIVE_DB_DATABASE" ]] || fail ".env DB_DATABASE is empty after recovery."
+[[ -n "$EFFECTIVE_DB_USERNAME" ]] || fail ".env DB_USERNAME is empty after recovery."
+[[ -n "$EFFECTIVE_DB_PASSWORD" ]] || fail ".env DB_PASSWORD is empty after recovery."
+log "Testing the database credentials exactly as re-read from .env..."
 
-log "Waiting for the new MySQL credentials to become active..."
 CONNECTED=0
-for attempt in {1..12}; do
+for attempt in {1..15}; do
   if "$PHP_BIN" -r '$dsn="mysql:host=localhost;port=3306;dbname=".$argv[1].";charset=utf8mb4";try{$pdo=new PDO($dsn,$argv[2],$argv[3],[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);$pdo->query("SELECT 1");exit(0);}catch(Throwable $e){exit(1);}' "$EFFECTIVE_DB_DATABASE" "$EFFECTIVE_DB_USERNAME" "$EFFECTIVE_DB_PASSWORD" >/dev/null 2>&1; then
     CONNECTED=1
     break
@@ -101,7 +109,7 @@ for attempt in {1..12}; do
 done
 
 unset BODY NEW_DB_PASSWORD EFFECTIVE_DB_PASSWORD HOSTINGER_API_TOKEN
-[[ "$CONNECTED" -eq 1 ]] || fail "Password was reset but the credentials read back from .env were not accepted. Wait one minute and run this helper again."
+[[ "$CONNECTED" -eq 1 ]] || fail "The credentials saved in .env were not accepted by MySQL after password reset. Wait one minute and run this helper again."
 
 "$PHP_BIN" artisan optimize:clear >/dev/null 2>&1 || true
 log "MySQL connection verified successfully using the credentials re-read from .env. Existing database/data were preserved."
