@@ -9,25 +9,41 @@ let quote=null,config=null,submitting=false;
 
 function slugs(){const p=new URLSearchParams(location.search);return p.get('cart')==='1'?[...new Set((read('bwa_cart',[])||[]).filter(Boolean).map(String))]:[p.get('course')||'python']}
 function message(text,type=''){const el=$('#checkoutMessage');if(!el)return;el.textContent=text||'';el.classList.remove('success','error');if(type)el.classList.add(type)}
+function setSubmit(enabled,label){const btn=$('#checkoutSubmit');if(!btn)return;btn.disabled=!enabled;btn.textContent=label}
 async function bridge(){for(let i=0;i<100&&!window.BWABackend;i++)await new Promise(r=>setTimeout(r,40));if(!window.BWABackend)throw new Error('Payment service is still loading.');await window.BWABackend.ready;if(!window.BWABackend.available)throw new Error('Payment service is unavailable.');if(!window.BWABackend.user)throw new Error('Please sign in before submitting payment.');return window.BWABackend}
-async function paymentConfig(){if(config)return config;const r=await fetch('/api/payment/easypaisa',{credentials:'same-origin',headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'}});config=await r.json().catch(()=>({enabled:false}));return config}
+async function paymentConfig(force=false){if(config&&!force)return config;const r=await fetch('/api/payment/easypaisa?ts='+Date.now(),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'}});config=await r.json().catch(()=>({enabled:false}));return config}
 
-function selectMethod(){const radio=$('input[name=payment][value=easypaisa]');if(radio){radio.checked=true;radio.dispatchEvent(new Event('change',{bubbles:true}))}}
-function hideQr(){const panel=$('#easypaisaPanel'),option=$('#easypaisaMethodOption');if(panel)panel.hidden=true;if(option)option.hidden=true;quote=null;const radio=$('input[name=payment][value=card]');if(radio){radio.checked=true;radio.dispatchEvent(new Event('change',{bubbles:true}))}}
+function resetPayment(){
+  quote=null;
+  const panel=$('#easypaisaPanel'),img=$('#easypaisaQrImage'),missing=$('#easypaisaQrMissing'),ref=$('#easypaisaReference');
+  if(panel)panel.hidden=true;if(img){img.hidden=true;img.removeAttribute('src')}if(missing)missing.hidden=true;if(ref)ref.value='';
+  setSubmit(false,'Apply coupon to continue');
+}
+
 async function revealQr(detail){
   quote=detail||null;
-  const panel=$('#easypaisaPanel'),option=$('#easypaisaMethodOption'),img=$('#easypaisaQrImage'),missing=$('#easypaisaQrMissing'),amount=$('#easypaisaAmount');
-  if(!panel||!option)return;
+  const panel=$('#easypaisaPanel'),img=$('#easypaisaQrImage'),missing=$('#easypaisaQrMissing'),amount=$('#easypaisaAmount'),radio=$('input[name=payment][value=easypaisa]');
+  if(radio)radio.checked=true;
   if(amount)amount.textContent=money(detail?.total||0);
-  if(Number(detail?.total||0)<=0){hideQr();message('Your coupon covers the full order. No EasyPaisa payment is required.','success');return}
-  const cfg=await paymentConfig().catch(()=>({enabled:false}));
-  panel.hidden=false;
+
+  if(Number(detail?.total||0)<=0){
+    if(panel)panel.hidden=true;
+    setSubmit(true,'Complete free enrollment');
+    message('Coupon applied. Your payable amount is Rs 0; no EasyPaisa payment is required.','success');
+    return;
+  }
+
+  const cfg=await paymentConfig(true).catch(()=>({enabled:false}));
+  if(panel)panel.hidden=false;
   if(cfg.enabled&&cfg.qr_url){
-    option.hidden=false;if(img){img.src=cfg.qr_url+'?t='+Date.now();img.hidden=false}if(missing)missing.hidden=true;selectMethod();
-    const submit=$('#checkoutSubmit');if(submit)submit.textContent=`Submit payment for verification · ${money(detail.total)}`;
-    panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+    if(img){img.src=cfg.qr_url+(cfg.qr_url.includes('?')?'&':'?')+'t='+Date.now();img.hidden=false}
+    if(missing)missing.hidden=true;
+    setSubmit(true,`Submit payment for verification · ${money(detail.total)}`);
+    message('Coupon applied. Scan the EasyPaisa QR and submit your transaction reference.','success');
+    panel?.scrollIntoView({behavior:'smooth',block:'nearest'});
   }else{
-    option.hidden=true;if(img)img.hidden=true;if(missing)missing.hidden=false;
+    if(img){img.hidden=true;img.removeAttribute('src')}if(missing)missing.hidden=false;
+    setSubmit(false,'EasyPaisa QR not configured');
     message('EasyPaisa QR is not configured yet. Please contact the academy administrator.','error');
   }
 }
@@ -41,26 +57,34 @@ function pendingView(out,reference){
 }
 
 async function submitEasyPaisa(e){
+  const form=e.target;if(!(form instanceof HTMLFormElement)||form.id!=='checkoutForm')return;
   const selected=$('input[name=payment]:checked')?.value;
   if(selected!=='easypaisa')return;
+
+  // A 100% coupon needs no manual payment; let the standard checkout endpoint grant access.
+  if(quote&&Number(quote.total||0)<=0)return;
+
   e.preventDefault();e.stopImmediatePropagation();
   if(submitting)return;
   const pending=read('bwa_pending_discount',null),reference=$('#easypaisaReference')?.value.trim()||'';
-  if(!quote||!pending?.code){message('Apply a valid coupon before using EasyPaisa QR payment.','error');return}
+  if(!quote||!pending?.code){message('Apply a valid coupon before submitting EasyPaisa payment.','error');return}
   if(reference.length<4){message('Enter the EasyPaisa transaction/reference ID after sending payment.','error');$('#easypaisaReference')?.focus();return}
-  submitting=true;const submit=$('#checkoutSubmit');if(submit){submit.disabled=true;submit.textContent='Submitting for verification…'}message('Submitting your payment reference securely…');
+  submitting=true;setSubmit(false,'Submitting for verification…');message('Submitting your payment reference securely…');
   try{
     const b=await bridge();
     const out=await b.api('/api/checkout/easypaisa',{method:'POST',body:JSON.stringify({course_slugs:slugs(),coupon_code:pending.code,payment_reference:reference})});
     const order={number:out.order?.number,total:Number(out.total||out.order?.total||0),date:out.order?.created_at,ids:slugs(),status:out.status||out.order?.status||'pending',payment_method:'easypaisa',payment_reference:reference,originalTotal:Number(out.subtotal||0),discount:{code:pending.code,amount:Number(out.discount_total||0)}};
     write('bwa_last_order',order);write('bwa_orders',[order,...(read('bwa_orders',[])||[]).filter(x=>x.number!==order.number)]);write('bwa_cart',[]);remove('bwa_pending_discount');remove('bwa_apply_discount_on_success');
     if(out.payment_pending){pendingView(out,reference)}else{location.href='/my-learning'}
-  }catch(err){const text=err?.data?.errors?Object.values(err.data.errors).flat().join(' '):(err?.message||'Payment could not be submitted.');message(text,'error');if(submit){submit.disabled=false;submit.textContent=`Submit payment for verification · ${money(quote?.total||0)}`}}
+  }catch(err){const text=err?.data?.errors?Object.values(err.data.errors).flat().join(' '):(err?.message||'Payment could not be submitted.');message(text,'error');setSubmit(true,`Submit payment for verification · ${money(quote?.total||0)}`)}
   finally{submitting=false}
 }
 
 document.addEventListener('submit',submitEasyPaisa,true);
 document.addEventListener('bwa:coupon-applied',e=>revealQr(e.detail));
-document.addEventListener('bwa:coupon-reset',hideQr);
-document.addEventListener('change',e=>{const radio=e.target instanceof HTMLInputElement&&e.target.name==='payment'?e.target:null;if(!radio)return;const fields=$('#cardFields');if(fields)fields.hidden=radio.value!=='card';const panel=$('#easypaisaPanel');if(panel&&quote&&config?.enabled)panel.hidden=radio.value!=='easypaisa';const submit=$('#checkoutSubmit');if(submit&&quote&&radio.value==='easypaisa')submit.textContent=`Submit payment for verification · ${money(quote.total||0)}`});
+document.addEventListener('bwa:coupon-reset',resetPayment);
+document.addEventListener('DOMContentLoaded',()=>{
+  const radio=$('input[name=payment][value=easypaisa]');if(radio)radio.checked=true;
+  resetPayment();
+});
 })();
