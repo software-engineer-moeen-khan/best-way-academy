@@ -2,24 +2,78 @@
 @import url('/assets/admin-mobile.css?rev=20260808-admin-mobile-v1');
 .admin-table select{height:34px;border:1px solid #d0d5dd;border-radius:5px;background:#fff;padding:0 8px;font:inherit;font-size:12px;color:#344054}.admin-item-card select{height:32px;border:1px solid #d0d5dd;border-radius:5px;background:#fff;padding:0 7px;font-size:11px}
 
-/* Keep the admin header anchored to the viewport on every screen size. */
-.admin-topbar{position:fixed;top:0;left:0;right:0;width:100%;z-index:50}
-.admin-shell{padding-top:68px}
-
-/* Desktop admin navigation stays anchored while only the page content scrolls. */
+/*
+ * Desktop admin shell: the browser document itself never scrolls.
+ * Header and sidebar stay anchored; only the main workspace scrolls vertically.
+ * !important is intentional because portal-polish/responsive layers load after
+ * this file and previously introduced 68px/72px positioning conflicts.
+ */
 @media (min-width:781px){
-  .admin-shell{display:block;padding-left:258px;min-height:100vh}
-  .admin-sidebar{position:fixed;left:0;top:68px;bottom:0;width:258px;height:auto;overflow-y:auto;overflow-x:hidden;z-index:35}
-  .admin-main{width:100%;min-width:0}
+  html:has(body.admin-body){height:100%;overflow:hidden}
+  body.admin-body{height:100vh;min-height:0!important;overflow:hidden!important}
+
+  body.admin-body>.admin-topbar{
+    position:fixed!important;
+    top:0!important;
+    left:0!important;
+    right:0!important;
+    width:100%!important;
+    height:72px!important;
+    min-height:72px!important;
+    z-index:1000!important;
+    background:#fff!important;
+    transform:none!important;
+  }
+
+  body.admin-body>.admin-shell{
+    position:fixed!important;
+    top:72px!important;
+    right:0!important;
+    bottom:0!important;
+    left:0!important;
+    display:block!important;
+    height:auto!important;
+    min-height:0!important;
+    padding-top:0!important;
+    padding-left:258px!important;
+    overflow:hidden!important;
+  }
+
+  body.admin-body .admin-sidebar{
+    position:fixed!important;
+    left:0!important;
+    top:72px!important;
+    bottom:0!important;
+    width:258px!important;
+    height:auto!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    z-index:900!important;
+  }
+
+  body.admin-body .admin-main{
+    width:100%!important;
+    height:100%!important;
+    min-width:0!important;
+    min-height:0!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
+  }
 }
+
 @media (min-width:781px) and (max-width:1050px){
-  .admin-shell{padding-left:220px}
-  .admin-sidebar{width:220px}
+  body.admin-body>.admin-shell{padding-left:220px!important}
+  body.admin-body .admin-sidebar{width:220px!important}
 }
 @media (min-width:781px) and (max-width:960px){
-  .admin-shell{padding-left:190px}
-  .admin-sidebar{width:190px}
+  body.admin-body>.admin-shell{padding-left:190px!important}
+  body.admin-body .admin-sidebar{width:190px!important}
 }
+
+/* Mobile keeps the existing stacked/navigation behavior. */
 @media (max-width:780px){
-  .admin-shell{padding-top:58px}
+  .admin-topbar{position:sticky;top:0;z-index:60}
+  .admin-shell{padding-top:0}
 }
