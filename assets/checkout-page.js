@@ -19,7 +19,7 @@
     $('#checkoutTotal')&&( $('#checkoutTotal').textContent=money(total) );
     $('#checkoutSubtotal')&&( $('#checkoutSubtotal').textContent=money(total) );
     $('#checkoutPayAmount')&&( $('#checkoutPayAmount').textContent=money(total) );
-    const btn=$('#checkoutSubmit');if(btn){btn.disabled=!courses.length;btn.textContent=courses.length?`Complete enrollment · ${money(total)}`:'Course unavailable';}
+    const btn=$('#checkoutSubmit');if(btn){btn.disabled=true;btn.textContent=courses.length?'Apply coupon to continue':'Course unavailable';}
   }
   function showError(message){
     const card=$('.order-card');if(!card)return;
@@ -35,8 +35,5 @@
       if(courses.length!==slugs.length)showError('One or more courses are currently unavailable and were removed from this order.');
     }catch(e){renderCourses([]);showError(e.message||'Unable to load your order. Please refresh and try again.');}
   }
-  document.addEventListener('DOMContentLoaded',()=>{
-    hydrate();
-    document.querySelectorAll('input[name=payment]').forEach(r=>r.addEventListener('change',()=>{const fields=$('#cardFields');if(fields)fields.hidden=r.value!=='card'}));
-  });
+  document.addEventListener('DOMContentLoaded',hydrate);
 })();
