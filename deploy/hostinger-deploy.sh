@@ -37,7 +37,10 @@ log "Installing PHP dependencies (Composer scripts disabled for Hostinger shared
 "$COMPOSER_BIN" install --no-dev --prefer-dist --no-interaction --optimize-autoloader --no-scripts
 
 if [[ ! -f .env ]]; then cp .env.example .env; chmod 600 .env; fi
+[[ -f deploy/env-set.php ]] || fail "deploy/env-set.php is missing."
+[[ -f deploy/env-get.php ]] || fail "deploy/env-get.php is missing. Pull the latest main branch first."
 setenv(){ "$PHP_BIN" deploy/env-set.php .env "$1" "$2"; }
+envget(){ "$PHP_BIN" deploy/env-get.php .env "$1" 2>/dev/null || true; }
 setenv APP_ENV production
 setenv APP_DEBUG false
 setenv APP_URL "https://$HOSTINGER_DOMAIN"
@@ -53,14 +56,12 @@ else
   log "Laravel package discovery was skipped; the app can rebuild its package manifest on boot."
 fi
 
-DB_DATABASE="$($PHP_BIN -r '$e=parse_ini_file(".env");echo $e["DB_DATABASE"]??"";' 2>/dev/null || true)"
-DB_USERNAME="$($PHP_BIN -r '$e=parse_ini_file(".env");echo $e["DB_USERNAME"]??"";' 2>/dev/null || true)"
-DB_PASSWORD="$($PHP_BIN -r '$e=parse_ini_file(".env");echo $e["DB_PASSWORD"]??"";' 2>/dev/null || true)"
+DB_DATABASE="$(envget DB_DATABASE)"
+DB_USERNAME="$(envget DB_USERNAME)"
+DB_PASSWORD="$(envget DB_PASSWORD)"
 HOSTINGER_API_TOKEN="${HOSTINGER_API_TOKEN:-}"
 
-# If a complete DB configuration already exists, verify it before Laravel touches
-# cache/sessions/migrations. A bad saved password should never lead into another
-# ambiguous password prompt during a normal deploy.
+# Verify existing credentials before Laravel touches DB-backed cache/sessions/migrations.
 if [[ -n "$DB_DATABASE" && -n "$DB_USERNAME" && -n "$DB_PASSWORD" ]]; then
   log "Verifying existing MySQL credentials from .env..."
   if ! "$PHP_BIN" -r '$dsn="mysql:host=localhost;port=3306;dbname=".$argv[1].";charset=utf8mb4";try{$pdo=new PDO($dsn,$argv[2],$argv[3],[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);$pdo->query("SELECT 1");exit(0);}catch(Throwable $e){exit(1);}' "$DB_DATABASE" "$DB_USERNAME" "$DB_PASSWORD" >/dev/null 2>&1; then
@@ -119,16 +120,17 @@ if [[ -z "$DB_DATABASE" || -z "$DB_USERNAME" || -z "$DB_PASSWORD" ]]; then
   setenv DB_PASSWORD "$DB_PASSWORD"
 fi
 
-APP_KEY="$($PHP_BIN -r '$e=parse_ini_file(".env");echo $e["APP_KEY"]??"";' 2>/dev/null || true)"
+APP_KEY="$(envget APP_KEY)"
 if [[ -z "$APP_KEY" ]]; then "$PHP_BIN" artisan key:generate --force; fi
-ADMIN_PASSWORD="$($PHP_BIN -r '$e=parse_ini_file(".env");echo $e["ADMIN_PASSWORD"]??"";' 2>/dev/null || true)"
+ADMIN_PASSWORD="$(envget ADMIN_PASSWORD)"
 if [[ -z "$ADMIN_PASSWORD" ]]; then
   ADMIN_PASSWORD="$($PHP_BIN -r 'echo rtrim(strtr(base64_encode(random_bytes(18)),"+/","XY"),"=")."aA9!";')"
   setenv ADMIN_EMAIL "admin@$HOSTINGER_DOMAIN"
   setenv ADMIN_NAME "Best Way Academy Admin"
   setenv ADMIN_PASSWORD "$ADMIN_PASSWORD"
 fi
-ADMIN_EMAIL="$($PHP_BIN -r '$e=parse_ini_file(".env");echo $e["ADMIN_EMAIL"]??"admin@example.com";' 2>/dev/null || true)"
+ADMIN_EMAIL="$(envget ADMIN_EMAIL)"
+[[ -n "$ADMIN_EMAIL" ]] || ADMIN_EMAIL="admin@example.com"
 if [[ ! -f .deploy/admin-credentials.txt ]]; then
   { echo "Admin URL: https://$HOSTINGER_DOMAIN/admin"; echo "Email: $ADMIN_EMAIL"; echo "Password: $ADMIN_PASSWORD"; } > .deploy/admin-credentials.txt
   chmod 600 .deploy/admin-credentials.txt
@@ -172,7 +174,13 @@ printf '%s\n' "$ROUTES" | grep -Fq 'api/categories' || fail "Catalog categories 
 printf '%s\n' "$ROUTES" | grep -Fq 'api/learning-plans' || fail "Learning plans route is missing."
 printf '%s\n' "$ROUTES" | grep -Fq 'api/assessments/{assessment}/submit' || fail "Assessment submission route is missing."
 "$PHP_BIN" artisan migrate:status >/dev/null
-"$PHP_BIN" -r '$e=parse_ini_file(".env");$dsn="mysql:host=".($e["DB_HOST"]??"localhost").";port=".($e["DB_PORT"]??3306).";dbname=".$e["DB_DATABASE"].";charset=utf8mb4";$pdo=new PDO($dsn,$e["DB_USERNAME"],$e["DB_PASSWORD"],[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);foreach(["users","sessions","auth_attempts","cache","cache_locks","course_categories","platform_settings","learning_plans","assessment_sets","assessment_questions","assessment_attempts"] as $t){$pdo->query("SELECT 1 FROM `$t` LIMIT 1");}echo "Admin/auth/content database tables verified.\n";'
+VERIFY_DB_HOST="$(envget DB_HOST)"; [[ -n "$VERIFY_DB_HOST" ]] || VERIFY_DB_HOST="localhost"
+VERIFY_DB_PORT="$(envget DB_PORT)"; [[ -n "$VERIFY_DB_PORT" ]] || VERIFY_DB_PORT="3306"
+VERIFY_DB_DATABASE="$(envget DB_DATABASE)"
+VERIFY_DB_USERNAME="$(envget DB_USERNAME)"
+VERIFY_DB_PASSWORD="$(envget DB_PASSWORD)"
+"$PHP_BIN" -r '$dsn="mysql:host=".$argv[1].";port=".$argv[2].";dbname=".$argv[3].";charset=utf8mb4";$pdo=new PDO($dsn,$argv[4],$argv[5],[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);foreach(["users","sessions","auth_attempts","cache","cache_locks","course_categories","platform_settings","learning_plans","assessment_sets","assessment_questions","assessment_attempts"] as $t){$pdo->query("SELECT 1 FROM `$t` LIMIT 1");}echo "Admin/auth/content database tables verified.\n";' "$VERIFY_DB_HOST" "$VERIFY_DB_PORT" "$VERIFY_DB_DATABASE" "$VERIFY_DB_USERNAME" "$VERIFY_DB_PASSWORD"
+unset VERIFY_DB_PASSWORD DB_PASSWORD ADMIN_PASSWORD
 
 log "Checking live backend health..."
 HEALTH_OK=0
