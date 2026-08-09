@@ -2,9 +2,10 @@
 
 use App\Http\Controllers\AdminExtrasController;
 use App\Http\Controllers\AdminManagementController;
-use App\Http\Controllers\AdminOrderController;
+use App\Http\Controllers\AdminPaymentOrderController;
 use App\Http\Controllers\CatalogMetadataController;
 use App\Http\Controllers\CouponController;
+use App\Http\Controllers\EasypaisaPaymentController;
 use App\Http\Controllers\LearningContentController;
 use App\Http\Controllers\SubscriptionController;
 use Illuminate\Support\Facades\Route;
@@ -12,9 +13,12 @@ use Illuminate\Support\Facades\Route;
 Route::get('/api/categories',[CatalogMetadataController::class,'categories']);
 Route::get('/api/platform',[CatalogMetadataController::class,'platform']);
 Route::get('/api/learning-plans',[LearningContentController::class,'plans']);
+Route::get('/api/payment/easypaisa',[EasypaisaPaymentController::class,'config']);
+Route::get('/api/payment/easypaisa/qr',[EasypaisaPaymentController::class,'qr']);
 
 Route::middleware('auth')->group(function(){
     Route::post('/api/coupons/quote',[CouponController::class,'quote'])->middleware('throttle:30,1');
+    Route::post('/api/checkout/easypaisa',[EasypaisaPaymentController::class,'submit'])->middleware('throttle:10,1');
     Route::get('/api/subscription',[SubscriptionController::class,'current']);
     Route::post('/api/subscription',[SubscriptionController::class,'start']);
     Route::delete('/api/subscription',[SubscriptionController::class,'cancel']);
@@ -41,7 +45,7 @@ Route::middleware('auth')->group(function(){
         Route::post('/enrollments',[AdminManagementController::class,'createEnrollment']);
         Route::delete('/enrollments/{enrollment}',[AdminManagementController::class,'deleteEnrollment'])->whereNumber('enrollment');
 
-        Route::patch('/orders/{order}',[AdminOrderController::class,'update'])->whereNumber('order');
+        Route::patch('/orders/{order}',[AdminPaymentOrderController::class,'update'])->whereNumber('order');
 
         Route::post('/coupons',[AdminManagementController::class,'createCoupon']);
         Route::put('/coupons/{coupon}',[AdminManagementController::class,'updateCoupon'])->whereNumber('coupon');
@@ -62,6 +66,9 @@ Route::middleware('auth')->group(function(){
         Route::post('/assessments',[AdminExtrasController::class,'createAssessment']);
         Route::put('/assessments/{assessment}',[AdminExtrasController::class,'updateAssessment'])->whereNumber('assessment');
         Route::delete('/assessments/{assessment}',[AdminExtrasController::class,'deleteAssessment'])->whereNumber('assessment');
+
+        Route::post('/payment/easypaisa-qr',[EasypaisaPaymentController::class,'uploadQr'])->middleware('throttle:10,1');
+        Route::delete('/payment/easypaisa-qr',[EasypaisaPaymentController::class,'removeQr'])->middleware('throttle:10,1');
 
         Route::put('/settings',[AdminManagementController::class,'updateSettings']);
     });
