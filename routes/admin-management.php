@@ -50,6 +50,7 @@ Route::middleware('auth')->group(function(){
         Route::get('/advertisements',[AdminAdvertisementController::class,'index'])->middleware('throttle:60,1');
         Route::post('/advertisements',[AdminAdvertisementController::class,'store'])->middleware('throttle:30,1');
         Route::put('/advertisement-placements/homepage-google-ai-popunder',[AdminAdvertisementController::class,'assignGoogleAiPopunder'])->middleware('throttle:30,1');
+        Route::put('/advertisement-placements/homepage-popular-skills-longbar',[AdminAdvertisementController::class,'assignPopularSkillsLongbar'])->middleware('throttle:30,1');
         Route::put('/advertisements/{advertisement}',[AdminAdvertisementController::class,'update'])->whereNumber('advertisement')->middleware('throttle:30,1');
         Route::delete('/advertisements/{advertisement}',[AdminAdvertisementController::class,'destroy'])->whereNumber('advertisement')->middleware('throttle:30,1');
 
