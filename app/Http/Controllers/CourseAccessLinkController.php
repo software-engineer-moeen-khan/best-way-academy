@@ -125,6 +125,67 @@ class CourseAccessLinkController extends Controller
         return $columns;
     }
 
+    private function persistDedicatedLink(int $courseId, ?string $link): void
+    {
+        if (! $this->hasAccessTable()) {
+            return;
+        }
+
+        $existing = DB::table('course_access_links')->where('course_id', $courseId)->first();
+
+        if ($link === null) {
+            if ($existing) {
+                DB::table('course_access_links')->where('course_id', $courseId)->delete();
+            }
+            return;
+        }
+
+        if ($existing) {
+            DB::table('course_access_links')->where('course_id', $courseId)->update([
+                'url' => $link,
+                'updated_at' => now(),
+            ]);
+            return;
+        }
+
+        DB::table('course_access_links')->insert([
+            'course_id' => $courseId,
+            'url' => $link,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    private function persistLegacySetting(int $courseId, ?string $link): void
+    {
+        $key = $this->settingKey($courseId);
+        $existing = DB::table('platform_settings')->where('key', $key)->first();
+
+        if ($link === null) {
+            if ($existing) {
+                DB::table('platform_settings')->where('key', $key)->delete();
+            }
+            return;
+        }
+
+        $encoded = json_encode($link, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+        if ($existing) {
+            DB::table('platform_settings')->where('key', $key)->update([
+                'value' => $encoded,
+                'updated_at' => now(),
+            ]);
+            return;
+        }
+
+        DB::table('platform_settings')->insert([
+            'key' => $key,
+            'value' => $encoded,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
     public function learner(Request $request): JsonResponse
     {
         $columns = array_merge(
@@ -185,21 +246,7 @@ class CourseAccessLinkController extends Controller
         $link = $this->cleanLink($data['course_link'] ?? null);
 
         DB::transaction(function () use ($course, $link) {
-            if ($this->hasAccessTable()) {
-                if ($link === null) {
-                    DB::table('course_access_links')->where('course_id', $course)->delete();
-                } else {
-                    $existing = DB::table('course_access_links')->where('course_id', $course)->exists();
-                    DB::table('course_access_links')->updateOrInsert(
-                        ['course_id' => $course],
-                        [
-                            'url' => $link,
-                            'updated_at' => now(),
-                            'created_at' => $existing ? DB::raw('created_at') : now(),
-                        ]
-                    );
-                }
-            }
+            $this->persistDedicatedLink($course, $link);
 
             if ($this->hasLinkColumn()) {
                 DB::table('courses')->where('id', $course)->update([
@@ -210,20 +257,7 @@ class CourseAccessLinkController extends Controller
                 DB::table('courses')->where('id', $course)->update(['updated_at' => now()]);
             }
 
-            $key = $this->settingKey($course);
-            if ($link === null) {
-                DB::table('platform_settings')->where('key', $key)->delete();
-            } else {
-                $existingSetting = DB::table('platform_settings')->where('key', $key)->exists();
-                DB::table('platform_settings')->updateOrInsert(
-                    ['key' => $key],
-                    [
-                        'value' => json_encode($link, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
-                        'updated_at' => now(),
-                        'created_at' => $existingSetting ? DB::raw('created_at') : now(),
-                    ]
-                );
-            }
+            $this->persistLegacySetting($course, $link);
         });
 
         $columns = ['id', 'slug', 'title', 'metadata'];
