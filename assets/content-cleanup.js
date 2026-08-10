@@ -12,6 +12,35 @@ function cleanBanner(){
     }
   });
 }
+function ensureFooterLegalLinks(){
+  const footer=document.querySelector('footer');
+  if(!footer)return;
+  let row=footer.querySelector('.legal-links');
+  if(!row){
+    row=document.createElement('div');
+    row.className='legal-links shell';
+    row.innerHTML='<a href="/about">About</a><a href="/contact">Contact</a><a href="/faq">FAQ</a>';
+    footer.appendChild(row);
+  }
+  const wanted=[
+    {href:'/privacy',label:'Privacy Policy'},
+    {href:'/terms',label:'Terms of Use'},
+    {href:'/contact',label:'Support',key:'support'},
+  ];
+  wanted.forEach(item=>{
+    const exists=[...row.querySelectorAll('a')].some(a=>{
+      const text=a.textContent.trim().toLowerCase();
+      if(item.key==='support')return text==='support';
+      try{return new URL(a.href,location.origin).pathname===item.href}catch{return false}
+    });
+    if(!exists){
+      const a=document.createElement('a');
+      a.href=item.href;
+      a.textContent=item.label;
+      row.appendChild(a);
+    }
+  });
+}
 function loadCommerceState(){
   if(document.querySelector('script[data-bwa-commerce-state]'))return;
   const script=document.createElement('script');
@@ -20,9 +49,10 @@ function loadCommerceState(){
   script.dataset.bwaCommerceState='1';
   document.head.appendChild(script);
 }
-cleanBanner();
+function run(){cleanBanner();ensureFooterLegalLinks()}
+run();
 loadCommerceState();
-const observer=new MutationObserver(cleanBanner);
+const observer=new MutationObserver(run);
 observer.observe(document.documentElement,{childList:true,subtree:true});
 setTimeout(()=>observer.disconnect(),5000);
 })();
