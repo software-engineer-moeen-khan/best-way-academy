@@ -11,6 +11,22 @@
   display: none !important;
 }
 
+/* Public navigation cleanup: keep Explore + Categories, remove AI, Career paths and Plans. */
+.desktop-nav a[href*="category=Artificial%20Intelligence"],
+.desktop-nav a[href*="category=Artificial+Intelligence"],
+.desktop-nav a[href*="category=Artificial%20intelligence"],
+.desktop-nav a[href*="category=Career"],
+.site-header .suite-links a[href="/plans"],
+.site-header .suite-links a[href="plans.html"],
+.site-header .suite-links a[href="/plans.html"],
+.site-header a[href="/plans"].nav-link,
+.site-header a[href="plans.html"].nav-link,
+.mobile-nav a[href="/plans"],
+.mobile-nav a[href="plans.html"],
+.mobile-nav a[href="/plans.html"] {
+  display: none !important;
+}
+
 /* Homepage: remove the skill-category tabs row above the skill cards. */
 #skillTabs,
 #skills > .tabs {
