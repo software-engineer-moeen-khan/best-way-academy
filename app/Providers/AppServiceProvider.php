@@ -49,7 +49,15 @@ class AppServiceProvider extends ServiceProvider
             if ($event->request->is('admin') && !str_contains($html, 'admin-advertisements.js')) {
                 $html = str_ireplace(
                     '</body>',
-                    '<script src="/assets/admin-advertisements.js?rev=20260811-advertisements-v2"></script>'.PHP_EOL.'</body>',
+                    '<script src="/assets/admin-advertisements.js?rev=20260811-advertisements-v3"></script>'.PHP_EOL.'</body>',
+                    $html
+                );
+            }
+
+            if ($event->request->getPathInfo() === '/' && !str_contains($html, 'homepage-google-ai-popunder.js')) {
+                $html = str_ireplace(
+                    '</body>',
+                    '<script src="/assets/homepage-google-ai-popunder.js?rev=20260811-google-ai-popunder-v1"></script>'.PHP_EOL.'</body>',
                     $html
                 );
             }
