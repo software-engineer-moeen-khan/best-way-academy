@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminAdvertisementController;
 use App\Http\Controllers\AdminExternalCourseController;
 use App\Http\Controllers\AdminExtrasController;
 use App\Http\Controllers\AdminManagementController;
@@ -44,6 +45,11 @@ Route::middleware('auth')->group(function(){
         Route::put('/promo-message',[PromoMessageController::class,'update'])->middleware('throttle:30,1');
         Route::get('/homepage-categories',[HomepageCategoriesController::class,'show']);
         Route::put('/homepage-categories',[HomepageCategoriesController::class,'update'])->middleware('throttle:30,1');
+
+        Route::get('/advertisements',[AdminAdvertisementController::class,'index'])->middleware('throttle:60,1');
+        Route::post('/advertisements',[AdminAdvertisementController::class,'store'])->middleware('throttle:30,1');
+        Route::put('/advertisements/{advertisement}',[AdminAdvertisementController::class,'update'])->whereNumber('advertisement')->middleware('throttle:30,1');
+        Route::delete('/advertisements/{advertisement}',[AdminAdvertisementController::class,'destroy'])->whereNumber('advertisement')->middleware('throttle:30,1');
 
         Route::post('/courses',[AdminExternalCourseController::class,'create']);
         Route::put('/courses/{course}',[AdminExternalCourseController::class,'update'])->whereNumber('course');
