@@ -1,4 +1,14 @@
 (()=>{
+  const ensureResponsiveCss=()=>{
+    if(document.querySelector('link[data-bwa-responsive-unified]'))return;
+    const link=document.createElement('link');
+    link.rel='stylesheet';
+    link.href='/assets/responsive-unified.css?rev=20260810-responsive-v1';
+    link.dataset.bwaResponsiveUnified='1';
+    document.head.appendChild(link);
+  };
+  ensureResponsiveCss();
+
   const cleanMap={
     'index.html':'/','courses.html':'/courses','course.html':'/course','cart.html':'/cart','wishlist.html':'/wishlist','login.html':'/login','signup.html':'/signup',
     'my-learning.html':'/my-learning','dashboard.html':'/dashboard','checkout.html':'/checkout','success.html':'/success','account.html':'/account','orders.html':'/orders',
@@ -70,7 +80,7 @@
   const bindMobileNavGlobal=()=>{
     if(window.__bwaMobileNavGlobal)return;window.__bwaMobileNavGlobal=true;
     document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('nav-open')){document.body.classList.remove('nav-open');document.querySelector('#globalMenuBtn')?.setAttribute('aria-expanded','false')}});
-    window.addEventListener('resize',()=>{if(innerWidth>780&&document.body.classList.contains('nav-open')){document.body.classList.remove('nav-open');document.querySelector('#globalMenuBtn')?.setAttribute('aria-expanded','false')}},{passive:true});
+    window.addEventListener('resize',()=>{if(innerWidth>900&&document.body.classList.contains('nav-open')){document.body.classList.remove('nav-open');document.querySelector('#globalMenuBtn')?.setAttribute('aria-expanded','false')}},{passive:true});
   };
   const bindSupportFeedback=()=>{
     const form=document.querySelector('#contactForm');if(!form||form.dataset.portalFeedbackBound)return;form.dataset.portalFeedbackBound='1';
@@ -84,9 +94,9 @@
   };
   const run=root=>{rewriteLinks(root);productionWording(root);enhanceTables(root);improveMedia(root);ensureMobileNavigation();closeMobileNav();activeNav();bindSupportFeedback()};
   document.addEventListener('DOMContentLoaded',()=>{
-    markPage();bindMobileNavGlobal();run(document);ensureFooter();
+    ensureResponsiveCss();markPage();bindMobileNavGlobal();run(document);ensureFooter();
     const observer=new MutationObserver(records=>records.forEach(r=>r.addedNodes.forEach(n=>{if(n.nodeType===1)run(n)})));
     observer.observe(document.body,{childList:true,subtree:true});
-    setTimeout(()=>{run(document);ensureFooter()},180);
+    setTimeout(()=>{ensureResponsiveCss();run(document);ensureFooter()},180);
   });
 })();
