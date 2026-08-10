@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 
 class CourseAccessLinkController extends Controller
@@ -12,6 +13,11 @@ class CourseAccessLinkController extends Controller
     private function settingKey(int $courseId): string
     {
         return 'course_link_'.$courseId;
+    }
+
+    private function hasLinkColumn(): bool
+    {
+        return Schema::hasColumn('courses','course_link');
     }
 
     private function metadata(object $course): array
@@ -31,7 +37,6 @@ class CourseAccessLinkController extends Controller
             return $this->safeStoredLink($direct);
         }
 
-        // Backward compatibility for links stored before the dedicated courses.course_link column.
         $value = DB::table('platform_settings')
             ->where('key', $this->settingKey((int) $course->id))
             ->value('value');
@@ -97,13 +102,21 @@ class CourseAccessLinkController extends Controller
         ]);
     }
 
+    private function courseSelectColumns(): array
+    {
+        $columns=['c.id','c.slug','c.title','c.metadata'];
+        if($this->hasLinkColumn())$columns[]='c.course_link';
+        return $columns;
+    }
+
     public function learner(Request $request): JsonResponse
     {
+        $columns=array_merge($this->courseSelectColumns(),['e.progress','e.enrolled_at','e.created_at as enrollment_created_at']);
         $rows = DB::table('enrollments as e')
             ->join('courses as c', 'c.id', '=', 'e.course_id')
             ->where('e.user_id', $request->user()->id)
             ->orderByDesc('e.updated_at')
-            ->select('c.id', 'c.slug', 'c.title', 'c.course_link', 'c.metadata', 'e.progress', 'e.enrolled_at', 'e.created_at as enrollment_created_at')
+            ->select($columns)
             ->get()
             ->map(function ($course) {
                 return [
@@ -125,7 +138,9 @@ class CourseAccessLinkController extends Controller
     {
         abort_unless($request->user()?->role === 'admin', 403);
 
-        $links = DB::table('courses')->orderBy('id')->get(['id', 'course_link', 'metadata'])->mapWithKeys(function ($course) {
+        $columns=['id','metadata'];
+        if($this->hasLinkColumn())$columns[]='course_link';
+        $links = DB::table('courses')->orderBy('id')->get($columns)->mapWithKeys(function ($course) {
             return [(string) $course->id => $this->storedLink($course)];
         });
 
@@ -147,12 +162,15 @@ class CourseAccessLinkController extends Controller
         $link = $this->cleanLink($data['course_link'] ?? null);
 
         DB::transaction(function () use ($course, $link) {
-            DB::table('courses')->where('id', $course)->update([
-                'course_link' => $link,
-                'updated_at' => now(),
-            ]);
+            if($this->hasLinkColumn()){
+                DB::table('courses')->where('id', $course)->update([
+                    'course_link' => $link,
+                    'updated_at' => now(),
+                ]);
+            }else{
+                DB::table('courses')->where('id', $course)->update(['updated_at'=>now()]);
+            }
 
-            // Keep old storage synchronized for safe rollback/backward compatibility.
             $key = $this->settingKey($course);
             if ($link === null) {
                 DB::table('platform_settings')->where('key', $key)->delete();
@@ -168,12 +186,15 @@ class CourseAccessLinkController extends Controller
             }
         });
 
-        $saved = trim((string) DB::table('courses')->where('id', $course)->value('course_link'));
+        $columns=['id','metadata'];
+        if($this->hasLinkColumn())$columns[]='course_link';
+        $savedCourse=DB::table('courses')->where('id',$course)->first($columns);
+        $saved=$savedCourse?$this->storedLink($savedCourse):null;
 
         return response()->json([
             'ok' => true,
             'course_id' => $course,
-            'course_link' => $saved !== '' ? $saved : null,
+            'course_link' => $saved,
         ])->header('Cache-Control', 'no-store, no-cache, must-revalidate');
     }
 }
