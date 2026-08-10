@@ -3,32 +3,33 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="Secure EasyPaisa checkout at Best Way Academy">
-  <title>Checkout — Best Way Academy</title>
+  <meta name="description" content="Secure SadaPay checkout for AWK Paid Courses">
+  <title>Checkout — AWK Paid Courses</title>
   <link rel="stylesheet" href="/assets/style.css?v=20260810-22">
   <link rel="stylesheet" href="/assets/pages.css?v=20260810-22">
   <link rel="stylesheet" href="/assets/checkout.css?v=20260810-22">
   <link rel="stylesheet" href="/assets/checkout-coupon.css?rev=20260810-coupon-v3">
-  <link rel="stylesheet" href="/assets/easypaisa-checkout.css?rev=20260810-easypaisa-v2">
   <link rel="stylesheet" href="/assets/responsive-final.css?rev=20260810-responsive-v2">
+  <link rel="stylesheet" href="/assets/awk-paid-theme.css?v=20260810-1">
 </head>
 <body class="checkout-page" data-page="checkout">
   <header class="checkout-header">
     <div class="shell">
-      <a class="brand" href="/"><span class="brand-mark">B</span><span>Best Way <b>Academy</b></span></a>
+      <a class="brand" href="/"><span class="brand-mark">A</span><span>AWK <b>Paid Courses</b></span></a>
       <div class="checkout-security" aria-label="Secure checkout">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3M6 10h12v10H6V10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <span>Secure checkout</span>
+        <span>Secure manual verification</span>
       </div>
     </div>
   </header>
+  <div class="awk-sale-strip">AZADI SALE • <strong>SAVE RS. 3,000</strong></div>
 
   <main class="checkout-main">
     <div class="checkout-shell">
       <div class="checkout-heading">
-        <p class="eyebrow">CHECKOUT</p>
+        <p class="eyebrow">AWK CHECKOUT</p>
         <h1>Complete your enrollment</h1>
-        <p>Apply your coupon, pay the discounted amount through EasyPaisa QR, then submit the transaction reference for verification.</p>
+        <p>Pay the exact amount to SadaPay using the QR or account number below, then submit your transaction/reference ID for admin verification.</p>
       </div>
 
       <div class="checkout-grid">
@@ -37,28 +38,23 @@
             <div class="checkout-section">
               <h2>Billing details</h2>
               <div class="form-grid">
-                <label>Full name
-                  <input type="text" autocomplete="name" placeholder="Your full name" required>
-                </label>
-                <label>Email address
-                  <input type="email" autocomplete="email" placeholder="you@example.com" required>
-                </label>
+                <label>Full name<input type="text" autocomplete="name" placeholder="Your full name" required></label>
+                <label>Email address<input type="email" autocomplete="email" placeholder="you@example.com" required></label>
               </div>
             </div>
 
             <div class="checkout-section">
               <h2>Payment method</h2>
-              <div class="payment-methods easypaisa-only-method">
-                <label id="easypaisaMethodOption" class="payment-option easypaisa-method">
-                  <input type="radio" name="payment" value="easypaisa" checked>
-                  <span><b>EasyPaisa QR</b><small>Apply a valid coupon, scan the QR and submit your transaction reference</small></span>
-                  <span class="payment-badge easypaisa-badge">QR</span>
+              <div class="payment-methods">
+                <label class="payment-option sadapay-method">
+                  <input type="radio" name="payment" value="sadapay" checked>
+                  <span><b>SadaPay</b><small>Scan QR or send to the account number, then submit your payment reference</small></span>
+                  <span class="payment-badge sadapay-badge">PAY</span>
                 </label>
               </div>
-
-              <button id="checkoutSubmit" class="checkout-button" type="submit" disabled>Apply coupon to continue</button>
+              <button id="checkoutSubmit" class="checkout-button" type="submit" disabled>Loading SadaPay…</button>
               <p id="checkoutMessage" class="checkout-coupon-message" aria-live="polite"></p>
-              <p class="checkout-trust"><span>🔒</span><span><strong>EasyPaisa verification.</strong> Course access is granted only after an administrator verifies the submitted payment, unless the coupon makes the order free.</span></p>
+              <p class="checkout-trust"><span>🔒</span><span><strong>Manual verification.</strong> Paid course access is granted after an administrator verifies your SadaPay transaction. Free coupon orders are activated immediately.</span></p>
             </div>
           </form>
         </section>
@@ -68,7 +64,7 @@
           <div id="checkoutItems" class="checkout-items"><p class="checkout-loading">Loading your course…</p></div>
           <div class="order-summary">
             <div class="checkout-coupon">
-              <label for="checkoutCouponCode">Coupon code</label>
+              <label for="checkoutCouponCode">Coupon code <small>(optional)</small></label>
               <div class="checkout-coupon-row">
                 <input id="checkoutCouponCode" type="text" maxlength="80" autocomplete="off" spellcheck="false" placeholder="Enter coupon code">
                 <button id="checkoutApplyCoupon" type="button">Apply</button>
@@ -79,52 +75,44 @@
             <div id="checkoutDiscountRow" class="order-line discount" hidden><span>Coupon discount</span><strong id="checkoutDiscount">− Rs 0</strong></div>
             <div class="order-line total"><span>Total</span><strong id="checkoutTotal">Rs 0</strong></div>
 
-            <section id="easypaisaPanel" class="easypaisa-panel" hidden aria-live="polite">
-              <div class="easypaisa-panel-head">
-                <div><span class="easypaisa-kicker">EASYPAISA PAYMENT</span><h3>Scan QR to pay</h3></div>
-                <span class="easypaisa-secure">Manual verification</span>
+            <section id="sadapayPanel" class="sadapay-panel" hidden aria-live="polite">
+              <div class="sadapay-panel-head">
+                <div><span class="sadapay-kicker">SADAPAY PAYMENT</span><h3>Scan QR or transfer by number</h3></div>
+                <span class="sadapay-secure">Manual verification</span>
               </div>
-              <p>Scan this QR in EasyPaisa and send the exact discounted amount shown below.</p>
-              <div class="easypaisa-amount"><span>Amount to send</span><strong id="easypaisaAmount">Rs 0</strong></div>
-              <div class="easypaisa-qr-wrap">
-                <img id="easypaisaQrImage" alt="EasyPaisa payment QR code" hidden>
-                <div id="easypaisaQrMissing" class="easypaisa-qr-missing" hidden>EasyPaisa QR has not been configured by the academy yet.</div>
+              <p>Send the exact amount shown below. You can scan the QR or use the SadaPay account details.</p>
+              <div class="sadapay-account">
+                <div><span>Account Name</span><strong id="sadapayAccountName">Muhammad Hamid Khan</strong></div>
+                <div><span>Account Number</span><strong id="sadapayAccountNumber">03104720458</strong></div>
               </div>
-              <label class="easypaisa-reference">Transaction / Reference ID
-                <input id="easypaisaReference" type="text" maxlength="120" autocomplete="off" placeholder="Enter EasyPaisa transaction/reference ID">
+              <div class="sadapay-amount"><span>Amount to send</span><strong id="sadapayAmount">Rs 0</strong></div>
+              <div class="sadapay-qr-wrap"><img id="sadapayQrImage" src="/assets/sadapay-account-qr.svg" alt="SadaPay account QR code"></div>
+              <label class="sadapay-reference">Transaction / Reference ID
+                <input id="sadapayReference" type="text" maxlength="120" autocomplete="off" placeholder="Enter SadaPay transaction/reference ID">
               </label>
-              <ol class="easypaisa-steps">
-                <li>Scan the QR and send the exact amount.</li>
-                <li>Copy your EasyPaisa transaction/reference ID.</li>
-                <li>Enter it above and press “Submit payment for verification”.</li>
+              <ol class="sadapay-steps">
+                <li>Scan the QR or transfer to <strong>03104720458</strong>.</li>
+                <li>Confirm the receiver name is <strong>Muhammad Hamid Khan</strong>.</li>
+                <li>Send the exact payable amount shown above.</li>
+                <li>Enter your SadaPay transaction/reference ID and submit.</li>
               </ol>
             </section>
 
-            <p class="checkout-price-note">The coupon and payable amount are validated again by the server when payment is submitted.</p>
-            <div class="order-benefits">
-              <span>✓ Lifetime access after verified payment</span>
-              <span>✓ Certificate of completion</span>
-              <span>✓ Learn across desktop and mobile</span>
-              <span>✓ Progress saved to your account</span>
-            </div>
-            <a class="back-link" href="/cart">← Back to cart</a>
+            <p class="checkout-price-note">Coupon and payable amount are validated again by the server when the payment is submitted.</p>
+            <div class="order-benefits"><span>✓ Lifetime access after verified payment</span><span>✓ Lifetime course updates</span><span>✓ Personal support</span><span>✓ Progress saved to your account</span></div>
+            <a class="back-link" href="/">← Back to AWK courses</a>
           </div>
         </aside>
       </div>
     </div>
   </main>
 
-  <footer class="checkout-footer">
-    <div class="shell">
-      <div class="brand footer-brand"><span class="brand-mark">B</span><span>Best Way <b>Academy</b></span></div>
-      <small>© 2026 Best Way Academy · EasyPaisa learner checkout</small>
-    </div>
-  </footer>
+  <footer class="checkout-footer"><div class="shell"><div class="brand footer-brand"><span class="brand-mark">A</span><span>AWK <b>Paid Courses</b></span></div><small>© 2026 AWK Paid Courses · SadaPay learner checkout</small></div></footer>
 
   <script src="/assets/app.js?v=20260810-22"></script>
   <script src="/assets/admin-overrides.js?v=20260810-22"></script>
   <script src="/assets/checkout-page.js?v=20260810-22"></script>
   <script src="/assets/checkout-coupon.js?rev=20260810-coupon-v3"></script>
-  <script src="/assets/easypaisa-checkout.js?rev=20260810-easypaisa-v2"></script>
+  <script src="/assets/sadapay-checkout.js?v=20260810-1"></script>
 </body>
 </html>
