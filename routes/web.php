@@ -75,6 +75,9 @@ $serveHtml=function(string $file){
     if(!str_contains($html,'responsive-unified.css')){
         $html=str_ireplace('</head>','  <link rel="stylesheet" data-bwa-responsive-unified="1" href="/assets/responsive-unified.css?v=20260810-35">'.PHP_EOL.'</head>',$html);
     }
+    if(!str_contains($html,'awk-paid-theme.css')){
+        $html=str_ireplace('</head>','  <link rel="stylesheet" href="/assets/awk-paid-theme.css?v=20260810-1">'.PHP_EOL.'</head>',$html);
+    }
     if(!str_contains($html,'backend-sync.js')){
         $html=str_ireplace('</body>','<script src="/assets/backend-sync.js?v=20260810-35"></script>'.PHP_EOL.'</body>',$html);
     }
@@ -92,6 +95,9 @@ $serveHtml=function(string $file){
     }
     if(!str_contains($html,'portal-polish.js')){
         $html=str_ireplace('</body>','<script src="/assets/portal-polish.js?v=20260810-35"></script>'.PHP_EOL.'</body>',$html);
+    }
+    if(!str_contains($html,'awk-paid-theme.js')){
+        $html=str_ireplace('</body>','<script src="/assets/awk-paid-theme.js?v=20260810-1"></script>'.PHP_EOL.'</body>',$html);
     }
 
     return response($html)
