@@ -57,7 +57,7 @@ class AppServiceProvider extends ServiceProvider
             if ($event->request->getPathInfo() === '/' && !str_contains($html, 'homepage-google-ai-popunder.js')) {
                 $html = str_ireplace(
                     '</body>',
-                    '<script src="/assets/homepage-google-ai-popunder.js?rev=20260811-google-ai-popunder-v2"></script>'.PHP_EOL.'</body>',
+                    '<script src="/assets/homepage-google-ai-popunder.js?rev=20260811-google-ai-popunder-v3"></script>'.PHP_EOL.'</body>',
                     $html
                 );
             }
