@@ -49,7 +49,7 @@ class AppServiceProvider extends ServiceProvider
             if ($event->request->is('admin') && !str_contains($html, 'admin-advertisements.js')) {
                 $html = str_ireplace(
                     '</body>',
-                    '<script src="/assets/admin-advertisements.js?rev=20260811-advertisements-v3"></script>'.PHP_EOL.'</body>',
+                    '<script src="/assets/admin-advertisements.js?rev=20260811-advertisements-v4"></script>'.PHP_EOL.'</body>',
                     $html
                 );
             }
@@ -176,6 +176,61 @@ HTML;
                     }
                 } catch (Throwable) {
                     // Keep the static fallback cards if the database is unavailable.
+                }
+            }
+
+            // Replace the complete Popular Skills section with the admin-selected LongBar advertisement.
+            if ($event->request->getPathInfo() === '/' && (str_contains($html, 'class="popular"') || str_contains($html, "class='popular'"))) {
+                $advertisement = null;
+                try {
+                    $advertisement = DB::table('advertisement_placements as ap')
+                        ->join('advertisements as a', 'a.id', '=', 'ap.advertisement_id')
+                        ->where('ap.placement_key', 'homepage_popular_skills_longbar')
+                        ->where('a.active', true)
+                        ->select('a.*')
+                        ->first();
+                } catch (Throwable) {
+                    $advertisement = null;
+                }
+
+                $replacement = '';
+                if ($advertisement) {
+                    $type = ($advertisement->ad_type ?? 'image') === 'embed' ? 'embed' : 'image';
+                    if ($type === 'embed' && trim((string) ($advertisement->embed_code ?? '')) !== '') {
+                        $replacement = '<section class="homepage-longbar-ad" data-ad-placement="homepage_popular_skills_longbar"><div class="shell homepage-longbar-ad-inner homepage-longbar-ad-embed">'.(string) $advertisement->embed_code.'</div></section>';
+                    } elseif ($type === 'image' && trim((string) ($advertisement->image_url ?? '')) !== '') {
+                        $image = htmlspecialchars((string) $advertisement->image_url, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                        $alt = htmlspecialchars(trim((string) ($advertisement->alt_text ?? $advertisement->name ?? 'Advertisement')), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                        $creative = '<img src="'.$image.'" alt="'.$alt.'" loading="lazy">';
+                        $target = trim((string) ($advertisement->target_url ?? ''));
+                        if ($target !== '') {
+                            $href = htmlspecialchars($target, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                            $creative = '<a href="'.$href.'" target="_blank" rel="noopener noreferrer sponsored">'.$creative.'</a>';
+                        }
+                        $replacement = '<section class="homepage-longbar-ad" data-ad-placement="homepage_popular_skills_longbar"><div class="shell homepage-longbar-ad-inner">'.$creative.'</div></section>';
+                    }
+                }
+
+                $html = preg_replace(
+                    '~<section\s+class=(["\'])popular\1[^>]*>.*?</section>~is',
+                    $replacement,
+                    $html,
+                    1
+                ) ?? $html;
+
+                if ($replacement !== '' && !str_contains($html, 'data-bwa-longbar-ad-style')) {
+                    $style = <<<'HTML'
+<style data-bwa-longbar-ad-style>
+.homepage-longbar-ad{padding:30px 0;background:transparent}
+.homepage-longbar-ad-inner{width:100%;overflow:hidden}
+.homepage-longbar-ad a{display:block;width:100%;text-decoration:none}
+.homepage-longbar-ad img{display:block;width:100%;height:auto;max-width:100%;border:0;border-radius:14px;object-fit:contain}
+.homepage-longbar-ad-embed{min-height:1px}
+.homepage-longbar-ad-embed iframe,.homepage-longbar-ad-embed img,.homepage-longbar-ad-embed video{max-width:100%}
+@media(max-width:780px){.homepage-longbar-ad{padding:18px 0}.homepage-longbar-ad img{border-radius:10px}}
+</style>
+HTML;
+                    $html = str_ireplace('</head>', $style.PHP_EOL.'</head>', $html);
                 }
             }
 
