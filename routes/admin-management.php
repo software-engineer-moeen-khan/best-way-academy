@@ -21,6 +21,7 @@ Route::get('/api/platform',[CatalogMetadataController::class,'platform']);
 Route::get('/api/learning-plans',[LearningContentController::class,'plans']);
 Route::get('/api/payment/easypaisa',[EasypaisaPaymentController::class,'config']);
 Route::get('/api/payment/easypaisa/qr',[EasypaisaPaymentController::class,'qr']);
+Route::get('/api/advertisements/homepage-google-ai-popunder',[AdminAdvertisementController::class,'publicGoogleAiPopunder'])->middleware('throttle:120,1');
 
 Route::middleware('auth')->group(function(){
     Route::post('/api/coupons/quote',[CouponController::class,'quote'])->middleware('throttle:30,1');
@@ -48,6 +49,7 @@ Route::middleware('auth')->group(function(){
 
         Route::get('/advertisements',[AdminAdvertisementController::class,'index'])->middleware('throttle:60,1');
         Route::post('/advertisements',[AdminAdvertisementController::class,'store'])->middleware('throttle:30,1');
+        Route::put('/advertisement-placements/homepage-google-ai-popunder',[AdminAdvertisementController::class,'assignGoogleAiPopunder'])->middleware('throttle:30,1');
         Route::put('/advertisements/{advertisement}',[AdminAdvertisementController::class,'update'])->whereNumber('advertisement')->middleware('throttle:30,1');
         Route::delete('/advertisements/{advertisement}',[AdminAdvertisementController::class,'destroy'])->whereNumber('advertisement')->middleware('throttle:30,1');
 
