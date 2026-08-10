@@ -1,168 +1,125 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Best Way Academy - practical online learning for career-ready skills." />
-  <title>Best Way Academy</title>
-  <link rel="preconnect" href="https://images.unsplash.com" />
-  <link rel="stylesheet" href="assets/style.css?v=20260808-3" />
-  <link rel="stylesheet" href="assets/pages.css?v=20260808-3" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="AWK Paid Courses — beginner to advanced trading courses with lifetime access and personal support.">
+  <title>AWK Paid Courses — Azadi Sale</title>
+  <link rel="stylesheet" href="/assets/awk-paid-theme.css?v=20260810-1">
 </head>
-<body data-page="home">
-  <div class="promo">Save 30% on yearly learning plans <strong>— learn more, spend less.</strong></div>
-
-  <header class="site-header">
-    <a class="brand" href="index.html" aria-label="Best Way Academy home">
-      <span class="brand-mark">B</span>
-      <span>Best Way <b>Academy</b></span>
+<body class="awk-home" data-page="home">
+  <nav class="awk-nav" aria-label="Main navigation">
+    <a class="awk-nav-brand" href="/" aria-label="AWK Paid Courses home">
+      <span class="awk-logo">↗</span>
+      <span>AWK <strong>PAID COURSES</strong></span>
     </a>
-    <nav class="desktop-nav">
-      <a href="courses.html">Explore</a>
-      <a href="courses.html?category=Artificial%20Intelligence">Skills</a>
-      <a href="courses.html?category=Career">Careers</a>
-    </nav>
-    <label class="search-wrap" aria-label="Search courses">
-      <span>⌕</span>
-      <input id="courseSearch" type="search" placeholder="Search for anything" />
-    </label>
-    <div class="header-actions">
-      <a class="login" href="login.html">Log in</a>
-      <a class="signup" href="signup.html">Sign up</a>
+    <div class="awk-nav-links">
+      <a href="#courses">Courses</a>
+      <a href="/faq">FAQ</a>
+      <a href="/contact">Contact / Support</a>
+      <a href="#coupon">Coupon</a>
+      <a class="awk-admin-link" href="/admin">Admin Panel</a>
+      <a class="awk-login-link" href="/login">Log in</a>
     </div>
-  </header>
+  </nav>
 
-  <main id="top">
-    <section class="hero shell">
-      <div class="hero-copy">
-        <p class="eyebrow">LEARN WITHOUT LIMITS</p>
-        <h1>Save 30% on a year of learning</h1>
-        <p>Build practical skills with career-focused courses taught in clear, easy-to-follow lessons.</p>
-        <a class="primary-btn" href="courses.html">Start learning</a>
-      </div>
-      <div class="hero-visual">
-        <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1200&q=85" alt="Student learning online" />
-        <span class="shape shape-one"></span><span class="shape shape-two"></span>
-      </div>
-    </section>
+  <div class="awk-sale-strip">🇵🇰 AZADI SALE &nbsp;•&nbsp; <strong>SAVE RS. 3,000</strong> &nbsp;•&nbsp; LIMITED TIME OFFER</div>
 
-    <section id="courses" class="section shell">
-      <div class="section-heading-row">
-        <div><h2>Trending Courses</h2><p>Popular skills learners are building right now.</p></div>
-        <a class="text-link" href="courses.html">View all →</a>
-      </div>
-      <div class="course-grid" id="courseGrid">
-        <a class="course-card" href="course.html?course=python" data-search="python web development programming beginner">
-          <img src="https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=900&q=80" alt="Python and web development course" />
-          <div class="course-body"><h3>Python & Web Development Bootcamp</h3><p class="teacher">Best Way Academy</p><div class="rating"><b>4.8</b> ★★★★★ <span>(2,431)</span></div><p class="price">Rs 4,999</p><span class="badge">Bestseller</span></div>
-        </a>
-        <a class="course-card" href="course.html?course=ai" data-search="ai chatgpt claude prompt engineering artificial intelligence">
-          <img src="https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=900&q=80" alt="AI and prompt engineering course" />
-          <div class="course-body"><h3>Complete AI, ChatGPT & Prompt Engineering</h3><p class="teacher">Best Way Academy</p><div class="rating"><b>4.9</b> ★★★★★ <span>(1,903)</span></div><p class="price">Rs 5,499</p><span class="badge">Hot & New</span></div>
-        </a>
-        <a class="course-card" href="course.html?course=data" data-search="data science analytics machine learning python">
-          <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=900&q=80" alt="Data science and analytics course" />
-          <div class="course-body"><h3>Data Science & Analytics Career Track</h3><p class="teacher">Best Way Academy</p><div class="rating"><b>4.7</b> ★★★★★ <span>(1,154)</span></div><p class="price">Rs 6,999</p><span class="badge">Career Track</span></div>
-        </a>
-        <a class="course-card" href="course.html?course=marketing" data-search="digital marketing social media seo ecommerce">
-          <img src="https://images.unsplash.com/photo-1557838923-2985c318be48?auto=format&fit=crop&w=900&q=80" alt="Digital marketing course" />
-          <div class="course-body"><h3>Digital Marketing, SEO & Social Media</h3><p class="teacher">Best Way Academy</p><div class="rating"><b>4.8</b> ★★★★★ <span>(973)</span></div><p class="price">Rs 3,999</p><span class="badge">Popular</span></div>
-        </a>
-      </div>
-      <p id="noResults" class="no-results" hidden>No matching courses found.</p>
-    </section>
-
-    <section class="ai-banner shell">
-      <div class="ai-copy">
-        <span class="mini-icon">✦</span>
-        <h2>Reimagine your career in the AI era</h2>
-        <p>Learn practical AI skills, build real projects, and stay ahead with career-focused learning paths.</p>
-        <ul><li>Learn AI fundamentals</li><li>Practice with real projects</li><li>Build job-ready skills</li></ul>
-        <a class="light-btn" href="course.html?course=ai">Learn more</a>
-      </div>
-      <div class="ai-collage">
-        <div class="color-card blue"></div>
-        <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=700&q=80" alt="Professional instructor" />
-        <div class="color-card purple">✦</div>
+  <main>
+    <section class="awk-hero awk-shell">
+      <span class="awk-kicker">Learn • Trade • Grow</span>
+      <h1>AWK <span>PAID COURSES</span></h1>
+      <p>Learn from basic to advanced and build a disciplined, consistent trading system with step-by-step lessons, practical examples and lifetime updates.</p>
+      <div class="awk-hero-badges">
+        <span><b>✓</b> Step-by-step learning</span>
+        <span><b>✓</b> Lifetime access</span>
+        <span><b>✓</b> Lifetime updates</span>
+        <span><b>✓</b> Personal support</span>
+        <span><b>✓</b> Learn at your own pace</span>
       </div>
     </section>
 
-    <section id="skills" class="section shell">
-      <h2>Skills to transform your career and life</h2>
-      <p>From technology to business, choose the path that matches your goals.</p>
-      <div class="tabs" id="skillTabs">
-        <a class="active" href="courses.html?category=Artificial%20Intelligence">Artificial Intelligence</a>
-        <a href="courses.html?category=Development">Python</a>
-        <a href="course.html?course=excel">Microsoft Excel</a>
-        <a href="courses.html?category=Development">Web Development</a>
-        <a href="course.html?course=marketing">Digital Marketing</a>
+    <section id="courses" class="awk-courses-section">
+      <div class="awk-shell">
+        <div class="awk-section-title">
+          <span class="awk-kicker">Choose your level</span>
+          <h2>Azadi Sale Course Packages</h2>
+          <p>Four focused options inspired by the AWK course roadmap — from Forex basics to a complete trading system.</p>
+        </div>
+
+        <div class="awk-course-grid">
+          <article class="awk-course-card">
+            <div class="awk-course-head"><span class="awk-course-number">01</span><h3>Beginner <span>Course</span></h3></div>
+            <div class="awk-card-icon"><span>🎓</span></div>
+            <div class="awk-learn-title">You will learn</div>
+            <ul class="awk-feature-list">
+              <li>What is Forex?</li><li>How the market works</li><li>Best pairs for beginners</li><li>Forex basics</li><li>Support &amp; resistance</li><li>Candlesticks</li><li>Candle stick patterns</li><li>Basic chart reading</li><li>Timeframes explanation</li><li>Trading terminology</li><li>Basic risk management</li><li>How to place a trade</li>
+            </ul>
+            <div class="awk-price-wrap"><span class="awk-old-price">Rs. 2,500</span><strong class="awk-price">Rs. 1,500</strong><a class="awk-enroll" href="/checkout?course=beginner-trading">Enroll Now</a></div>
+          </article>
+
+          <article class="awk-course-card">
+            <div class="awk-course-head"><span class="awk-course-number">02</span><h3>Advanced <span>Course</span></h3></div>
+            <div class="awk-card-icon"><span>📈</span></div>
+            <div class="awk-learn-title">You will learn</div>
+            <ul class="awk-feature-list">
+              <li>All beginner course topics</li><li>Market structure</li><li>Liquidity concepts</li><li>Fibonacci retracement levels</li><li>Order blocks</li><li>Fair Value Gaps (FVG)</li><li>Smart Money Concepts</li><li>Break of Structure (BOS)</li><li>Change of Character (CHoCH)</li><li>Imbalance</li><li>Advanced risk management</li><li>Backtesting guide</li><li>Trading psychology</li><li>Two tested high-winrate strategies</li>
+            </ul>
+            <div class="awk-price-wrap"><span class="awk-old-price">Rs. 5,000</span><strong class="awk-price">Rs. 3,000</strong><a class="awk-enroll" href="/checkout?course=advanced-trading">Enroll Now</a></div>
+          </article>
+
+          <article class="awk-course-card">
+            <div class="awk-course-head"><span class="awk-course-number">03</span><h3>Strategy <span>Course</span></h3></div>
+            <div class="awk-card-icon"><span>◎</span></div>
+            <div class="awk-learn-title">You will learn</div>
+            <ul class="awk-feature-list">
+              <li>5 high-winrate strategies</li><li>Entry rules</li><li>Exit rules</li><li>Stop loss placement</li><li>Risk-to-reward ratio</li><li>Best time to trade</li><li>Strategy backtesting</li><li>Live examples</li><li>Common mistakes</li><li>Performance tips</li>
+            </ul>
+            <div class="awk-price-wrap"><span class="awk-old-price">Rs. 6,000</span><strong class="awk-price">Rs. 4,000</strong><a class="awk-enroll" href="/checkout?course=strategy-trading">Enroll Now</a></div>
+          </article>
+
+          <article class="awk-course-card featured">
+            <span class="awk-best-value">Best Value</span>
+            <div class="awk-course-head"><span class="awk-course-number">04</span><h3>All-in-One <span>Course</span></h3></div>
+            <div class="awk-card-icon"><span>♛</span></div>
+            <div class="awk-learn-title">Everything included</div>
+            <ul class="awk-feature-list">
+              <li>All beginner topics</li><li>All advanced topics</li><li>All 5 strategies</li><li>Live market examples</li><li>Backtesting &amp; optimization</li><li>Trading psychology</li><li>Risk management</li><li>Money management</li><li>Complete trading system</li><li>Lifetime updates</li><li>Personal support</li>
+            </ul>
+            <div class="awk-price-wrap"><span class="awk-old-price">Rs. 8,000</span><strong class="awk-price">Rs. 5,000</strong><a class="awk-enroll" href="/checkout?course=all-in-one-trading">Enroll Now</a></div>
+          </article>
+        </div>
       </div>
-      <div class="skill-panels">
-        <a class="skill-panel" href="course.html?course=ai"><span>01</span><h3>Artificial Intelligence</h3><p>AI tools, prompt engineering and automation.</p></a>
-        <a class="skill-panel" href="course.html?course=python"><span>02</span><h3>Web Development</h3><p>Frontend, backend and full-stack foundations.</p></a>
-        <a class="skill-panel" href="course.html?course=excel"><span>03</span><h3>Data & Excel</h3><p>Analytics, dashboards and business reporting.</p></a>
-        <a class="skill-panel" href="course.html?course=marketing"><span>04</span><h3>Marketing</h3><p>SEO, paid ads and social growth strategies.</p></a>
+    </section>
+
+    <section class="awk-benefits" aria-label="Course benefits">
+      <div class="awk-shell awk-benefit-grid">
+        <div><span>▤</span> Step-by-step learning</div><div><span>◷</span> Lifetime access</div><div><span>⟳</span> Lifetime updates</div><div><span>◉</span> Personal support</div><div><span>↗</span> Learn at your own pace</div>
       </div>
     </section>
 
-    <section class="logo-strip">
-      <p>Learners build skills used by teams around the world</p>
-      <div><b>Volkswagen</b><b>Samsung</b><b>Cisco</b><b>Vimeo</b><b>Citi</b><b>Ericsson</b></div>
-    </section>
-
-    <section class="section shell testimonials">
-      <h2>Join others transforming their lives through learning</h2>
-      <div class="quote-grid">
-        <article><div class="quote-mark">“</div><p>The lessons are clear and practical. I was able to build my first portfolio project within weeks.</p><div class="person"><span>AK</span><div><b>Adeel Khan</b><small>Web learner</small></div></div></article>
-        <article><div class="quote-mark">“</div><p>The AI track helped me understand tools I had been hearing about but never knew how to use properly.</p><div class="person"><span>SN</span><div><b>Sara Noor</b><small>AI learner</small></div></div></article>
-        <article><div class="quote-mark">“</div><p>I liked that every topic included a real use case instead of only theory.</p><div class="person"><span>UH</span><div><b>Usman Haider</b><small>Data learner</small></div></div></article>
-        <article><div class="quote-mark">“</div><p>The marketing course gave me a clear roadmap and practical assignments I could use for clients.</p><div class="person"><span>MA</span><div><b>Maryam Ali</b><small>Marketing learner</small></div></div></article>
+    <section class="awk-tools">
+      <div class="awk-shell">
+        <div class="awk-section-title"><span class="awk-kicker">Everything you asked for</span><h2>Support &amp; Management</h2><p>Quick access to the learner support pages and the complete administration area.</p></div>
+        <div class="awk-tools-grid">
+          <a class="awk-tool-card" href="/faq"><i>?</i><h3>FAQ</h3><p>Answers to common questions about courses, access, payments and learning.</p></a>
+          <a class="awk-tool-card" href="/contact"><i>◉</i><h3>Contact &amp; Support</h3><p>Send a support request directly to the academy support inbox.</p></a>
+          <a class="awk-tool-card" href="/admin"><i>⚙</i><h3>Admin Panel</h3><p>Manage courses, users, <b>enrollments</b>, orders, payments and total revenue.</p></a>
+          <a class="awk-tool-card" href="/admin"><i>％</i><h3>Coupon Management</h3><p>Create fixed or percentage discount coupons and monitor coupon usage.</p></a>
+        </div>
       </div>
     </section>
 
-    <section class="cert shell">
-      <div><span class="eyebrow light">CERTIFICATIONS</span><h2>Get certified and get ahead in your career</h2><p>Prepare for industry-recognized credentials with focused learning paths and practice.</p><a href="courses.html">Explore certifications and courses →</a></div>
-      <div class="cert-cards"><a href="course.html?course=cloud"><b>CompTIA</b><span>Cloud & Security</span></a><a href="course.html?course=cloud"><b>AWS</b><span>Cloud Computing</span></a><a href="courses.html?category=Career"><b>PMI</b><span>Project Management</span></a></div>
-    </section>
-
-    <section id="careers" class="section shell">
-      <h2>Ready to reimagine your career?</h2>
-      <p>Choose a career path and start building the skills employers look for.</p>
-      <div class="career-grid">
-        <a href="course.html?course=cloud"><img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=900&q=80" alt="Cloud engineer" /><h3>Cloud Engineer</h3><div><span>AWS</span><span>Linux</span><span>Networking</span></div></a>
-        <a href="course.html?course=data"><img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=900&q=80" alt="Data scientist" /><h3>Data Scientist</h3><div><span>Python</span><span>SQL</span><span>AI</span></div></a>
-        <a href="course.html?course=marketing"><img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=900&q=80" alt="Digital marketer" /><h3>Digital Marketer</h3><div><span>SEO</span><span>Ads</span><span>Content</span></div></a>
-      </div>
-    </section>
-
-    <section class="popular"><div class="shell"><h2>Popular Skills</h2><div class="popular-grid">
-      <div><h3>ChatGPT is a top skill</h3><a href="course.html?course=ai">See ChatGPT courses ›</a><a href="course.html?course=ai">Prompt Engineering ›</a><a href="course.html?course=ai">Generative AI ›</a></div>
-      <div><h4>Development</h4><a href="course.html?course=python">Python ›</a><a href="course.html?course=python">Web Development ›</a><a href="course.html?course=data">Data Science ›</a></div>
-      <div><h4>Business</h4><a href="course.html?course=excel">Microsoft Excel ›</a><a href="course.html?course=marketing">Digital Marketing ›</a><a href="courses.html?category=Career">Career Paths ›</a></div>
-      <div><h4>Cloud</h4><a href="course.html?course=cloud">AWS ›</a><a href="course.html?course=cloud">Linux ›</a><a href="course.html?course=cloud">Networking ›</a></div>
-    </div></div></section>
-
-    <section class="google-ai shell">
-      <div class="google-copy"><span class="google-word">Google</span><h2>Learn AI with Google</h2><h3>Google AI Professional Certificate</h3><p>Build practical AI skills through bite-sized projects and guided lessons.</p><a class="outline-btn" href="course.html?course=ai">Learn more</a></div>
-      <div class="google-cards">
-        <a href="course.html?course=ai"><img src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=600&q=80" alt="AI fundamentals" /><b>AI Fundamentals</b></a>
-        <a href="course.html?course=ai"><img src="https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=600&q=80" alt="AI productivity" /><b>AI for Productivity</b></a>
-        <a href="course.html?course=ai"><img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=600&q=80" alt="AI teamwork" /><b>AI for Work</b></a>
+    <section id="coupon" class="awk-coupon-banner">
+      <div class="awk-shell awk-coupon-inner">
+        <div><span class="awk-kicker">Discounts supported</span><h2>Have a coupon code?</h2><p>Choose a course, continue to checkout and enter your coupon. The final payable amount is validated by the server before the SadaPay payment is submitted.</p></div>
+        <div class="awk-coupon-box"><span>Azadi Sale Highlight</span><strong>Save up to Rs. 3,000</strong><a href="#courses">Choose a course</a></div>
       </div>
     </section>
   </main>
 
-  <footer>
-    <div class="footer-top shell"><strong>Top companies choose Best Way Academy to build in-demand career skills.</strong><div><span>Learning</span><span>Technology</span><span>Business</span></div></div>
-    <div class="footer-grid shell">
-      <div><h4>Explore top skills</h4><a href="course.html?course=python">Python</a><a href="course.html?course=python">Web Development</a><a href="course.html?course=ai">Artificial Intelligence</a><a href="course.html?course=marketing">Digital Marketing</a></div>
-      <div><h4>Certifications</h4><a href="course.html?course=cloud">AWS</a><a href="courses.html?category=Career">Project Management</a><a href="course.html?course=data">Data Analytics</a><a href="course.html?course=cloud">Cloud Computing</a></div>
-      <div><h4>About</h4><a href="about.html">About us</a><a href="courses.html?category=Career">Careers</a><a href="contact.html">Contact</a><a href="faq.html">Help</a></div>
-      <div><h4>For learners</h4><a href="courses.html">All courses</a><a href="wishlist.html">Wishlist</a><a href="my-learning.html">My learning</a><a href="contact.html">Support</a></div>
-    </div>
-    <div class="footer-bottom shell"><div class="brand footer-brand"><span class="brand-mark">B</span><span>Best Way <b>Academy</b></span></div><span>© 2026 Best Way Academy</span><span>English</span></div>
+  <footer class="awk-footer">
+    <div class="awk-shell awk-footer-inner"><strong>AWK Paid Courses</strong><span>© 2026 AWK Paid Courses. All rights reserved.</span><span><a href="/faq">FAQ</a> · <a href="/contact">Support</a> · <a href="/admin">Admin</a></span></div>
   </footer>
-
-  <script src="assets/app.js?v=20260808-3"></script>
 </body>
 </html>
