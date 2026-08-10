@@ -10,3 +10,9 @@
 .suite-links a[href="/teach.html"] {
   display: none !important;
 }
+
+/* Homepage: remove the skill-category tabs row above the skill cards. */
+#skillTabs,
+#skills > .tabs {
+  display: none !important;
+}
