@@ -46,6 +46,14 @@ class AppServiceProvider extends ServiceProvider
                 );
             }
 
+            if ($event->request->is('admin') && !str_contains($html, 'admin-advertisements.js')) {
+                $html = str_ireplace(
+                    '</body>',
+                    '<script src="/assets/admin-advertisements.js?rev=20260811-advertisements-v1"></script>'.PHP_EOL.'</body>',
+                    $html
+                );
+            }
+
             // Keep the public header intentionally small even if legacy scripts recreate old links.
             if (!$event->request->is('admin') && !str_contains($html, 'data-bwa-header-cleanup')) {
                 $headerCleanup = <<<'HTML'
