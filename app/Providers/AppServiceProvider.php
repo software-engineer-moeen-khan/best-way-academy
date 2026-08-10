@@ -38,6 +38,29 @@ class AppServiceProvider extends ServiceProvider
                 );
             }
 
+            // Keep the public header intentionally small even if legacy scripts recreate old links.
+            if (!$event->request->is('admin') && !str_contains($html, 'data-bwa-header-cleanup')) {
+                $headerCleanup = <<<'HTML'
+<style data-bwa-header-cleanup>
+.desktop-nav a[href*="category=Artificial%20Intelligence"],
+.desktop-nav a[href*="category=Artificial+Intelligence"],
+.desktop-nav a[href*="category=Career"],
+.site-header .suite-links a[href="/plans"],
+.site-header .suite-links a[href="plans.html"],
+.site-header .suite-links a[href="/plans.html"],
+.site-header a[href="/plans"].nav-link,
+.site-header a[href="plans.html"].nav-link,
+.site-header a[href="/plans.html"].nav-link,
+.mobile-nav a[href="/plans"],
+.mobile-nav a[href="plans.html"],
+.mobile-nav a[href="/plans.html"] {
+    display: none !important;
+}
+</style>
+HTML;
+                $html = str_ireplace('</head>', $headerCleanup.PHP_EOL.'</head>', $html);
+            }
+
             if (str_contains($html, 'class="promo"') || str_contains($html, "class='promo'")) {
                 try {
                     $stored = DB::table('platform_settings')->where('key', 'promo_message')->value('value');
