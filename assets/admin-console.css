@@ -5,10 +5,9 @@
 /*
  * Desktop admin shell: the browser document itself never scrolls.
  * Header and sidebar stay anchored; only the main workspace scrolls vertically.
- * !important is intentional because portal-polish/responsive layers load after
- * this file and previously introduced 68px/72px positioning conflicts.
+ * Desktop-only begins at 1025px so tablets can use the stacked responsive shell.
  */
-@media (min-width:781px){
+@media (min-width:1025px){
   html:has(body.admin-body){height:100%;overflow:hidden}
   body.admin-body{height:100vh;min-height:0!important;overflow:hidden!important}
 
@@ -63,17 +62,21 @@
   }
 }
 
-@media (min-width:781px) and (max-width:1050px){
+@media (min-width:1025px) and (max-width:1180px){
   body.admin-body>.admin-shell{padding-left:220px!important}
   body.admin-body .admin-sidebar{width:220px!important}
 }
-@media (min-width:781px) and (max-width:960px){
-  body.admin-body>.admin-shell{padding-left:190px!important}
-  body.admin-body .admin-sidebar{width:190px!important}
+
+/* Tablet/mobile use normal document scrolling with a sticky topbar + horizontal section nav. */
+@media (max-width:1024px){
+  html:has(body.admin-body){height:auto!important;overflow-x:hidden!important;overflow-y:auto!important}
+  body.admin-body{height:auto!important;min-height:100vh!important;overflow-x:hidden!important;overflow-y:auto!important}
+  body.admin-body>.admin-topbar{position:sticky!important;top:0!important;left:auto!important;right:auto!important;width:100%!important;z-index:1000!important;transform:none!important}
+  body.admin-body>.admin-shell{position:static!important;display:block!important;height:auto!important;min-height:0!important;padding:0!important;overflow:visible!important}
+  body.admin-body .admin-sidebar{position:sticky!important;left:auto!important;top:64px!important;bottom:auto!important;width:100%!important;height:auto!important;overflow-x:auto!important;overflow-y:hidden!important;z-index:900!important}
+  body.admin-body .admin-main{width:100%!important;height:auto!important;min-width:0!important;min-height:0!important;overflow:visible!important}
 }
 
-/* Mobile keeps the existing stacked/navigation behavior. */
 @media (max-width:780px){
-  .admin-topbar{position:sticky;top:0;z-index:60}
-  .admin-shell{padding-top:0}
+  body.admin-body .admin-sidebar{top:60px!important}
 }
