@@ -1,8 +1,6 @@
 (()=>{
 'use strict';
 const $=s=>document.querySelector(s);
-const lines=v=>String(v||'').split('\n').map(x=>x.trim()).filter(Boolean);
-let savingCourse=false;
 
 function ensureCourseLinkField(){
   const form=$('#courseForm');
@@ -42,80 +40,47 @@ function toast(text,error=false){
   window.__bwaAdminCourseToast=setTimeout(()=>el.classList.remove('show'),4200);
 }
 
-function errorText(err){
-  if(err?.data?.errors)return Object.values(err.data.errors).flat().join(' ');
-  return err?.data?.message||err?.message||'Request failed.';
-}
-
 async function backend(){
   for(let i=0;i<150&&!window.BWABackend;i++)await new Promise(r=>setTimeout(r,40));
   if(!window.BWABackend)throw new Error('Backend bridge did not load.');
   await window.BWABackend.ready;
   if(!window.BWABackend.available)throw new Error('Laravel backend is unavailable.');
-  if(window.BWABackend.user?.role!=='admin')throw new Error('Administrator access is required.');
   return window.BWABackend;
 }
 
-function coursePayload(form){
-  return {
-    title:String(form.elements.title?.value||'').trim(),
-    slug:String(form.elements.slug?.value||'').trim()||null,
-    category:String(form.elements.category?.value||''),
-    subtitle:String(form.elements.subtitle?.value||'').trim()||null,
-    description:String(form.elements.description?.value||'').trim()||null,
-    price:Number(form.elements.price?.value||0),
-    status:String(form.elements.status?.value||'draft'),
-    image:String(form.elements.image?.value||'').trim()||null,
-    badge:String(form.elements.badge?.value||'').trim()||null,
-    instructor_id:form.elements.instructor_id?.value?Number(form.elements.instructor_id.value):null,
-    course_link:String(ensureCourseLinkField()?.value||'').trim(),
-    learn:lines(form.elements.learn?.value),
-    modules:lines(form.elements.modules?.value),
-  };
+function courseRequest(url,options){
+  const path=typeof url==='string'?url:(url?.url||'');
+  const method=String(options?.method||'GET').toUpperCase();
+  return /^\/api\/admin\/manage\/courses(?:\/\d+)?(?:\?.*)?$/.test(path)&&['POST','PUT'].includes(method);
 }
 
-async function saveCourse(form){
-  if(savingCourse)return;
-  const id=Number(form.elements.id?.value||0);
-  const payload=coursePayload(form);
-  const input=ensureCourseLinkField();
-  if(!payload.course_link){toast('Course access link is required.',true);input?.focus();return}
-
-  const button=form.querySelector('button[type="submit"]');
-  const oldText=button?.textContent||'Save course';
-  savingCourse=true;
-  if(button){button.disabled=true;button.textContent='Saving course & link…'}
-  try{
-    const b=await backend();
-    const out=await b.api(id?`/api/admin/manage/courses/${id}`:'/api/admin/manage/courses',{
-      method:id?'PUT':'POST',body:JSON.stringify(payload),
-    });
-    const courseId=Number(out?.course?.id||id||0);
-    if(!courseId)throw new Error('Course was saved but its ID could not be resolved.');
-
-    // Dedicated write is the source of truth for the access link. This is intentionally
-    // separate from the full course request so legacy/core course handlers can never drop it.
-    const linkWrite=await b.api(`/api/admin/manage/course-links/${courseId}`,{
-      method:'PUT',body:JSON.stringify({course_link:payload.course_link}),
-    });
-    const written=String(linkWrite?.course_link||'').trim();
-    if(!written)throw new Error('Course Link was not persisted by the database endpoint.');
-
-    const check=await b.api('/api/admin/manage/course-links');
-    const verified=String(check?.links?.[String(courseId)]||'').trim();
-    if(!verified)throw new Error('Course Link database verification failed.');
-
-    if(input)input.value=verified;
-    form.closest('dialog')?.close();
-    toast(id?'Course and Course Link updated successfully.':'Course and Course Link created successfully.');
-    setTimeout(()=>$('#adminRefresh')?.click(),100);
-  }catch(err){
-    toast(errorText(err),true);
-  }finally{
-    savingCourse=false;
-    if(button){button.disabled=false;button.textContent=oldText}
+// Keep the core admin.js save flow. We only enrich its outgoing JSON payload with
+// the Course Link currently visible in the Add/Edit Course modal.
+const nativeFetch=window.fetch.bind(window);
+window.fetch=async function(input,options={}){
+  if(courseRequest(input,options)){
+    const dialog=$('#courseDialog');
+    const inputEl=ensureCourseLinkField();
+    const link=String(inputEl?.value||'').trim();
+    // Only inject during an actual Add/Edit modal save. Publish/Hide uses the same
+    // endpoint without opening the modal and must preserve the existing link.
+    if(dialog?.open){
+      if(!link){
+        toast('Course access link is required.',true);
+        inputEl?.focus();
+        return new Response(JSON.stringify({message:'Course Link is required.',errors:{course_link:['Course Link is required.']}}),{
+          status:422,headers:{'Content-Type':'application/json'}
+        });
+      }
+      try{
+        const body=typeof options.body==='string'?JSON.parse(options.body):{};
+        body.course_link=link;
+        options={...options,body:JSON.stringify(body)};
+      }catch{}
+    }
   }
-}
+  return nativeFetch(input,options);
+};
 
 async function fillEditCourseLink(courseId){
   courseId=String(courseId||'');
@@ -124,37 +89,28 @@ async function fillEditCourseLink(courseId){
     const b=await backend();
     const out=await b.api('/api/admin/manage/course-links');
     const saved=String(out?.links?.[courseId]||'');
-    for(const delay of [40,140,320])setTimeout(()=>{
+    for(const delay of [20,100,260])setTimeout(()=>{
       const form=$('#courseForm'),dialog=$('#courseDialog'),input=ensureCourseLinkField();
       if(!form||!dialog?.open||!input)return;
       if(String(form.elements.id?.value||'')!==courseId)return;
       input.value=saved;
     },delay);
   }catch(err){
-    console.warn('[BWA course link edit]',err.message);
+    console.warn('[BWA course link edit]',err?.message||err);
     toast('Could not load the saved Course Link. Refresh and try again.',true);
   }
 }
 
 installExternalCourseUi();
 
-document.addEventListener('submit',e=>{
-  const form=e.target;
-  if(!(form instanceof HTMLFormElement)||form.id!=='courseForm')return;
-  e.preventDefault();
-  e.stopPropagation();
-  e.stopImmediatePropagation();
-  saveCourse(form);
-},true);
-
 document.addEventListener('click',e=>{
   if(!(e.target instanceof Element))return;
   const edit=e.target.closest('[data-course-edit]');
   if(edit){setTimeout(()=>fillEditCourseLink(edit.getAttribute('data-course-edit')),0);return}
-  if(e.target.closest('#addCourseBtn'))setTimeout(()=>{const input=ensureCourseLinkField();if(input)input.value=''},40);
+  if(e.target.closest('#addCourseBtn'))setTimeout(()=>{const input=ensureCourseLinkField();if(input)input.value=''},20);
 },true);
 
-document.write('<script src="/assets/admin.js?rev=20260810-admin-management-v5"><\/script>');
+document.write('<script src="/assets/admin.js?rev=20260810-admin-management-v6"><\/script>');
 document.write('<script src="/assets/admin-extras.js?rev=20260808-admin-management-v3"><\/script>');
 document.write('<script src="/assets/admin-mobile.js?rev=20260808-admin-mobile-v1"><\/script>');
 document.write('<script src="/assets/admin-payment-tools.js?rev=20260810-payment-v2"><\/script>');
