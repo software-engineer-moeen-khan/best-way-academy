@@ -1,0 +1,12 @@
+/* Hide the public "Teach" navigation entry on desktop and mobile. */
+.site-header a[href="/teach"],
+.site-header a[href="teach.html"],
+.site-header a[href="/teach.html"],
+.mobile-nav a[href="/teach"],
+.mobile-nav a[href="teach.html"],
+.mobile-nav a[href="/teach.html"],
+.suite-links a[href="/teach"],
+.suite-links a[href="teach.html"],
+.suite-links a[href="/teach.html"] {
+  display: none !important;
+}
