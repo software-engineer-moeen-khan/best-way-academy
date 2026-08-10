@@ -3,6 +3,7 @@
 const $=(s,r=document)=>r.querySelector(s);
 const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 const GOOGLE_AI_PLACEMENT='homepage_google_ai_popunder';
+const LONGBAR_PLACEMENT='homepage_popular_skills_longbar';
 let api=null,items=[];
 
 async function backend(){
@@ -34,6 +35,7 @@ function installStyle(){
     .admin-ad-type{display:inline-flex;padding:4px 8px;border-radius:999px;background:#f2f4f7;color:#344054;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-left:6px}
     .admin-placement-grid{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:end;margin-top:14px}
     .admin-placement-grid label{margin:0}
+    .admin-placement-card{margin-bottom:18px}
     #advertisementDialog .admin-ad-image-preview{width:100%;max-height:220px;object-fit:contain;border:1px solid #e4e7ec;border-radius:12px;background:#f8fafc;margin-top:8px;display:none}
     #advertisementEmbedPreview{white-space:pre-wrap;word-break:break-word;max-height:180px;overflow:auto;border:1px solid #e4e7ec;border-radius:12px;background:#f8fafc;padding:12px;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;color:#344054;margin-top:8px;display:none}
     [data-ad-mode][hidden]{display:none!important}
@@ -63,16 +65,23 @@ function ensureUi(){
         <div><p class="eyebrow">MONETIZATION</p><h1>Advertisements</h1><p>Create image ads or embed-code ads and assign them to website placements.</p></div>
         <button id="addAdvertisementBtn" class="admin-primary" type="button">+ Add advertisement</button>
       </div>
-      <div class="admin-card" style="margin-bottom:18px">
+      <div class="admin-card admin-placement-card">
         <strong>Homepage — Learn AI with Google Popunder</strong>
-        <p style="margin:6px 0 0;color:#667085">Choose the ad that should trigger when a visitor interacts with the “Learn AI with Google” section.</p>
+        <p style="margin:6px 0 0;color:#667085">Choose the ad that should open when a visitor clicks anywhere in the “Learn AI with Google” section.</p>
         <form id="googleAiPopunderPlacementForm" class="admin-placement-grid">
-          <label>Selected advertisement
-            <select id="googleAiPopunderAdvertisement"><option value="">None / disabled</option></select>
-          </label>
+          <label>Selected advertisement<select id="googleAiPopunderAdvertisement"><option value="">None / disabled</option></select></label>
           <button class="admin-primary" type="submit">Save placement</button>
         </form>
         <p id="googleAiPopunderPlacementMessage" class="admin-muted" style="margin:10px 0 0"></p>
+      </div>
+      <div class="admin-card admin-placement-card">
+        <strong>Homepage — Popular Skills LongBar Ad</strong>
+        <p style="margin:6px 0 0;color:#667085">This replaces the complete “Popular Skills” section on the homepage with the selected full-width advertisement.</p>
+        <form id="longbarPlacementForm" class="admin-placement-grid">
+          <label>Selected advertisement<select id="longbarAdvertisement"><option value="">None / hidden</option></select></label>
+          <button class="admin-primary" type="submit">Save placement</button>
+        </form>
+        <p id="longbarPlacementMessage" class="admin-muted" style="margin:10px 0 0"></p>
       </div>
       <div class="admin-toolbar"><input id="advertisementSearch" type="search" placeholder="Search advertisements…"><select id="advertisementTypeFilter"><option value="">All types</option><option value="image">Image ads</option><option value="embed">Embed code ads</option></select><select id="advertisementStatusFilter"><option value="">All statuses</option><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
       <div class="admin-card admin-table-wrap">
@@ -95,7 +104,7 @@ function ensureUi(){
         <div data-ad-mode="image">
           <label>Advertisement image URL<input name="image_url" maxlength="2048" inputmode="url" placeholder="https://example.com/banner.jpg"></label>
           <img id="advertisementImagePreview" class="admin-ad-image-preview" alt="Advertisement preview">
-          <label>Click / destination URL <small>Required when this Image Ad is used as a popunder.</small><input name="target_url" maxlength="2048" inputmode="url" placeholder="https://advertiser.example.com/"></label>
+          <label>Click / destination URL <small>Optional for LongBar; required for Popunder.</small><input name="target_url" maxlength="2048" inputmode="url" placeholder="https://advertiser.example.com/"></label>
           <label>Image alt text<input name="alt_text" maxlength="255" placeholder="Short description of the advertisement"></label>
         </div>
         <div data-ad-mode="embed" hidden>
@@ -124,21 +133,26 @@ function matches(item){
   return(!q||text.includes(q))&&(!type||item.ad_type===type)&&(!status||(status==='active'?item.active:!item.active));
 }
 function shortCode(value){const text=String(value||'').replace(/\s+/g,' ').trim();return text.length>90?text.slice(0,87)+'…':text}
-function placementLabel(key){return key===GOOGLE_AI_PLACEMENT?'Homepage · Google AI Popunder':(key||'Unassigned')}
+function placementsOf(item){return Array.isArray(item.placements)?item.placements:(item.placement_key?[item.placement_key]:[])}
+function placementLabel(key){if(key===GOOGLE_AI_PLACEMENT)return'Homepage · Google AI Popunder';if(key===LONGBAR_PLACEMENT)return'Homepage · Popular Skills LongBar';return key||'Unassigned'}
 function usableForPopunder(item){return !!item.active&&(item.ad_type==='embed'?!!String(item.embed_code||'').trim():!!String(item.target_url||'').trim())}
+function usableForLongbar(item){return !!item.active&&(item.ad_type==='embed'?!!String(item.embed_code||'').trim():!!String(item.image_url||'').trim())}
 
-function renderPlacement(){
-  const select=$('#googleAiPopunderAdvertisement'),msg=$('#googleAiPopunderPlacementMessage');if(!select)return;
-  const selected=items.find(x=>x.placement_key===GOOGLE_AI_PLACEMENT);
+function fillPlacement(selectId,msgId,key,usable,emptyText,selectedText){
+  const select=$(selectId),msg=$(msgId);if(!select)return;
+  const selected=items.find(x=>placementsOf(x).includes(key));
   select.innerHTML='<option value="">None / disabled</option>'+items.map(item=>{
-    const usable=usableForPopunder(item),type=item.ad_type==='embed'?'Embed':'Image';
-    const why=!item.active?' — inactive':(!usable?' — missing destination/code':'');
-    return `<option value="${item.id}" ${usable?'':'disabled'}>${esc(item.name)} (${type})${esc(why)}</option>`;
+    const ok=usable(item),type=item.ad_type==='embed'?'Embed':'Image';
+    const why=!item.active?' — inactive':(!ok?' — missing required content':'');
+    return `<option value="${item.id}" ${ok?'':'disabled'}>${esc(item.name)} (${type})${esc(why)}</option>`;
   }).join('');
   select.value=selected?String(selected.id):'';
-  if(msg)msg.textContent=selected
-    ?`Currently selected: ${selected.name}. The ad triggers on the first interaction with the Google AI section per page load.`
-    :'No popunder advertisement is currently assigned to this section.';
+  if(msg)msg.textContent=selected?selectedText(selected):emptyText;
+}
+
+function renderPlacements(){
+  fillPlacement('#googleAiPopunderAdvertisement','#googleAiPopunderPlacementMessage',GOOGLE_AI_PLACEMENT,usableForPopunder,'No popunder advertisement is currently assigned.',x=>`Currently selected: ${x.name}.`);
+  fillPlacement('#longbarAdvertisement','#longbarPlacementMessage',LONGBAR_PLACEMENT,usableForLongbar,'No LongBar advertisement is currently assigned; Popular Skills will be hidden.',x=>`Currently selected: ${x.name}. It replaces the Popular Skills section.`);
 }
 
 function render(){
@@ -149,13 +163,14 @@ function render(){
     const preview=type==='embed'?'<div class="admin-ad-code-preview">&lt;/&gt;<br>Embed</div>':`<img class="admin-ad-preview" src="${esc(item.image_url||'')}" alt="${esc(item.alt_text||item.name)}">`;
     const detail=type==='embed'?shortCode(item.embed_code):String(item.image_url||'');
     const destination=type==='embed'?'<span class="admin-muted">Inside embed code</span>':(item.target_url?`<a class="admin-link" href="${esc(item.target_url)}" target="_blank" rel="noopener noreferrer">Open destination ↗</a>`:'<span class="admin-muted">Not set</span>');
-    return `<tr><td>${preview}</td><td class="admin-ad-name"><strong>${esc(item.name)}</strong><span class="admin-ad-type">${type==='embed'?'Embed code':'Image'}</span><small>${esc(detail)}</small></td><td>${destination}</td><td><span class="admin-ad-placement">${esc(placementLabel(item.placement_key))}</span></td><td><span class="status-pill ${item.active?'status-active':'status-hidden'}">${item.active?'active':'inactive'}</span></td><td><div class="admin-actions"><button class="admin-small primary" type="button" data-ad-edit="${item.id}">Edit</button><button class="admin-small danger" type="button" data-ad-delete="${item.id}">Delete</button></div></td></tr>`;
+    const placementText=placementsOf(item).length?placementsOf(item).map(placementLabel).join(' · '):'Unassigned';
+    return `<tr><td>${preview}</td><td class="admin-ad-name"><strong>${esc(item.name)}</strong><span class="admin-ad-type">${type==='embed'?'Embed code':'Image'}</span><small>${esc(detail)}</small></td><td>${destination}</td><td><span class="admin-ad-placement">${esc(placementText)}</span></td><td><span class="status-pill ${item.active?'status-active':'status-hidden'}">${item.active?'active':'inactive'}</span></td><td><div class="admin-actions"><button class="admin-small primary" type="button" data-ad-edit="${item.id}">Edit</button><button class="admin-small danger" type="button" data-ad-delete="${item.id}">Delete</button></div></td></tr>`;
   }).join('');
   empty.hidden=list.length>0;
 }
 
 async function load(){
-  try{if(!api)await backend();const out=await api('/api/admin/manage/advertisements');items=out.advertisements||[];render();renderPlacement();message(`${items.length} advertisement${items.length===1?'':'s'} saved.`)}
+  try{if(!api)await backend();const out=await api('/api/admin/manage/advertisements');items=out.advertisements||[];render();renderPlacements();message(`${items.length} advertisement${items.length===1?'':'s'} saved.`)}
   catch(err){message(err?.message||'Could not load advertisements.',true)}
 }
 
@@ -180,11 +195,10 @@ async function save(e){
   catch(err){message(err?.data?.errors?Object.values(err.data.errors).flat().join(' '):(err?.message||'Could not save advertisement.'),true)}
 }
 
-async function savePlacement(e){
-  e.preventDefault();const select=$('#googleAiPopunderAdvertisement'),msg=$('#googleAiPopunderPlacementMessage');
-  const id=Number(select?.value||0)||null;
-  try{if(!api)await backend();await api('/api/admin/manage/advertisement-placements/homepage-google-ai-popunder',{method:'PUT',body:JSON.stringify({advertisement_id:id})});await load();if(msg)msg.textContent=id?'Google AI popunder placement saved successfully.':'Google AI popunder disabled.'}
-  catch(err){if(msg)msg.textContent=err?.data?.errors?Object.values(err.data.errors).flat().join(' '):(err?.message||'Could not save popunder placement.')}
+async function savePlacement(e,selectId,msgId,url,label){
+  e.preventDefault();const select=$(selectId),msg=$(msgId),id=Number(select?.value||0)||null;
+  try{if(!api)await backend();await api(url,{method:'PUT',body:JSON.stringify({advertisement_id:id})});await load();if(msg)msg.textContent=id?`${label} placement saved successfully.`:`${label} placement disabled.`}
+  catch(err){if(msg)msg.textContent=err?.data?.errors?Object.values(err.data.errors).flat().join(' '):(err?.message||`Could not save ${label} placement.`)}
 }
 
 async function remove(id){
@@ -195,10 +209,21 @@ async function remove(id){
 
 function init(){
   ensureUi();
-  $('#addAdvertisementBtn')?.addEventListener('click',()=>openDialog());$('#closeAdvertisementDialog')?.addEventListener('click',closeDialog);$('#cancelAdvertisementDialog')?.addEventListener('click',closeDialog);$('#advertisementForm')?.addEventListener('submit',save);$('#googleAiPopunderPlacementForm')?.addEventListener('submit',savePlacement);
-  $('#advertisementForm [name="ad_type"]')?.addEventListener('change',syncMode);$('#advertisementForm [name="image_url"]')?.addEventListener('input',paintPreview);$('#advertisementForm [name="embed_code"]')?.addEventListener('input',paintEmbedPreview);$('#advertisementSearch')?.addEventListener('input',render);$('#advertisementTypeFilter')?.addEventListener('change',render);$('#advertisementStatusFilter')?.addEventListener('change',render);
+  $('#addAdvertisementBtn')?.addEventListener('click',()=>openDialog());
+  $('#closeAdvertisementDialog')?.addEventListener('click',closeDialog);
+  $('#cancelAdvertisementDialog')?.addEventListener('click',closeDialog);
+  $('#advertisementForm')?.addEventListener('submit',save);
+  $('#googleAiPopunderPlacementForm')?.addEventListener('submit',e=>savePlacement(e,'#googleAiPopunderAdvertisement','#googleAiPopunderPlacementMessage','/api/admin/manage/advertisement-placements/homepage-google-ai-popunder','Google AI popunder'));
+  $('#longbarPlacementForm')?.addEventListener('submit',e=>savePlacement(e,'#longbarAdvertisement','#longbarPlacementMessage','/api/admin/manage/advertisement-placements/homepage-popular-skills-longbar','Homepage LongBar'));
+  $('#advertisementForm [name="ad_type"]')?.addEventListener('change',syncMode);
+  $('#advertisementForm [name="image_url"]')?.addEventListener('input',paintPreview);
+  $('#advertisementForm [name="embed_code"]')?.addEventListener('input',paintEmbedPreview);
+  $('#advertisementSearch')?.addEventListener('input',render);
+  $('#advertisementTypeFilter')?.addEventListener('change',render);
+  $('#advertisementStatusFilter')?.addEventListener('change',render);
   document.addEventListener('click',e=>{if(!(e.target instanceof Element))return;const edit=e.target.closest('[data-ad-edit]');if(edit){openDialog(items.find(x=>Number(x.id)===Number(edit.dataset.adEdit)));return}const del=e.target.closest('[data-ad-delete]');if(del)remove(Number(del.dataset.adDelete))});
-  if(location.hash==='#advertisements')activatePanel();load();
+  if(location.hash==='#advertisements')activatePanel();
+  load();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
