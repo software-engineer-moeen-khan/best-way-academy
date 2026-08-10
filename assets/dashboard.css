@@ -3,3 +3,13 @@
 @media(max-width:900px){.dashboard-stats{grid-template-columns:repeat(2,1fr)}.dashboard-grid{grid-template-columns:1fr}.account-card{order:-1}.dashboard-hero-inner{align-items:flex-start}}
 @media(max-width:650px){.dashboard-hero{padding:30px 0 62px}.dashboard-hero-inner{flex-direction:column}.dashboard-hero h1{font-size:31px}.dashboard-stats{grid-template-columns:1fr 1fr;gap:9px;margin-top:-45px}.dashboard-stats article{padding:16px}.dashboard-stats strong{font-size:25px}.dashboard-card{padding:18px}.dashboard-card-head{margin-bottom:14px}.dash-course{grid-template-columns:90px 1fr}.dash-course img{width:90px;height:64px}.dash-course>a{grid-column:2;justify-self:start}.quick-grid{grid-template-columns:1fr}.profile-form input{font-size:16px}.dashboard-header .desktop-nav{display:none}}
 @media(max-width:420px){.dashboard-stats{grid-template-columns:1fr}.dashboard-stats article{display:grid;grid-template-columns:1fr auto;align-items:center}.dashboard-stats strong{grid-row:1/3;grid-column:2}.dash-course{grid-template-columns:78px 1fr}.dash-course img{width:78px;height:58px}.dash-course h3{font-size:14px}.dashboard-card-head{flex-direction:column;gap:7px}}
+
+/* Dashboard cleanup: text-only enrolled courses and no decorative overlap artifacts. */
+.dashboard-stats::before,.dashboard-stats::after,.dashboard-stats article::before,.dashboard-stats article::after{content:none!important;display:none!important}
+.dashboard-stats article{overflow:hidden}
+.dashboard-grid{position:relative;z-index:1}
+.dash-course{grid-template-columns:minmax(0,1fr) auto!important;gap:16px}
+.dash-course>img,.dash-course .course-access-image{display:none!important}
+.dash-course>a{grid-column:auto!important;justify-self:end!important}
+@media(max-width:650px){.dash-course{grid-template-columns:minmax(0,1fr) auto!important}.dash-course>a{grid-column:auto!important;justify-self:end!important}}
+@media(max-width:520px){.dash-course{grid-template-columns:1fr!important}.dash-course>a{justify-self:start!important}}
