@@ -8,6 +8,7 @@ use App\Http\Controllers\CatalogMetadataController;
 use App\Http\Controllers\CouponController;
 use App\Http\Controllers\CourseAccessLinkController;
 use App\Http\Controllers\EasypaisaPaymentController;
+use App\Http\Controllers\HomepageCategoriesController;
 use App\Http\Controllers\LearningContentController;
 use App\Http\Controllers\MessageCenterController;
 use App\Http\Controllers\PromoMessageController;
@@ -41,6 +42,8 @@ Route::middleware('auth')->group(function(){
         Route::put('/course-links/{course}',[CourseAccessLinkController::class,'adminUpdate'])->whereNumber('course');
         Route::get('/promo-message',[PromoMessageController::class,'show']);
         Route::put('/promo-message',[PromoMessageController::class,'update'])->middleware('throttle:30,1');
+        Route::get('/homepage-categories',[HomepageCategoriesController::class,'show']);
+        Route::put('/homepage-categories',[HomepageCategoriesController::class,'update'])->middleware('throttle:30,1');
 
         Route::post('/courses',[AdminExternalCourseController::class,'create']);
         Route::put('/courses/{course}',[AdminExternalCourseController::class,'update'])->whereNumber('course');
