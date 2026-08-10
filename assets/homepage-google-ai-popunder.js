@@ -17,18 +17,25 @@ function executeEmbed(code){
   });
 }
 
-function openPopunder(url){
+function openAdvertisement(url){
   const popup=window.open(url,'_blank');
-  if(!popup)return false;
-  try{popup.blur()}catch{}
-  try{window.focus()}catch{}
-  return true;
+  if(popup){
+    try{popup.blur()}catch{}
+    try{window.focus()}catch{}
+    return true;
+  }
+
+  // If the browser blocks the popup, still send the visitor to the selected ad.
+  try{
+    window.location.assign(url);
+    return true;
+  }catch{
+    return false;
+  }
 }
 
-function clickedInsideGoogleAi(event){
-  const target=event.target;
-  if(!(target instanceof Element))return false;
-  return !!target.closest('.google-ai');
+function insideGoogleAi(target){
+  return target instanceof Element && !!target.closest('.google-ai');
 }
 
 async function init(){
@@ -37,13 +44,23 @@ async function init(){
   if(!section)return;
 
   section.style.cursor='pointer';
-  section.setAttribute('data-popunder-clickable','true');
+  section.setAttribute('data-ad-clickable','true');
+
+  // This section is an advertisement trigger, not a course-navigation block.
+  // Remove the original course destinations so its cards/buttons can never open courses.
+  section.querySelectorAll('a[href]').forEach(link=>{
+    link.dataset.originalHref=link.getAttribute('href')||'';
+    link.removeAttribute('href');
+    link.setAttribute('role','button');
+    if(!link.hasAttribute('tabindex'))link.tabIndex=0;
+  });
 
   let advertisement=null;
   let fired=false;
 
   const trigger=()=>{
     if(fired||!advertisement||!advertisement.active)return;
+
     const type=advertisement.ad_type==='embed'?'embed':'image';
     if(type==='embed'){
       const code=String(advertisement.embed_code||'').trim();
@@ -52,19 +69,26 @@ async function init(){
       executeEmbed(code);
       return;
     }
+
     const url=String(advertisement.target_url||'').trim();
     if(!url)return;
-    if(openPopunder(url))fired=true;
+    if(openAdvertisement(url))fired=true;
   };
 
-  document.addEventListener('click',event=>{
-    if(clickedInsideGoogleAi(event))trigger();
-  },{capture:true});
+  const intercept=e=>{
+    if(!insideGoogleAi(e.target))return;
+    e.preventDefault();
+    e.stopPropagation();
+    if(typeof e.stopImmediatePropagation==='function')e.stopImmediatePropagation();
+    trigger();
+  };
 
+  // Capture phase guarantees nested cards, images and the Learn more button cannot navigate away.
+  document.addEventListener('click',intercept,true);
+  document.addEventListener('auxclick',intercept,true);
   document.addEventListener('keydown',event=>{
-    if(event.key!=='Enter'&&event.key!==' ')return;
-    if(clickedInsideGoogleAi(event))trigger();
-  },{capture:true});
+    if((event.key==='Enter'||event.key===' ')&&insideGoogleAi(event.target))intercept(event);
+  },true);
 
   try{
     const response=await fetch('/api/advertisements/homepage-google-ai-popunder',{
