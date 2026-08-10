@@ -221,13 +221,13 @@ HTML;
                 if ($replacement !== '' && !str_contains($html, 'data-bwa-longbar-ad-style')) {
                     $style = <<<'HTML'
 <style data-bwa-longbar-ad-style>
-.homepage-longbar-ad{padding:30px 0;background:transparent}
-.homepage-longbar-ad-inner{width:100%;overflow:hidden}
-.homepage-longbar-ad a{display:block;width:100%;text-decoration:none}
-.homepage-longbar-ad img{display:block;width:100%;height:auto;max-width:100%;border:0;border-radius:14px;object-fit:contain}
-.homepage-longbar-ad-embed{min-height:1px}
-.homepage-longbar-ad-embed iframe,.homepage-longbar-ad-embed img,.homepage-longbar-ad-embed video{max-width:100%}
-@media(max-width:780px){.homepage-longbar-ad{padding:18px 0}.homepage-longbar-ad img{border-radius:10px}}
+.homepage-longbar-ad{min-height:320px;padding:30px 0;background:transparent;display:flex;align-items:center;justify-content:center}
+.homepage-longbar-ad-inner{width:100%;min-height:260px;overflow:hidden;display:flex;align-items:center;justify-content:center;margin:0 auto;text-align:center}
+.homepage-longbar-ad a{display:flex;align-items:center;justify-content:center;width:auto;max-width:100%;text-decoration:none;margin:0 auto}
+.homepage-longbar-ad img{display:block;width:auto;height:auto;max-width:100%;border:0;border-radius:14px;object-fit:contain;margin:0 auto}
+.homepage-longbar-ad-embed{min-height:260px;display:flex;align-items:center;justify-content:center;text-align:center}
+.homepage-longbar-ad-embed>*,.homepage-longbar-ad-embed iframe,.homepage-longbar-ad-embed img,.homepage-longbar-ad-embed video{max-width:100%;margin-left:auto!important;margin-right:auto!important}
+@media(max-width:780px){.homepage-longbar-ad{min-height:180px;padding:18px 0}.homepage-longbar-ad-inner,.homepage-longbar-ad-embed{min-height:144px}.homepage-longbar-ad img{border-radius:10px}}
 </style>
 HTML;
                     $html = str_ireplace('</head>', $style.PHP_EOL.'</head>', $html);
