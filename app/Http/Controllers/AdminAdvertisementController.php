@@ -140,14 +140,20 @@ class AdminAdvertisementController extends Controller
                 abort_if(trim((string) ($row->image_url ?? '')) === '', 422, 'This Image advertisement has no image URL.');
             }
 
-            DB::table('advertisement_placements')->updateOrInsert(
-                ['placement_key' => $placementKey],
-                [
+            $exists = DB::table('advertisement_placements')->where('placement_key', $placementKey)->exists();
+            if ($exists) {
+                DB::table('advertisement_placements')->where('placement_key', $placementKey)->update([
                     'advertisement_id' => $advertisementId,
                     'updated_at' => now(),
-                    'created_at' => DB::raw('COALESCE(created_at, NOW())'),
-                ]
-            );
+                ]);
+            } else {
+                DB::table('advertisement_placements')->insert([
+                    'placement_key' => $placementKey,
+                    'advertisement_id' => $advertisementId,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
         });
 
         return response()->json([
