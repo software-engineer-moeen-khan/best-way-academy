@@ -49,7 +49,7 @@ class AppServiceProvider extends ServiceProvider
             if ($event->request->is('admin') && !str_contains($html, 'admin-advertisements.js')) {
                 $html = str_ireplace(
                     '</body>',
-                    '<script src="/assets/admin-advertisements.js?rev=20260811-advertisements-v1"></script>'.PHP_EOL.'</body>',
+                    '<script src="/assets/admin-advertisements.js?rev=20260811-advertisements-v2"></script>'.PHP_EOL.'</body>',
                     $html
                 );
             }
