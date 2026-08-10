@@ -10,6 +10,7 @@ use App\Http\Controllers\CourseAccessLinkController;
 use App\Http\Controllers\EasypaisaPaymentController;
 use App\Http\Controllers\LearningContentController;
 use App\Http\Controllers\MessageCenterController;
+use App\Http\Controllers\PromoMessageController;
 use App\Http\Controllers\SubscriptionController;
 use Illuminate\Support\Facades\Route;
 
@@ -38,6 +39,8 @@ Route::middleware('auth')->group(function(){
         Route::post('/messages/{user}/reply',[MessageCenterController::class,'adminReply'])->whereNumber('user')->middleware('throttle:30,1');
         Route::get('/course-links',[CourseAccessLinkController::class,'adminIndex']);
         Route::put('/course-links/{course}',[CourseAccessLinkController::class,'adminUpdate'])->whereNumber('course');
+        Route::get('/promo-message',[PromoMessageController::class,'show']);
+        Route::put('/promo-message',[PromoMessageController::class,'update'])->middleware('throttle:30,1');
 
         Route::post('/courses',[AdminExternalCourseController::class,'create']);
         Route::put('/courses/{course}',[AdminExternalCourseController::class,'update'])->whereNumber('course');
