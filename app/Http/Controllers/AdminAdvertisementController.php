@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 class AdminAdvertisementController extends Controller
 {
     private const GOOGLE_AI_POPUNDER = 'homepage_google_ai_popunder';
+    private const POPULAR_SKILLS_LONGBAR = 'homepage_popular_skills_longbar';
 
     private function admin(Request $request): User
     {
@@ -62,18 +63,16 @@ class AdminAdvertisementController extends Controller
             ];
         }
 
-        $imageUrl = $this->cleanLink($data['image_url'] ?? null, true);
-
         return [
             'ad_type' => 'image',
-            'image_url' => $imageUrl,
+            'image_url' => $this->cleanLink($data['image_url'] ?? null, true),
             'embed_code' => null,
             'target_url' => $this->cleanLink($data['target_url'] ?? null),
             'alt_text' => trim((string) ($data['alt_text'] ?? '')) ?: null,
         ];
     }
 
-    private function payload(object $row): array
+    private function payload(object $row, array $placements = []): array
     {
         return [
             'id' => (int) $row->id,
@@ -83,7 +82,8 @@ class AdminAdvertisementController extends Controller
             'embed_code' => $row->embed_code ?? null,
             'target_url' => $row->target_url,
             'alt_text' => $row->alt_text,
-            'placement_key' => $row->placement_key,
+            'placement_key' => $placements[0] ?? $row->placement_key ?? null,
+            'placements' => array_values($placements),
             'active' => (bool) $row->active,
             'created_at' => $row->created_at,
             'updated_at' => $row->updated_at,
@@ -103,19 +103,17 @@ class AdminAdvertisementController extends Controller
         ]);
     }
 
-    public function publicGoogleAiPopunder(): JsonResponse
+    private function placementAdvertisement(string $placementKey): ?object
     {
-        $row = DB::table('advertisements')
-            ->where('placement_key', self::GOOGLE_AI_POPUNDER)
-            ->where('active', true)
+        return DB::table('advertisement_placements as ap')
+            ->join('advertisements as a', 'a.id', '=', 'ap.advertisement_id')
+            ->where('ap.placement_key', $placementKey)
+            ->where('a.active', true)
+            ->select('a.*')
             ->first();
-
-        return response()->json([
-            'advertisement' => $row ? $this->payload($row) : null,
-        ])->header('Cache-Control', 'no-cache, no-store, must-revalidate');
     }
 
-    public function assignGoogleAiPopunder(Request $request): JsonResponse
+    private function assignPlacement(Request $request, string $placementKey, string $mode): JsonResponse
     {
         $this->admin($request);
         $data = $request->validate([
@@ -123,12 +121,9 @@ class AdminAdvertisementController extends Controller
         ]);
         $advertisementId = isset($data['advertisement_id']) ? (int) $data['advertisement_id'] : null;
 
-        DB::transaction(function () use ($advertisementId): void {
-            DB::table('advertisements')
-                ->where('placement_key', self::GOOGLE_AI_POPUNDER)
-                ->update(['placement_key' => null, 'updated_at' => now()]);
-
+        DB::transaction(function () use ($advertisementId, $placementKey, $mode): void {
             if (!$advertisementId) {
+                DB::table('advertisement_placements')->where('placement_key', $placementKey)->delete();
                 return;
             }
 
@@ -139,32 +134,63 @@ class AdminAdvertisementController extends Controller
             $type = ($row->ad_type ?? 'image') === 'embed' ? 'embed' : 'image';
             if ($type === 'embed') {
                 abort_if(trim((string) ($row->embed_code ?? '')) === '', 422, 'This Embed Code advertisement has no embed code.');
-            } else {
+            } elseif ($mode === 'popunder') {
                 abort_if(trim((string) ($row->target_url ?? '')) === '', 422, 'An Image advertisement needs a destination URL before it can be used as a popunder.');
+            } else {
+                abort_if(trim((string) ($row->image_url ?? '')) === '', 422, 'This Image advertisement has no image URL.');
             }
 
-            DB::table('advertisements')->where('id', $advertisementId)->update([
-                'placement_key' => self::GOOGLE_AI_POPUNDER,
-                'updated_at' => now(),
-            ]);
+            DB::table('advertisement_placements')->updateOrInsert(
+                ['placement_key' => $placementKey],
+                [
+                    'advertisement_id' => $advertisementId,
+                    'updated_at' => now(),
+                    'created_at' => DB::raw('COALESCE(created_at, NOW())'),
+                ]
+            );
         });
 
         return response()->json([
             'ok' => true,
-            'placement_key' => self::GOOGLE_AI_POPUNDER,
+            'placement_key' => $placementKey,
             'advertisement_id' => $advertisementId,
         ]);
+    }
+
+    public function publicGoogleAiPopunder(): JsonResponse
+    {
+        $row = $this->placementAdvertisement(self::GOOGLE_AI_POPUNDER);
+
+        return response()->json([
+            'advertisement' => $row ? $this->payload($row, [self::GOOGLE_AI_POPUNDER]) : null,
+        ])->header('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
+
+    public function assignGoogleAiPopunder(Request $request): JsonResponse
+    {
+        return $this->assignPlacement($request, self::GOOGLE_AI_POPUNDER, 'popunder');
+    }
+
+    public function assignPopularSkillsLongbar(Request $request): JsonResponse
+    {
+        return $this->assignPlacement($request, self::POPULAR_SKILLS_LONGBAR, 'longbar');
     }
 
     public function index(Request $request): JsonResponse
     {
         $this->admin($request);
 
+        $placementsByAdvertisement = DB::table('advertisement_placements')
+            ->orderBy('placement_key')
+            ->get(['advertisement_id', 'placement_key'])
+            ->groupBy(fn ($row) => (int) $row->advertisement_id)
+            ->map(fn ($rows) => $rows->pluck('placement_key')->values()->all());
+
         $items = DB::table('advertisements')
             ->orderByDesc('updated_at')
             ->orderByDesc('id')
             ->get()
-            ->map(fn ($row) => $this->payload($row))
+            ->map(fn ($row) => $this->payload($row, $placementsByAdvertisement->get((int) $row->id, [])))
             ->values();
 
         return response()->json(['advertisements' => $items]);
@@ -207,8 +233,13 @@ class AdminAdvertisementController extends Controller
         ]);
 
         $row = DB::table('advertisements')->where('id', $advertisement)->first();
+        $placements = DB::table('advertisement_placements')
+            ->where('advertisement_id', $advertisement)
+            ->orderBy('placement_key')
+            ->pluck('placement_key')
+            ->all();
 
-        return response()->json(['ok' => true, 'advertisement' => $this->payload($row)]);
+        return response()->json(['ok' => true, 'advertisement' => $this->payload($row, $placements)]);
     }
 
     public function destroy(Request $request, int $advertisement): JsonResponse
