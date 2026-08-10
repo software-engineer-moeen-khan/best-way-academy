@@ -91,8 +91,15 @@ async function saveCourse(form){
       method:id?'PUT':'POST',body:JSON.stringify(payload),
     });
     const courseId=Number(out?.course?.id||id||0);
-    const returned=String(out?.course?.course_link||'').trim();
-    if(!courseId||!returned)throw new Error('Course Link was not saved to the database.');
+    if(!courseId)throw new Error('Course was saved but its ID could not be resolved.');
+
+    // Dedicated write is the source of truth for the access link. This is intentionally
+    // separate from the full course request so legacy/core course handlers can never drop it.
+    const linkWrite=await b.api(`/api/admin/manage/course-links/${courseId}`,{
+      method:'PUT',body:JSON.stringify({course_link:payload.course_link}),
+    });
+    const written=String(linkWrite?.course_link||'').trim();
+    if(!written)throw new Error('Course Link was not persisted by the database endpoint.');
 
     const check=await b.api('/api/admin/manage/course-links');
     const verified=String(check?.links?.[String(courseId)]||'').trim();
@@ -131,7 +138,6 @@ async function fillEditCourseLink(courseId){
 
 installExternalCourseUi();
 
-// This listener is installed before admin.js and captures Course Save so the link can never be dropped.
 document.addEventListener('submit',e=>{
   const form=e.target;
   if(!(form instanceof HTMLFormElement)||form.id!=='courseForm')return;
@@ -141,7 +147,6 @@ document.addEventListener('submit',e=>{
   saveCourse(form);
 },true);
 
-// admin.js opens the modal on the same click; load the saved link immediately after it has filled the form.
 document.addEventListener('click',e=>{
   if(!(e.target instanceof Element))return;
   const edit=e.target.closest('[data-course-edit]');
