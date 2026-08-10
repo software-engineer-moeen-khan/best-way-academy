@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\DB;
 
 class AdminAdvertisementController extends Controller
 {
+    private const GOOGLE_AI_POPUNDER = 'homepage_google_ai_popunder';
+
     private function admin(Request $request): User
     {
         $user = $request->user();
@@ -98,6 +100,59 @@ class AdminAdvertisementController extends Controller
             'target_url' => ['nullable', 'string', 'max:2048'],
             'alt_text' => ['nullable', 'string', 'max:255'],
             'active' => ['required', 'boolean'],
+        ]);
+    }
+
+    public function publicGoogleAiPopunder(): JsonResponse
+    {
+        $row = DB::table('advertisements')
+            ->where('placement_key', self::GOOGLE_AI_POPUNDER)
+            ->where('active', true)
+            ->first();
+
+        return response()->json([
+            'advertisement' => $row ? $this->payload($row) : null,
+        ])->header('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
+
+    public function assignGoogleAiPopunder(Request $request): JsonResponse
+    {
+        $this->admin($request);
+        $data = $request->validate([
+            'advertisement_id' => ['nullable', 'integer'],
+        ]);
+        $advertisementId = isset($data['advertisement_id']) ? (int) $data['advertisement_id'] : null;
+
+        DB::transaction(function () use ($advertisementId): void {
+            DB::table('advertisements')
+                ->where('placement_key', self::GOOGLE_AI_POPUNDER)
+                ->update(['placement_key' => null, 'updated_at' => now()]);
+
+            if (!$advertisementId) {
+                return;
+            }
+
+            $row = DB::table('advertisements')->where('id', $advertisementId)->first();
+            abort_unless($row, 404, 'Advertisement not found.');
+            abort_unless((bool) $row->active, 422, 'Choose an active advertisement.');
+
+            $type = ($row->ad_type ?? 'image') === 'embed' ? 'embed' : 'image';
+            if ($type === 'embed') {
+                abort_if(trim((string) ($row->embed_code ?? '')) === '', 422, 'This Embed Code advertisement has no embed code.');
+            } else {
+                abort_if(trim((string) ($row->target_url ?? '')) === '', 422, 'An Image advertisement needs a destination URL before it can be used as a popunder.');
+            }
+
+            DB::table('advertisements')->where('id', $advertisementId)->update([
+                'placement_key' => self::GOOGLE_AI_POPUNDER,
+                'updated_at' => now(),
+            ]);
+        });
+
+        return response()->json([
+            'ok' => true,
+            'placement_key' => self::GOOGLE_AI_POPUNDER,
+            'advertisement_id' => $advertisementId,
         ]);
     }
 
