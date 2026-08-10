@@ -9,17 +9,22 @@ use App\Http\Controllers\CouponController;
 use App\Http\Controllers\CourseAccessLinkController;
 use App\Http\Controllers\EasypaisaPaymentController;
 use App\Http\Controllers\LearningContentController;
+use App\Http\Controllers\SadapayPaymentController;
 use App\Http\Controllers\SubscriptionController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/api/categories',[CatalogMetadataController::class,'categories']);
 Route::get('/api/platform',[CatalogMetadataController::class,'platform']);
 Route::get('/api/learning-plans',[LearningContentController::class,'plans']);
+Route::get('/api/payment/sadapay',[SadapayPaymentController::class,'config']);
+Route::get('/api/payment/sadapay/qr',[SadapayPaymentController::class,'qr']);
+// Keep existing EasyPaisa endpoints for backwards compatibility on old links.
 Route::get('/api/payment/easypaisa',[EasypaisaPaymentController::class,'config']);
 Route::get('/api/payment/easypaisa/qr',[EasypaisaPaymentController::class,'qr']);
 
 Route::middleware('auth')->group(function(){
     Route::post('/api/coupons/quote',[CouponController::class,'quote'])->middleware('throttle:30,1');
+    Route::post('/api/checkout/sadapay',[SadapayPaymentController::class,'submit'])->middleware('throttle:10,1');
     Route::post('/api/checkout/easypaisa',[EasypaisaPaymentController::class,'submit'])->middleware('throttle:10,1');
     Route::get('/api/course-access-links',[CourseAccessLinkController::class,'learner'])->middleware('throttle:60,1');
     Route::get('/api/subscription',[SubscriptionController::class,'current']);
@@ -72,6 +77,8 @@ Route::middleware('auth')->group(function(){
         Route::put('/assessments/{assessment}',[AdminExtrasController::class,'updateAssessment'])->whereNumber('assessment');
         Route::delete('/assessments/{assessment}',[AdminExtrasController::class,'deleteAssessment'])->whereNumber('assessment');
 
+        Route::post('/payment/sadapay-qr',[SadapayPaymentController::class,'uploadQr'])->middleware('throttle:10,1');
+        Route::delete('/payment/sadapay-qr',[SadapayPaymentController::class,'removeQr'])->middleware('throttle:10,1');
         Route::post('/payment/easypaisa-qr',[EasypaisaPaymentController::class,'uploadQr'])->middleware('throttle:10,1');
         Route::delete('/payment/easypaisa-qr',[EasypaisaPaymentController::class,'removeQr'])->middleware('throttle:10,1');
 
