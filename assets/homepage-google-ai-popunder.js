@@ -25,27 +25,25 @@ function openPopunder(url){
   return true;
 }
 
+function clickedInsideGoogleAi(event){
+  const target=event.target;
+  if(!(target instanceof Element))return false;
+  return !!target.closest('.google-ai');
+}
+
 async function init(){
   if(!(location.pathname==='/'||document.body?.dataset?.page==='home'))return;
   const section=document.querySelector('.google-ai');
   if(!section)return;
 
-  let advertisement=null;
-  try{
-    const response=await fetch('/api/advertisements/homepage-google-ai-popunder',{
-      credentials:'same-origin',
-      cache:'no-store',
-      headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'},
-    });
-    if(!response.ok)return;
-    const data=await response.json();
-    advertisement=data?.advertisement||null;
-  }catch{return}
-  if(!advertisement||!advertisement.active)return;
+  section.style.cursor='pointer';
+  section.setAttribute('data-popunder-clickable','true');
 
+  let advertisement=null;
   let fired=false;
+
   const trigger=()=>{
-    if(fired)return;
+    if(fired||!advertisement||!advertisement.active)return;
     const type=advertisement.ad_type==='embed'?'embed':'image';
     if(type==='embed'){
       const code=String(advertisement.embed_code||'').trim();
@@ -59,10 +57,25 @@ async function init(){
     if(openPopunder(url))fired=true;
   };
 
-  section.addEventListener('click',trigger,{capture:true});
-  section.addEventListener('keydown',event=>{
-    if(event.key==='Enter'||event.key===' ')trigger();
+  document.addEventListener('click',event=>{
+    if(clickedInsideGoogleAi(event))trigger();
   },{capture:true});
+
+  document.addEventListener('keydown',event=>{
+    if(event.key!=='Enter'&&event.key!==' ')return;
+    if(clickedInsideGoogleAi(event))trigger();
+  },{capture:true});
+
+  try{
+    const response=await fetch('/api/advertisements/homepage-google-ai-popunder',{
+      credentials:'same-origin',
+      cache:'no-store',
+      headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'},
+    });
+    if(!response.ok)return;
+    const data=await response.json();
+    advertisement=data?.advertisement||null;
+  }catch{return}
 }
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
