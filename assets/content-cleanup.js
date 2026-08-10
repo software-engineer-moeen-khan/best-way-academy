@@ -19,26 +19,38 @@ function ensureFooterLegalLinks(){
   if(!row){
     row=document.createElement('div');
     row.className='legal-links shell';
-    row.innerHTML='<a href="/about">About</a><a href="/contact">Contact</a><a href="/faq">FAQ</a>';
     footer.appendChild(row);
   }
-  const wanted=[
+
+  const required=[
+    {href:'/about',label:'About'},
+    {href:'/contact',label:'Contact'},
+    {href:'/faq',label:'FAQ'},
     {href:'/privacy',label:'Privacy Policy'},
     {href:'/terms',label:'Terms of Use'},
-    {href:'/contact',label:'Support',key:'support'},
+    {href:'/contact',label:'Support',matchLabel:true},
   ];
-  wanted.forEach(item=>{
+
+  required.forEach(item=>{
     const exists=[...row.querySelectorAll('a')].some(a=>{
       const text=a.textContent.trim().toLowerCase();
-      if(item.key==='support')return text==='support';
+      if(item.matchLabel)return text===item.label.toLowerCase();
       try{return new URL(a.href,location.origin).pathname===item.href}catch{return false}
     });
-    if(!exists){
-      const a=document.createElement('a');
-      a.href=item.href;
-      a.textContent=item.label;
-      row.appendChild(a);
-    }
+    if(exists)return;
+    const a=document.createElement('a');
+    a.href=item.href;
+    a.textContent=item.label;
+    row.appendChild(a);
+  });
+
+  // Remove old non-link placeholder text from the legal row without touching links.
+  [...row.childNodes].forEach(node=>{
+    if(node.nodeType===Node.TEXT_NODE&&node.nodeValue.trim())node.remove();
+  });
+  row.querySelectorAll('span').forEach(span=>{
+    const t=span.textContent.trim().toLowerCase();
+    if(t.includes('academy platform')||t.includes('frontend')||t.includes('demo'))span.remove();
   });
 }
 function loadCommerceState(){
@@ -54,5 +66,8 @@ run();
 loadCommerceState();
 const observer=new MutationObserver(run);
 observer.observe(document.documentElement,{childList:true,subtree:true});
-setTimeout(()=>observer.disconnect(),5000);
+window.addEventListener('load',run,{once:true});
+setTimeout(run,250);
+setTimeout(run,1000);
+setTimeout(run,2500);
 })();
