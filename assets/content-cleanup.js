@@ -12,7 +12,16 @@ function cleanBanner(){
     }
   });
 }
+function loadCommerceState(){
+  if(document.querySelector('script[data-bwa-commerce-state]'))return;
+  const script=document.createElement('script');
+  script.src='/assets/commerce-state.js?rev=20260810-commerce-counts-v1';
+  script.defer=true;
+  script.dataset.bwaCommerceState='1';
+  document.head.appendChild(script);
+}
 cleanBanner();
+loadCommerceState();
 const observer=new MutationObserver(cleanBanner);
 observer.observe(document.documentElement,{childList:true,subtree:true});
 setTimeout(()=>observer.disconnect(),5000);
