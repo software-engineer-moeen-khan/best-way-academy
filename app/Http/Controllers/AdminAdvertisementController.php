@@ -43,12 +43,42 @@ class AdminAdvertisementController extends Controller
         abort(422, 'Enter a valid URL or internal path.');
     }
 
+    private function normalizedCreative(array $data): array
+    {
+        $type = $data['ad_type'];
+
+        if ($type === 'embed') {
+            $embed = trim((string) ($data['embed_code'] ?? ''));
+            abort_if($embed === '', 422, 'Embed code is required for an Embed Code advertisement.');
+
+            return [
+                'ad_type' => 'embed',
+                'image_url' => null,
+                'embed_code' => $embed,
+                'target_url' => null,
+                'alt_text' => null,
+            ];
+        }
+
+        $imageUrl = $this->cleanLink($data['image_url'] ?? null, true);
+
+        return [
+            'ad_type' => 'image',
+            'image_url' => $imageUrl,
+            'embed_code' => null,
+            'target_url' => $this->cleanLink($data['target_url'] ?? null),
+            'alt_text' => trim((string) ($data['alt_text'] ?? '')) ?: null,
+        ];
+    }
+
     private function payload(object $row): array
     {
         return [
             'id' => (int) $row->id,
             'name' => $row->name,
+            'ad_type' => $row->ad_type ?? 'image',
             'image_url' => $row->image_url,
+            'embed_code' => $row->embed_code ?? null,
             'target_url' => $row->target_url,
             'alt_text' => $row->alt_text,
             'placement_key' => $row->placement_key,
@@ -56,6 +86,19 @@ class AdminAdvertisementController extends Controller
             'created_at' => $row->created_at,
             'updated_at' => $row->updated_at,
         ];
+    }
+
+    private function validated(Request $request): array
+    {
+        return $request->validate([
+            'name' => ['required', 'string', 'max:160'],
+            'ad_type' => ['required', 'string', 'in:image,embed'],
+            'image_url' => ['nullable', 'string', 'max:2048'],
+            'embed_code' => ['nullable', 'string', 'max:200000'],
+            'target_url' => ['nullable', 'string', 'max:2048'],
+            'alt_text' => ['nullable', 'string', 'max:255'],
+            'active' => ['required', 'boolean'],
+        ]);
     }
 
     public function index(Request $request): JsonResponse
@@ -75,20 +118,13 @@ class AdminAdvertisementController extends Controller
     public function store(Request $request): JsonResponse
     {
         $this->admin($request);
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:160'],
-            'image_url' => ['required', 'string', 'max:2048'],
-            'target_url' => ['nullable', 'string', 'max:2048'],
-            'alt_text' => ['nullable', 'string', 'max:255'],
-            'active' => ['required', 'boolean'],
-        ]);
-
+        $data = $this->validated($request);
+        $creative = $this->normalizedCreative($data);
         $now = now();
+
         $id = DB::table('advertisements')->insertGetId([
             'name' => trim($data['name']),
-            'image_url' => $this->cleanLink($data['image_url'], true),
-            'target_url' => $this->cleanLink($data['target_url'] ?? null),
-            'alt_text' => trim((string) ($data['alt_text'] ?? '')) ?: null,
+            ...$creative,
             'placement_key' => null,
             'active' => (bool) $data['active'],
             'created_at' => $now,
@@ -105,19 +141,12 @@ class AdminAdvertisementController extends Controller
         $this->admin($request);
         abort_unless(DB::table('advertisements')->where('id', $advertisement)->exists(), 404);
 
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:160'],
-            'image_url' => ['required', 'string', 'max:2048'],
-            'target_url' => ['nullable', 'string', 'max:2048'],
-            'alt_text' => ['nullable', 'string', 'max:255'],
-            'active' => ['required', 'boolean'],
-        ]);
+        $data = $this->validated($request);
+        $creative = $this->normalizedCreative($data);
 
         DB::table('advertisements')->where('id', $advertisement)->update([
             'name' => trim($data['name']),
-            'image_url' => $this->cleanLink($data['image_url'], true),
-            'target_url' => $this->cleanLink($data['target_url'] ?? null),
-            'alt_text' => trim((string) ($data['alt_text'] ?? '')) ?: null,
+            ...$creative,
             'active' => (bool) $data['active'],
             'updated_at' => now(),
         ]);
