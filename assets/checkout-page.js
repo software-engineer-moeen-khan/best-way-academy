@@ -19,7 +19,7 @@
     $('#checkoutTotal')&&( $('#checkoutTotal').textContent=money(total) );
     $('#checkoutSubtotal')&&( $('#checkoutSubtotal').textContent=money(total) );
     $('#checkoutPayAmount')&&( $('#checkoutPayAmount').textContent=money(total) );
-    const btn=$('#checkoutSubmit');if(btn){btn.disabled=true;btn.textContent=courses.length?'Apply coupon to continue':'Course unavailable';}
+    const btn=$('#checkoutSubmit');if(btn){btn.disabled=true;btn.textContent=courses.length?'Loading EasyPaisa QR…':'Course unavailable';}
   }
   function showError(message){
     const card=$('.order-card');if(!card)return;
