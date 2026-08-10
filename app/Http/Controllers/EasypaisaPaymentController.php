@@ -102,7 +102,7 @@ class EasypaisaPaymentController extends Controller
         $data=$request->validate([
             'course_slugs'=>['required','array','min:1','max:50'],
             'course_slugs.*'=>['required','string','max:120'],
-            'coupon_code'=>['required','string','max:80'],
+            'coupon_code'=>['nullable','string','max:80'],
             'payment_reference'=>['required','string','min:4','max:120'],
         ]);
 
@@ -121,23 +121,30 @@ class EasypaisaPaymentController extends Controller
 
         $result=DB::transaction(function()use($courses,$user,$data,$reference){
             $subtotal=(int)$courses->sum('price');
-            $code=strtoupper(trim($data['coupon_code']));
-            $coupon=DB::table('coupons')->where('code',$code)->lockForUpdate()->first();
-            abort_unless($coupon&&$coupon->active,422,'Coupon is invalid or inactive.');
-            $now=now();
-            abort_if($coupon->starts_at&&$now->lt($coupon->starts_at),422,'Coupon is not active yet.');
-            abort_if($coupon->ends_at&&$now->gt($coupon->ends_at),422,'Coupon has expired.');
-            abort_if($coupon->max_uses!==null&&(int)$coupon->uses>=(int)$coupon->max_uses,422,'Coupon usage limit has been reached.');
+            $coupon=null;
+            $discount=0;
+            $code=trim((string)($data['coupon_code']??''));
 
-            $base=$subtotal;
-            if($coupon->course_id){
-                $target=$courses->firstWhere('id',$coupon->course_id);
-                abort_unless($target,422,'Coupon does not apply to this order.');
-                $base=(int)$target->price;
+            if($code!==''){
+                $code=strtoupper($code);
+                $coupon=DB::table('coupons')->where('code',$code)->lockForUpdate()->first();
+                abort_unless($coupon&&$coupon->active,422,'Coupon is invalid or inactive.');
+                $now=now();
+                abort_if($coupon->starts_at&&$now->lt($coupon->starts_at),422,'Coupon is not active yet.');
+                abort_if($coupon->ends_at&&$now->gt($coupon->ends_at),422,'Coupon has expired.');
+                abort_if($coupon->max_uses!==null&&(int)$coupon->uses>=(int)$coupon->max_uses,422,'Coupon usage limit has been reached.');
+
+                $base=$subtotal;
+                if($coupon->course_id){
+                    $target=$courses->firstWhere('id',$coupon->course_id);
+                    abort_unless($target,422,'Coupon does not apply to this order.');
+                    $base=(int)$target->price;
+                }
+                $discount=$coupon->discount_type==='fixed'
+                    ? min($base,(int)$coupon->discount_value)
+                    : (int)round($base*min(100,(int)$coupon->discount_value)/100);
             }
-            $discount=$coupon->discount_type==='fixed'
-                ? min($base,(int)$coupon->discount_value)
-                : (int)round($base*min(100,(int)$coupon->discount_value)/100);
+
             $total=max(0,$subtotal-$discount);
 
             $duplicate=DB::table('orders')->where('user_id',$user->id)->where('payment_method','easypaisa')
@@ -147,7 +154,7 @@ class EasypaisaPaymentController extends Controller
 
             $status=$total===0?'completed':'pending';
             $meta=[
-                'source'=>'web','subtotal'=>$subtotal,'discount_total'=>$discount,'coupon_code'=>$coupon->code,
+                'source'=>'web','subtotal'=>$subtotal,'discount_total'=>$discount,'coupon_code'=>$coupon?->code,
                 'payment_channel'=>'easypaisa_qr','payment_reference'=>$reference,
                 'payment_submitted_at'=>now()->toIso8601String(),'enrollment_granted'=>false,'coupon_counted'=>false,
             ];
@@ -172,8 +179,11 @@ class EasypaisaPaymentController extends Controller
                     ]);
                     if($inserted)DB::table('courses')->where('id',$course->id)->increment('students_count');
                 }
-                DB::table('coupons')->where('id',$coupon->id)->increment('uses');
-                $meta['enrollment_granted']=true;$meta['coupon_counted']=true;
+                if($coupon){
+                    DB::table('coupons')->where('id',$coupon->id)->increment('uses');
+                    $meta['coupon_counted']=true;
+                }
+                $meta['enrollment_granted']=true;
                 DB::table('orders')->where('id',$orderId)->update(['metadata'=>json_encode($meta,JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE),'updated_at'=>now()]);
             }
 
