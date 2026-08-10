@@ -29,6 +29,11 @@ class AdminExternalCourseController extends Controller
         return Schema::hasColumn('courses','course_link');
     }
 
+    private function hasAccessTable(): bool
+    {
+        return Schema::hasTable('course_access_links');
+    }
+
     private function cleanLink(?string $value): string
     {
         $value=trim((string)$value);
@@ -56,6 +61,11 @@ class AdminExternalCourseController extends Controller
 
     private function storedLink(object $course): ?string
     {
+        if($this->hasAccessTable()){
+            $dedicated=trim((string)DB::table('course_access_links')->where('course_id',(int)$course->id)->value('url'));
+            if($dedicated!=='')return $dedicated;
+        }
+
         $direct=trim((string)($course->course_link??''));
         if($direct!=='')return $direct;
 
@@ -71,16 +81,59 @@ class AdminExternalCourseController extends Controller
         return $legacy!==''?$legacy:null;
     }
 
+    private function syncDedicatedLink(int $courseId,string $link): void
+    {
+        if(!$this->hasAccessTable())return;
+
+        $existing=DB::table('course_access_links')->where('course_id',$courseId)->exists();
+        if($existing){
+            DB::table('course_access_links')->where('course_id',$courseId)->update([
+                'url'=>$link,
+                'updated_at'=>now(),
+            ]);
+            return;
+        }
+
+        DB::table('course_access_links')->insert([
+            'course_id'=>$courseId,
+            'url'=>$link,
+            'created_at'=>now(),
+            'updated_at'=>now(),
+        ]);
+    }
+
     private function syncLinkSetting(int $courseId,string $link): void
     {
-        DB::table('platform_settings')->updateOrInsert(
-            ['key'=>$this->settingKey($courseId)],
-            [
-                'value'=>json_encode($link,JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE),
+        $existing=DB::table('platform_settings')->where('key',$this->settingKey($courseId))->exists();
+        $encoded=json_encode($link,JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
+
+        if($existing){
+            DB::table('platform_settings')->where('key',$this->settingKey($courseId))->update([
+                'value'=>$encoded,
                 'updated_at'=>now(),
-                'created_at'=>now(),
-            ]
-        );
+            ]);
+            return;
+        }
+
+        DB::table('platform_settings')->insert([
+            'key'=>$this->settingKey($courseId),
+            'value'=>$encoded,
+            'created_at'=>now(),
+            'updated_at'=>now(),
+        ]);
+    }
+
+    private function persistLink(int $courseId,string $link): void
+    {
+        $this->syncDedicatedLink($courseId,$link);
+        $this->syncLinkSetting($courseId,$link);
+
+        if($this->hasLinkColumn()){
+            DB::table('courses')->where('id',$courseId)->update([
+                'course_link'=>$link,
+                'updated_at'=>now(),
+            ]);
+        }
     }
 
     private function uniqueSlug(string $source,?int $ignoreId=null): string
@@ -139,11 +192,12 @@ class AdminExternalCourseController extends Controller
             ];
             if($this->hasLinkColumn())$row['course_link']=$data['course_link'];
             $courseId=DB::table('courses')->insertGetId($row);
-            $this->syncLinkSetting($courseId,$data['course_link']);
+            $this->persistLink($courseId,$data['course_link']);
             return $courseId;
         });
 
-        return response()->json(['ok'=>true,'course'=>$this->payload(DB::table('courses')->where('id',$id)->first())],201)
+        $saved=DB::table('courses')->where('id',$id)->first();
+        return response()->json(['ok'=>true,'course'=>$this->payload($saved)],201)
             ->header('Cache-Control','no-store, no-cache, must-revalidate');
     }
 
@@ -159,7 +213,7 @@ class AdminExternalCourseController extends Controller
         abort_if(DB::table('courses')->where('slug',$slug)->where('id','!=',$course)->exists(),422,'Course slug is already in use.');
         $link=array_key_exists('course_link',$data)?$data['course_link']:$this->storedLink($existing);
 
-        DB::transaction(function()use($course,$data,$existing,$instructorId,$slug,$link){
+        DB::transaction(function()use($course,$data,$instructorId,$slug,$link){
             $row=[
                 'instructor_id'=>$instructorId,'slug'=>$slug,'title'=>trim($data['title']),'category'=>$data['category'],
                 'subtitle'=>$data['subtitle']??null,'description'=>$data['description']??null,'price'=>$data['price'],'status'=>$data['status'],
@@ -168,10 +222,11 @@ class AdminExternalCourseController extends Controller
             ];
             if($this->hasLinkColumn()&&$link!==null)$row['course_link']=$link;
             DB::table('courses')->where('id',$course)->update($row);
-            if(array_key_exists('course_link',$data)&&$link!==null)$this->syncLinkSetting($course,$link);
+            if(array_key_exists('course_link',$data)&&$link!==null)$this->persistLink($course,$link);
         });
 
-        return response()->json(['ok'=>true,'course'=>$this->payload(DB::table('courses')->where('id',$course)->first())])
+        $saved=DB::table('courses')->where('id',$course)->first();
+        return response()->json(['ok'=>true,'course'=>$this->payload($saved)])
             ->header('Cache-Control','no-store, no-cache, must-revalidate');
     }
 }
