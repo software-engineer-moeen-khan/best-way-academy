@@ -15,9 +15,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/api/health', function(){
     try {
         DB::select('select 1');
-        return response()->json(['ok'=>true,'app'=>'Best Way Academy','db'=>'connected','time'=>now()->toIso8601String()]);
+        return response()->json(['ok'=>true,'app'=>'AWK Paid Courses','db'=>'connected','time'=>now()->toIso8601String()]);
     } catch (Throwable $e) {
-        return response()->json(['ok'=>false,'app'=>'Best Way Academy','db'=>'unavailable','time'=>now()->toIso8601String()],503);
+        return response()->json(['ok'=>false,'app'=>'AWK Paid Courses','db'=>'unavailable','time'=>now()->toIso8601String()],503);
     }
 });
 Route::get('/api/session',[AuthController::class,'session']);
@@ -64,34 +64,43 @@ $serveHtml=function(string $file){
     $html=file_get_contents($path);
 
     $html=str_replace(['href="assets/','src="assets/'],['href="/assets/','src="/assets/'],$html);
-    $html=preg_replace('/(\/assets\/[A-Za-z0-9_.\/-]+\.(?:css|js))(?:\?v[^"\']*)?/','$1?v=20260810-35',$html);
+    $html=preg_replace('/(\/assets\/[A-Za-z0-9_.\/-]+\.(?:css|js))(?:\?v[^"\']*)?/','$1?v=20260810-awk1',$html);
 
     if(!str_contains($html,'portal-polish.css')){
-        $html=str_ireplace('</head>','  <link rel="stylesheet" href="/assets/portal-polish.css?v=20260810-35">'.PHP_EOL.'</head>',$html);
+        $html=str_ireplace('</head>','  <link rel="stylesheet" href="/assets/portal-polish.css?v=20260810-awk1">'.PHP_EOL.'</head>',$html);
     }
     if(!str_contains($html,'responsive-final.css')){
-        $html=str_ireplace('</head>','  <link rel="stylesheet" href="/assets/responsive-final.css?v=20260810-35">'.PHP_EOL.'</head>',$html);
+        $html=str_ireplace('</head>','  <link rel="stylesheet" href="/assets/responsive-final.css?v=20260810-awk1">'.PHP_EOL.'</head>',$html);
     }
     if(!str_contains($html,'responsive-unified.css')){
-        $html=str_ireplace('</head>','  <link rel="stylesheet" data-bwa-responsive-unified="1" href="/assets/responsive-unified.css?v=20260810-35">'.PHP_EOL.'</head>',$html);
+        $html=str_ireplace('</head>','  <link rel="stylesheet" data-bwa-responsive-unified="1" href="/assets/responsive-unified.css?v=20260810-awk1">'.PHP_EOL.'</head>',$html);
+    }
+    if(!str_contains($html,'awk-theme.css')){
+        $html=str_ireplace('</head>','  <link rel="stylesheet" data-awk-theme="1" href="/assets/awk-theme.css?v=20260810-awk1">'.PHP_EOL.'</head>',$html);
     }
     if(!str_contains($html,'backend-sync.js')){
-        $html=str_ireplace('</body>','<script src="/assets/backend-sync.js?v=20260810-35"></script>'.PHP_EOL.'</body>',$html);
+        $html=str_ireplace('</body>','<script src="/assets/backend-sync.js?v=20260810-awk1"></script>'.PHP_EOL.'</body>',$html);
     }
     if(!str_contains($html,'backend-actions.js')){
-        $html=str_ireplace('</body>','<script src="/assets/backend-actions.js?v=20260810-35"></script>'.PHP_EOL.'</body>',$html);
+        $html=str_ireplace('</body>','<script src="/assets/backend-actions.js?v=20260810-awk1"></script>'.PHP_EOL.'</body>',$html);
     }
     if(!str_contains($html,'admin-backend.js')){
-        $html=str_ireplace('</body>','<script src="/assets/admin-backend.js?v=20260810-35"></script>'.PHP_EOL.'</body>',$html);
+        $html=str_ireplace('</body>','<script src="/assets/admin-backend.js?v=20260810-awk1"></script>'.PHP_EOL.'</body>',$html);
     }
     if(!str_contains($html,'instructor-backend.js')){
-        $html=str_ireplace('</body>','<script src="/assets/instructor-backend.js?v=20260810-35"></script>'.PHP_EOL.'</body>',$html);
+        $html=str_ireplace('</body>','<script src="/assets/instructor-backend.js?v=20260810-awk1"></script>'.PHP_EOL.'</body>',$html);
     }
     if(!str_contains($html,'clean-route-fixes.js')){
-        $html=str_ireplace('</body>','<script src="/assets/clean-route-fixes.js?v=20260810-35"></script>'.PHP_EOL.'</body>',$html);
+        $html=str_ireplace('</body>','<script src="/assets/clean-route-fixes.js?v=20260810-awk1"></script>'.PHP_EOL.'</body>',$html);
     }
     if(!str_contains($html,'portal-polish.js')){
-        $html=str_ireplace('</body>','<script src="/assets/portal-polish.js?v=20260810-35"></script>'.PHP_EOL.'</body>',$html);
+        $html=str_ireplace('</body>','<script src="/assets/portal-polish.js?v=20260810-awk1"></script>'.PHP_EOL.'</body>',$html);
+    }
+    if(!str_contains($html,'awk-site.js')){
+        $html=str_ireplace('</body>','<script src="/assets/awk-site.js?v=20260810-awk1"></script>'.PHP_EOL.'</body>',$html);
+    }
+    if($file==='admin.html'&&!str_contains($html,'admin-payment-tools.js')){
+        $html=str_ireplace('</body>','<script src="/assets/admin-payment-tools.js?v=20260810-awk1"></script>'.PHP_EOL.'</body>',$html);
     }
 
     return response($html)
