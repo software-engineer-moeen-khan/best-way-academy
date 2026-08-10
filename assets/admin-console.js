@@ -54,16 +54,12 @@ function courseRequest(url,options){
   return /^\/api\/admin\/manage\/courses(?:\/\d+)?(?:\?.*)?$/.test(path)&&['POST','PUT'].includes(method);
 }
 
-// Keep the core admin.js save flow. We only enrich its outgoing JSON payload with
-// the Course Link currently visible in the Add/Edit Course modal.
 const nativeFetch=window.fetch.bind(window);
 window.fetch=async function(input,options={}){
   if(courseRequest(input,options)){
     const dialog=$('#courseDialog');
     const inputEl=ensureCourseLinkField();
     const link=String(inputEl?.value||'').trim();
-    // Only inject during an actual Add/Edit modal save. Publish/Hide uses the same
-    // endpoint without opening the modal and must preserve the existing link.
     if(dialog?.open){
       if(!link){
         toast('Course access link is required.',true);
@@ -111,6 +107,7 @@ document.addEventListener('click',e=>{
 },true);
 
 document.write('<script src="/assets/admin.js?rev=20260810-admin-management-v6"><\/script>');
+document.write('<script src="/assets/admin-messages.js?rev=20260810-admin-messages-v1"><\/script>');
 document.write('<script src="/assets/admin-extras.js?rev=20260808-admin-management-v3"><\/script>');
 document.write('<script src="/assets/admin-mobile.js?rev=20260808-admin-mobile-v1"><\/script>');
 document.write('<script src="/assets/admin-payment-tools.js?rev=20260810-payment-v2"><\/script>');
