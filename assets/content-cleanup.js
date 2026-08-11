@@ -61,9 +61,18 @@ function loadCommerceState(){
   script.dataset.bwaCommerceState='1';
   document.head.appendChild(script);
 }
+function loadCourseFreeLabels(){
+  if(document.querySelector('script[data-bwa-course-free-labels]'))return;
+  const script=document.createElement('script');
+  script.src='/assets/course-free-labels.js?rev=20260812-free-labels-v1';
+  script.defer=true;
+  script.dataset.bwaCourseFreeLabels='1';
+  document.head.appendChild(script);
+}
 function run(){cleanBanner();ensureFooterLegalLinks()}
 run();
 loadCommerceState();
+loadCourseFreeLabels();
 const observer=new MutationObserver(run);
 observer.observe(document.documentElement,{childList:true,subtree:true});
 window.addEventListener('load',run,{once:true});
