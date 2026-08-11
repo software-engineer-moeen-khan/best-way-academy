@@ -5,6 +5,7 @@ use App\Http\Controllers\AdminExternalCourseController;
 use App\Http\Controllers\AdminExtrasController;
 use App\Http\Controllers\AdminManagementController;
 use App\Http\Controllers\AdminPaymentOrderController;
+use App\Http\Controllers\AiCareerAdController;
 use App\Http\Controllers\CatalogMetadataController;
 use App\Http\Controllers\CouponController;
 use App\Http\Controllers\CourseAccessLinkController;
@@ -22,6 +23,7 @@ Route::get('/api/learning-plans',[LearningContentController::class,'plans']);
 Route::get('/api/payment/easypaisa',[EasypaisaPaymentController::class,'config']);
 Route::get('/api/payment/easypaisa/qr',[EasypaisaPaymentController::class,'qr']);
 Route::get('/api/advertisements/homepage-google-ai-popunder',[AdminAdvertisementController::class,'publicGoogleAiPopunder'])->middleware('throttle:120,1');
+Route::get('/api/advertisements/homepage-ai-career-learn-more-ad',[AiCareerAdController::class,'show'])->middleware('throttle:120,1');
 
 Route::middleware('auth')->group(function(){
     Route::post('/api/coupons/quote',[CouponController::class,'quote'])->middleware('throttle:30,1');
@@ -51,6 +53,7 @@ Route::middleware('auth')->group(function(){
         Route::post('/advertisements',[AdminAdvertisementController::class,'store'])->middleware('throttle:30,1');
         Route::put('/advertisement-placements/homepage-google-ai-popunder',[AdminAdvertisementController::class,'assignGoogleAiPopunder'])->middleware('throttle:30,1');
         Route::put('/advertisement-placements/homepage-popular-skills-longbar',[AdminAdvertisementController::class,'assignPopularSkillsLongbar'])->middleware('throttle:30,1');
+        Route::put('/advertisement-placements/homepage-ai-career-learn-more-ad',[AiCareerAdController::class,'assign'])->middleware('throttle:30,1');
         Route::put('/advertisements/{advertisement}',[AdminAdvertisementController::class,'update'])->whereNumber('advertisement')->middleware('throttle:30,1');
         Route::delete('/advertisements/{advertisement}',[AdminAdvertisementController::class,'destroy'])->whereNumber('advertisement')->middleware('throttle:30,1');
 
