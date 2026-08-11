@@ -11,6 +11,7 @@ use App\Http\Controllers\CouponController;
 use App\Http\Controllers\CourseAccessLinkController;
 use App\Http\Controllers\EasypaisaPaymentController;
 use App\Http\Controllers\HomepageCategoriesController;
+use App\Http\Controllers\HomepageTrendingCoursesController;
 use App\Http\Controllers\LearningContentController;
 use App\Http\Controllers\MessageCenterController;
 use App\Http\Controllers\PromoMessageController;
@@ -22,6 +23,7 @@ Route::get('/api/platform',[CatalogMetadataController::class,'platform']);
 Route::get('/api/learning-plans',[LearningContentController::class,'plans']);
 Route::get('/api/payment/easypaisa',[EasypaisaPaymentController::class,'config']);
 Route::get('/api/payment/easypaisa/qr',[EasypaisaPaymentController::class,'qr']);
+Route::get('/api/homepage-trending-courses',[HomepageTrendingCoursesController::class,'publicIndex'])->middleware('throttle:120,1');
 Route::get('/api/advertisements/homepage-google-ai-popunder',[AdminAdvertisementController::class,'publicGoogleAiPopunder'])->middleware('throttle:120,1');
 Route::get('/api/advertisements/homepage-ai-career-learn-more-ad',[AiCareerAdController::class,'show'])->middleware('throttle:120,1');
 
@@ -48,6 +50,8 @@ Route::middleware('auth')->group(function(){
         Route::put('/promo-message',[PromoMessageController::class,'update'])->middleware('throttle:30,1');
         Route::get('/homepage-categories',[HomepageCategoriesController::class,'show']);
         Route::put('/homepage-categories',[HomepageCategoriesController::class,'update'])->middleware('throttle:30,1');
+        Route::get('/homepage-trending-courses',[HomepageTrendingCoursesController::class,'show'])->middleware('throttle:60,1');
+        Route::put('/homepage-trending-courses',[HomepageTrendingCoursesController::class,'update'])->middleware('throttle:30,1');
 
         Route::get('/advertisements',[AdminAdvertisementController::class,'index'])->middleware('throttle:60,1');
         Route::post('/advertisements',[AdminAdvertisementController::class,'store'])->middleware('throttle:30,1');
