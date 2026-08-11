@@ -142,13 +142,19 @@ async function backend(){
   return window.BWABackend;
 }
 
-async function enrollFree(){
+async function enrollFree(anchor){
   const bridge=await backend();
   if(!bridge.user){
     const returnTo=`${location.pathname}${location.search}`;
     location.assign(`/login?redirect=${encodeURIComponent(returnTo)}`);
     return;
   }
+
+  if(anchor){
+    anchor.textContent='Enrolling…';
+    anchor.setAttribute('aria-busy','true');
+  }
+
   const out=await bridge.api(FREE_ENROLL_API,{method:'POST',body:JSON.stringify({})});
   freeInfo={...(freeInfo||{}),is_free:true,enrolled:true};
   paintFreeCourse();
@@ -156,17 +162,29 @@ async function enrollFree(){
 }
 
 async function prepare(){
-  const [loadedAd,loadedFree]=await Promise.all([loadAd(),loadFreeInfo()]);
-  ad=loadedAd;
-  freeInfo=loadedFree;
+  // Resolve free/paid status first. Free courses deliberately skip loading or
+  // arming the Enroll advertisement so their enrollment remains one direct click.
+  freeInfo=await loadFreeInfo();
   if(freeInfo?.is_free){
+    ad=null;
+    prepared=true;
     for(const delay of [0,80,260,700])setTimeout(paintFreeCourse,delay);
+    backend().catch(()=>{}); // warm the authenticated bridge before the click
+    return;
   }
+
+  ad=await loadAd();
   if(usable(ad)){
     if(ad.ad_type==='embed')await armEmbed(ad.embed_code);
     else armed=true;
   }
   prepared=true;
+}
+
+function release(anchor){
+  anchor?.removeAttribute('aria-busy');
+  continuing=false;
+  if(freeInfo?.is_free)paintFreeCourse();
 }
 
 function installClickGate(){
@@ -177,45 +195,35 @@ function installClickGate(){
     const originalCheckout=checkoutHref(anchor);
     event.preventDefault();
     continuing=true;
-    anchor.setAttribute('aria-busy','true');
 
     const continueAfterPrepare=async()=>{
       try{
         if(!prepared&&preparePromise)await preparePromise;
 
-        if(freeInfo?.is_free&&freeInfo.enrolled){
-          location.assign('/my-learning');
+        // FREE COURSE: no checkout, coupon, EasyPaisa or Enroll advertisement.
+        // The enrollment request is started immediately from this click.
+        if(freeInfo?.is_free){
+          if(freeInfo.enrolled){
+            location.assign('/my-learning');
+            return;
+          }
+          await enrollFree(anchor);
           return;
         }
 
+        // PAID COURSE: preserve the existing advertisement -> checkout flow.
+        anchor.setAttribute('aria-busy','true');
         if(usable(ad)&&ad.ad_type!=='embed')openImageAd(ad);
-
         const delay=usable(ad)
           ? (ad.ad_type==='embed'?(armed?850:1200):450)
           : 0;
-
-        setTimeout(async()=>{
-          try{
-            if(freeInfo?.is_free){
-              await enrollFree();
-              return;
-            }
-            location.assign(originalCheckout);
-          }catch(err){
-            console.warn('[BWA free enrollment]',err?.message||err);
-            anchor.removeAttribute('aria-busy');
-            continuing=false;
-          }
-        },delay);
+        setTimeout(()=>location.assign(originalCheckout),delay);
       }catch(err){
-        console.warn('[BWA enrollment gate]',err?.message||err);
-        anchor.removeAttribute('aria-busy');
-        continuing=false;
+        console.warn('[BWA enrollment]',err?.message||err);
+        release(anchor);
       }
     };
 
-    // The event itself continues propagating. If an embed/popunder ad was
-    // pre-armed, its document/window click listener receives this real click.
     continueAfterPrepare();
   },true);
 }
