@@ -11,7 +11,7 @@ function card(course,currency){
   const image=esc(course.image||fallback);
   const rating=Number(course.rating||0).toFixed(1);
   const students=esc(course.students||'0');
-  const price=`${esc(currency||'Rs')} ${Number(course.price||0).toLocaleString('en-PK')}`;
+  const price=Number(course.price||0)===0?'Free':`${esc(currency||'Rs')} ${Number(course.price||0).toLocaleString('en-PK')}`;
   const badge=String(course.badge||'').trim();
   return `<a class="course-card" href="/course?course=${slug}" data-search="${esc(`${course.title||''} ${course.category||''} ${course.subtitle||''}`.toLowerCase())}">
     <img src="${image}" alt="${title}" loading="lazy">
