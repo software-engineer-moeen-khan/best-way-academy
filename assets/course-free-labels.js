@@ -2,7 +2,7 @@
 'use strict';
 
 const exactZero=/^(?:Rs|PKR)\s*0(?:[.,]00)?$/i;
-const inlineZero=/([·•|]\s*)(?:Rs|PKR)\s*0(?:[.,]00)?\b/gi;
+const inlineZero=/([·•|]\s*)(?:Rs|PKR)\s*0(?:[.,]00)?\b/i;
 
 function isCoursePriceElement(el){
   if(!(el instanceof Element))return false;
