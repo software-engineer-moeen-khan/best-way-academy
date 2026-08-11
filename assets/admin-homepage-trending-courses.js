@@ -6,7 +6,7 @@ const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 function loadActionAdControls(){
   if(document.querySelector('script[src*="action-ad-gates.js"]'))return;
   const script=document.createElement('script');
-  script.src='/assets/action-ad-gates.js?rev=20260812-v1';
+  script.src='/assets/action-ad-gates.js?rev=20260812-v2';
   script.defer=true;
   document.body.appendChild(script);
 }
