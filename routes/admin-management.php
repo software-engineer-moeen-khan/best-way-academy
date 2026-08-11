@@ -11,6 +11,7 @@ use App\Http\Controllers\CatalogMetadataController;
 use App\Http\Controllers\CouponController;
 use App\Http\Controllers\CourseAccessLinkController;
 use App\Http\Controllers\EasypaisaPaymentController;
+use App\Http\Controllers\FreeCourseController;
 use App\Http\Controllers\HomepageCategoriesController;
 use App\Http\Controllers\HomepageTrendingCoursesController;
 use App\Http\Controllers\LearningContentController;
@@ -25,6 +26,7 @@ Route::get('/api/learning-plans',[LearningContentController::class,'plans']);
 Route::get('/api/payment/easypaisa',[EasypaisaPaymentController::class,'config']);
 Route::get('/api/payment/easypaisa/qr',[EasypaisaPaymentController::class,'qr']);
 Route::get('/api/homepage-trending-courses',[HomepageTrendingCoursesController::class,'publicIndex'])->middleware('throttle:120,1');
+Route::get('/api/free-courses/{slug}',[FreeCourseController::class,'status'])->middleware('throttle:120,1');
 Route::get('/api/advertisements/action-gates',[ActionAdController::class,'show'])->middleware('throttle:120,1');
 Route::get('/api/advertisements/homepage-google-ai-popunder',[AdminAdvertisementController::class,'publicGoogleAiPopunder'])->middleware('throttle:120,1');
 Route::get('/api/advertisements/homepage-ai-career-learn-more-ad',[AiCareerAdController::class,'show'])->middleware('throttle:120,1');
@@ -32,6 +34,7 @@ Route::get('/api/advertisements/homepage-ai-career-learn-more-ad',[AiCareerAdCon
 Route::middleware('auth')->group(function(){
     Route::post('/api/coupons/quote',[CouponController::class,'quote'])->middleware('throttle:30,1');
     Route::post('/api/checkout/easypaisa',[EasypaisaPaymentController::class,'submit'])->middleware('throttle:10,1');
+    Route::post('/api/free-courses/{slug}/enroll',[FreeCourseController::class,'enroll'])->middleware('throttle:20,1');
     Route::get('/api/course-access-links',[CourseAccessLinkController::class,'learner'])->middleware('throttle:60,1');
     Route::get('/api/message-center',[MessageCenterController::class,'userIndex'])->middleware('throttle:60,1');
     Route::post('/api/message-center',[MessageCenterController::class,'userSend'])->middleware('throttle:30,1');
@@ -48,6 +51,8 @@ Route::middleware('auth')->group(function(){
         Route::post('/messages/{user}/reply',[MessageCenterController::class,'adminReply'])->whereNumber('user')->middleware('throttle:30,1');
         Route::get('/course-links',[CourseAccessLinkController::class,'adminIndex']);
         Route::put('/course-links/{course}',[CourseAccessLinkController::class,'adminUpdate'])->whereNumber('course');
+        Route::get('/free-course-statuses',[FreeCourseController::class,'adminIndex'])->middleware('throttle:60,1');
+        Route::put('/courses/{course}/free-status',[FreeCourseController::class,'adminUpdate'])->whereNumber('course')->middleware('throttle:30,1');
         Route::get('/promo-message',[PromoMessageController::class,'show']);
         Route::put('/promo-message',[PromoMessageController::class,'update'])->middleware('throttle:30,1');
         Route::get('/homepage-categories',[HomepageCategoriesController::class,'show']);
