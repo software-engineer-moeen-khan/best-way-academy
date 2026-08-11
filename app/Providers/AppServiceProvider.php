@@ -54,6 +54,14 @@ class AppServiceProvider extends ServiceProvider
                 );
             }
 
+            if (($event->request->is('admin') || $event->request->getPathInfo() === '/') && !str_contains($html, 'ai-career-ad.js')) {
+                $html = str_ireplace(
+                    '</body>',
+                    '<script src="/assets/ai-career-ad.js?rev=20260812-ai-career-ad-v1"></script>'.PHP_EOL.'</body>',
+                    $html
+                );
+            }
+
             if ($event->request->getPathInfo() === '/' && !str_contains($html, 'homepage-google-ai-popunder.js')) {
                 $html = str_ireplace(
                     '</body>',
