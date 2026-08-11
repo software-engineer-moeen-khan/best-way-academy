@@ -4,7 +4,7 @@ const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const read=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}};
 const write=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
 let platform={currency_symbol:'Rs'};
-const money=n=>`${platform.currency_symbol||'Rs'} ${Number(n||0).toLocaleString('en-PK')}`;
+const money=n=>Number(n||0)===0?'Free':`${platform.currency_symbol||'Rs'} ${Number(n||0).toLocaleString('en-PK')}`;
 async function json(path){const r=await fetch(path,{credentials:'same-origin',headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'}});if(!r.ok)throw new Error(`Request failed (${r.status})`);return r.json()}
 function addCart(id){const cart=[...new Set([...(read('bwa_cart',[])||[]),id])];write('bwa_cart',cart);if(typeof headerEnhance==='function')headerEnhance();if(typeof toast==='function')toast('Added to cart')}
 function toggleWish(id){const list=read('bwa_wishlist',[])||[],next=list.includes(id)?list.filter(x=>x!==id):[...list,id];write('bwa_wishlist',next);if(typeof headerEnhance==='function')headerEnhance();if(typeof toast==='function')toast(list.includes(id)?'Removed from wishlist':'Saved to wishlist')}
