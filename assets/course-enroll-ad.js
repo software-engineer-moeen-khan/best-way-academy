@@ -1,11 +1,16 @@
 (()=>{
 'use strict';
 
-const API='/api/advertisements/action-gates';
-const PLACEMENT='course_enroll_now_ad';
+const AD_API='/api/advertisements/action-gates';
+const slug=new URLSearchParams(location.search).get('course')||'python';
+const FREE_STATUS_API=`/api/free-courses/${encodeURIComponent(slug)}`;
+const FREE_ENROLL_API=`/api/free-courses/${encodeURIComponent(slug)}/enroll`;
 let ad=null;
+let freeInfo=null;
 let armed=false;
+let prepared=false;
 let continuing=false;
+let preparePromise=null;
 
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 
@@ -16,17 +21,26 @@ function usable(item){
     : !!String(item.target_url||'').trim();
 }
 
-async function loadAd(){
+async function getJson(path){
   try{
-    const response=await fetch(API,{
+    const response=await fetch(path,{
       credentials:'same-origin',
       cache:'no-store',
       headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'},
     });
     if(!response.ok)return null;
-    const data=await response.json();
-    return usable(data?.enroll_now)?data.enroll_now:null;
+    return await response.json();
   }catch{return null}
+}
+
+async function loadAd(){
+  const data=await getJson(AD_API);
+  return usable(data?.enroll_now)?data.enroll_now:null;
+}
+
+async function loadFreeInfo(){
+  const data=await getJson(FREE_STATUS_API);
+  return data&&typeof data.is_free==='boolean'?data:null;
 }
 
 function armEmbed(code){
@@ -104,51 +118,113 @@ function openImageAd(item){
 
 function checkoutHref(anchor){
   const raw=anchor?.getAttribute('href')||anchor?.href||'';
-  if(raw)return raw;
-  const slug=new URLSearchParams(location.search).get('course')||'python';
+  if(raw&&!raw.endsWith('#'))return raw;
   return `/checkout?course=${encodeURIComponent(slug)}`;
 }
 
+function paintFreeCourse(){
+  if(!freeInfo?.is_free)return;
+  const price=document.querySelector('#detailPrice');
+  const enroll=document.querySelector('#enrollNow');
+  if(price)price.textContent='Free';
+  if(enroll){
+    enroll.dataset.freeCourse='1';
+    enroll.textContent=freeInfo.enrolled?'Open My Learning':'Enroll for free';
+    enroll.setAttribute('href',freeInfo.enrolled?'/my-learning':'#');
+  }
+}
+
+async function backend(){
+  for(let i=0;i<120&&!window.BWABackend;i++)await sleep(40);
+  if(!window.BWABackend)throw new Error('Enrollment service is still loading.');
+  await window.BWABackend.ready;
+  if(!window.BWABackend.available)throw new Error('Enrollment service is unavailable.');
+  return window.BWABackend;
+}
+
+async function enrollFree(){
+  const bridge=await backend();
+  if(!bridge.user){
+    const returnTo=`${location.pathname}${location.search}`;
+    location.assign(`/login?redirect=${encodeURIComponent(returnTo)}`);
+    return;
+  }
+  const out=await bridge.api(FREE_ENROLL_API,{method:'POST',body:JSON.stringify({})});
+  freeInfo={...(freeInfo||{}),is_free:true,enrolled:true};
+  paintFreeCourse();
+  location.assign(out?.redirect||'/my-learning');
+}
+
 async function prepare(){
-  ad=await loadAd();
-  if(!usable(ad))return;
-  if(ad.ad_type==='embed')await armEmbed(ad.embed_code);
-  else armed=true;
+  const [loadedAd,loadedFree]=await Promise.all([loadAd(),loadFreeInfo()]);
+  ad=loadedAd;
+  freeInfo=loadedFree;
+  if(freeInfo?.is_free){
+    for(const delay of [0,80,260,700])setTimeout(paintFreeCourse,delay);
+  }
+  if(usable(ad)){
+    if(ad.ad_type==='embed')await armEmbed(ad.embed_code);
+    else armed=true;
+  }
+  prepared=true;
 }
 
 function installClickGate(){
   document.addEventListener('click',event=>{
     const anchor=event.target.closest?.('#enrollNow');
-    if(!anchor||continuing||!usable(ad))return;
+    if(!anchor||continuing)return;
 
-    // Stop the anchor's normal navigation for a moment, but allow this SAME
-    // genuine user click to continue bubbling to any pre-armed ad-network
-    // document/window listeners.
+    const originalCheckout=checkoutHref(anchor);
     event.preventDefault();
-
-    if(ad.ad_type!=='embed')openImageAd(ad);
-
     continuing=true;
     anchor.setAttribute('aria-busy','true');
-    const href=checkoutHref(anchor);
 
-    // Keep the delay short: the ad gets the real click first, then the learner
-    // proceeds to exactly the checkout URL Enroll now was already pointing to.
-    setTimeout(()=>{
-      anchor.removeAttribute('aria-busy');
-      window.location.assign(href);
-    },ad.ad_type==='embed'?(armed?850:1200):450);
+    const continueAfterPrepare=async()=>{
+      try{
+        if(!prepared&&preparePromise)await preparePromise;
+
+        if(freeInfo?.is_free&&freeInfo.enrolled){
+          location.assign('/my-learning');
+          return;
+        }
+
+        if(usable(ad)&&ad.ad_type!=='embed')openImageAd(ad);
+
+        const delay=usable(ad)
+          ? (ad.ad_type==='embed'?(armed?850:1200):450)
+          : 0;
+
+        setTimeout(async()=>{
+          try{
+            if(freeInfo?.is_free){
+              await enrollFree();
+              return;
+            }
+            location.assign(originalCheckout);
+          }catch(err){
+            console.warn('[BWA free enrollment]',err?.message||err);
+            anchor.removeAttribute('aria-busy');
+            continuing=false;
+          }
+        },delay);
+      }catch(err){
+        console.warn('[BWA enrollment gate]',err?.message||err);
+        anchor.removeAttribute('aria-busy');
+        continuing=false;
+      }
+    };
+
+    // The event itself continues propagating. If an embed/popunder ad was
+    // pre-armed, its document/window click listener receives this real click.
+    continueAfterPrepare();
   },true);
 }
 
 async function init(){
   if(location.pathname!=='/course'&&document.body?.dataset?.page!=='course')return;
   installClickGate();
-  await prepare();
-
-  // Dynamic catalog scripts may update the Enroll href after page load; the
-  // delegated handler above intentionally reads the final href at click time.
-  if(ad?.ad_type==='embed'&&!armed)await sleep(100);
+  preparePromise=prepare();
+  await preparePromise;
 }
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
