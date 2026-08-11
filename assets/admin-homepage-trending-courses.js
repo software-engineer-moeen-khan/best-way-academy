@@ -3,6 +3,14 @@
 const $=(s,r=document)=>r.querySelector(s);
 const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 
+function loadActionAdControls(){
+  if(document.querySelector('script[src*="action-ad-gates.js"]'))return;
+  const script=document.createElement('script');
+  script.src='/assets/action-ad-gates.js?rev=20260812-v1';
+  script.defer=true;
+  document.body.appendChild(script);
+}
+
 async function backend(){
   for(let i=0;i<150&&!window.BWABackend;i++)await new Promise(r=>setTimeout(r,40));
   if(!window.BWABackend)throw new Error('Backend bridge did not load.');
@@ -81,6 +89,7 @@ async function save(e){
 }
 
 function init(){
+  loadActionAdControls();
   ensureUi();
   $('#homepageTrendingCoursesForm')?.addEventListener('submit',save);
   load();
