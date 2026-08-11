@@ -3,7 +3,7 @@
 if(window.__bwaAuthoritativeCourseLinkSave)return;window.__bwaAuthoritativeCourseLinkSave=true;
 const $=s=>document.querySelector(s);
 const lines=v=>String(v||'').split('\n').map(x=>x.trim()).filter(Boolean);
-let api=null,linkMap={};
+let api=null,linkMap={},freeMap={};
 
 function toast(text,error=false){
   const el=$('#adminToast');
@@ -29,11 +29,38 @@ function ensureField(){
   }
   return input;
 }
+function syncFreeUi(){
+  const form=$('#courseForm');if(!form)return;
+  const checkbox=form.elements.is_free,price=form.elements.price;
+  if(!checkbox||!price)return;
+  const free=!!checkbox.checked;
+  if(free){
+    if(!price.dataset.paidPrice&&Number(price.value)>0)price.dataset.paidPrice=price.value;
+    price.value='0';price.disabled=true;price.required=false;
+  }else{
+    price.disabled=false;price.required=true;
+    if(Number(price.value)===0&&price.dataset.paidPrice)price.value=price.dataset.paidPrice;
+  }
+}
+function ensureFreeField(){
+  const form=$('#courseForm');if(!form)return null;
+  let input=form.elements.is_free;
+  if(!input){
+    const label=document.createElement('label');
+    label.className='admin-check admin-free-course-field';
+    label.innerHTML='<input name="is_free" type="checkbox"> <span><b>Free course</b><small>Students enroll instantly. No coupon or EasyPaisa checkout is required.</small></span>';
+    const price=form.elements.price?.closest('label');
+    if(price)price.insertAdjacentElement('afterend',label);else form.querySelector('.admin-form-grid')?.appendChild(label);
+    input=form.elements.is_free;
+    input?.addEventListener('change',syncFreeUi);
+  }
+  return input;
+}
 function installExternalUi(){
-  ensureField();
+  ensureField();ensureFreeField();syncFreeUi();
   if(!document.querySelector('#bwaExternalCourseAdminStyle')){
     const style=document.createElement('style');style.id='bwaExternalCourseAdminStyle';
-    style.textContent='[data-panel="courses"] .admin-table th:nth-child(4),[data-panel="courses"] .admin-table td:nth-child(4),[data-course-curriculum]{display:none!important}';
+    style.textContent='[data-panel="courses"] .admin-table th:nth-child(4),[data-panel="courses"] .admin-table td:nth-child(4),[data-course-curriculum]{display:none!important}.admin-free-course-field{align-self:end;min-height:54px}.admin-free-course-field small{display:block;color:#667085;margin-top:3px}';
     document.head.appendChild(style);
   }
   const p=document.querySelector('[data-panel="courses"] .admin-heading p:not(.eyebrow)');
@@ -52,27 +79,37 @@ async function reloadLinks(){
   const out=await api('/api/admin/manage/course-links');
   linkMap=out?.links||{};return linkMap;
 }
+async function reloadFreeStatuses(){
+  if(!api)await ready();
+  const out=await api('/api/admin/manage/free-course-statuses');
+  freeMap=out?.courses||{};return freeMap;
+}
 async function fillEdit(id){
   id=String(id||'');if(!id)return;
   try{
-    await reloadLinks();
+    await Promise.all([reloadLinks(),reloadFreeStatuses()]);
     const value=String(linkMap[id]||'');
+    const free=!!freeMap[id]?.is_free;
     for(const delay of [30,120,260])setTimeout(()=>{
-      const form=$('#courseForm'),dialog=$('#courseDialog'),input=ensureField();
-      if(!form||!dialog?.open||!input)return;
+      const form=$('#courseForm'),dialog=$('#courseDialog'),input=ensureField(),freeInput=ensureFreeField();
+      if(!form||!dialog?.open||!input||!freeInput)return;
       if(String(form.elements.id?.value||'')!==id)return;
       input.value=value;
+      freeInput.checked=free;
+      if(!free&&freeMap[id]?.price!==undefined)form.elements.price.value=String(freeMap[id].price);
+      syncFreeUi();
     },delay);
-  }catch(err){console.warn('[BWA course-link edit]',err.message)}
+  }catch(err){console.warn('[BWA course edit extras]',err.message)}
 }
 function payload(form){
+  const isFree=!!ensureFreeField()?.checked;
   return {
     title:String(form.elements.title?.value||'').trim(),
     slug:String(form.elements.slug?.value||'').trim()||null,
     category:String(form.elements.category?.value||''),
     subtitle:String(form.elements.subtitle?.value||'').trim()||null,
     description:String(form.elements.description?.value||'').trim()||null,
-    price:Number(form.elements.price?.value||0),
+    price:isFree?0:Number(form.elements.price?.value||0),
     status:String(form.elements.status?.value||'draft'),
     image:String(form.elements.image?.value||'').trim()||null,
     badge:String(form.elements.badge?.value||'').trim()||null,
@@ -83,10 +120,10 @@ function payload(form){
   };
 }
 async function authoritativeSave(form){
-  const id=Number(form.elements.id?.value||0),body=payload(form),input=ensureField();
+  const id=Number(form.elements.id?.value||0),body=payload(form),input=ensureField(),isFree=!!ensureFreeField()?.checked;
   if(!body.course_link){toast('Course access link is required.',true);input?.focus();return}
   const button=form.querySelector('button[type="submit"]'),original=button?.textContent||'Save course';
-  if(button){button.disabled=true;button.textContent='Saving course & link…'}
+  if(button){button.disabled=true;button.textContent='Saving course…'}
   try{
     if(!api)await ready();
     const out=await api(id?`/api/admin/manage/courses/${id}`:'/api/admin/manage/courses',{
@@ -96,20 +133,24 @@ async function authoritativeSave(form){
     if(!courseId)throw new Error('Course ID was not returned after saving.');
     if(!saved)throw new Error('Course saved, but Course Link was not persisted.');
 
-    await reloadLinks();
+    await api(`/api/admin/manage/courses/${courseId}/free-status`,{
+      method:'PUT',body:JSON.stringify({is_free:isFree}),
+    });
+
+    await Promise.all([reloadLinks(),reloadFreeStatuses()]);
     const verified=String(linkMap[String(courseId)]||'').trim();
     if(!verified)throw new Error('Course Link database verification failed.');
+    if(!!freeMap[String(courseId)]?.is_free!==isFree)throw new Error('Free course status database verification failed.');
 
     if(input)input.value=verified;
     form.closest('dialog')?.close();
-    toast(id?'Course and Course Link updated successfully.':'Course and Course Link created successfully.');
+    toast(isFree?(id?'Free course updated successfully.':'Free course created successfully.'):(id?'Course updated successfully.':'Course created successfully.'));
     setTimeout(()=>$('#adminRefresh')?.click(),100);
   }catch(err){toast(errorText(err),true)}finally{
     if(button){button.disabled=false;button.textContent=original}
   }
 }
 
-// Capture the submit before the legacy form-level handler, so Course Link can never be dropped.
 document.addEventListener('submit',e=>{
   const form=e.target;
   if(!(form instanceof HTMLFormElement)||form.id!=='courseForm')return;
@@ -117,13 +158,17 @@ document.addEventListener('submit',e=>{
   authoritativeSave(form);
 },true);
 
-// Legacy admin.js opens/fills the modal first; then reload the link directly from MySQL.
 document.addEventListener('click',e=>{
   const edit=e.target instanceof Element?e.target.closest('[data-course-edit]'):null;
   if(edit){setTimeout(()=>fillEdit(edit.getAttribute('data-course-edit')),0);return}
-  if(e.target instanceof Element&&e.target.closest('#addCourseBtn'))setTimeout(()=>{const input=ensureField();if(input)input.value=''},30);
+  if(e.target instanceof Element&&e.target.closest('#addCourseBtn'))setTimeout(()=>{
+    const input=ensureField(),freeInput=ensureFreeField(),price=$('#courseForm')?.elements.price;
+    if(input)input.value='';
+    if(freeInput)freeInput.checked=false;
+    if(price){price.disabled=false;price.required=true;delete price.dataset.paidPrice}
+  },30);
 },true);
 
-async function init(){installExternalUi();try{await ready();await reloadLinks()}catch(err){console.warn('[BWA course links]',err.message)}}
+async function init(){installExternalUi();try{await ready();await Promise.all([reloadLinks(),reloadFreeStatuses()])}catch(err){console.warn('[BWA course extras]',err.message)}}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
