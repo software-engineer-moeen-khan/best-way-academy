@@ -186,6 +186,7 @@ document.addEventListener('click',e=>{
 },true);
 
 document.write('<script src="/assets/admin.js?rev=20260810-admin-management-v6"><\/script>');
+document.write('<script src="/assets/admin-overview-reports.js?rev=20260812-admin-overview-reports-v1"><\/script>');
 document.write('<script src="/assets/admin-messages.js?rev=20260810-admin-messages-v2"><\/script>');
 document.write('<script src="/assets/admin-extras.js?rev=20260808-admin-management-v3"><\/script>');
 document.write('<script src="/assets/admin-mobile.js?rev=20260808-admin-mobile-v1"><\/script>');
