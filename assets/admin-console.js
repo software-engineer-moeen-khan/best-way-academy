@@ -90,6 +90,34 @@ function courseRequest(url,options){
   return /^\/api\/admin\/manage\/courses(?:\/\d+)?(?:\?.*)?$/.test(path)&&['POST','PUT'].includes(method);
 }
 
+function imageErrorText(err){
+  if(err?.data?.errors)return Object.values(err.data.errors).flat().join(' ');
+  return err?.data?.message||err?.message||'Image URL could not be imported.';
+}
+
+function isStoredCourseImage(value){
+  if(!value)return false;
+  try{
+    const url=new URL(value,location.origin);
+    return url.origin===location.origin&&url.pathname.startsWith('/api/course-images/');
+  }catch{return false}
+}
+
+async function localiseCourseImage(value){
+  let image=String(value||'').trim();
+  if(!image||isStoredCourseImage(image))return image;
+  if(!/^[a-z][a-z0-9+.-]*:/i.test(image)&&/^(?:www\.)?[a-z0-9.-]+\.[a-z]{2,}(?:[/:?#].*)?$/i.test(image))image='https://'+image;
+  if(!/^https?:\/\//i.test(image))return image;
+
+  const bridge=await backend();
+  const out=await bridge.api('/api/admin/manage/course-images/import',{
+    method:'POST',body:JSON.stringify({url:image}),
+  });
+  const stored=String(out?.url||'').trim();
+  if(!stored)throw new Error('Image was downloaded but no stored image URL was returned.');
+  return stored;
+}
+
 const nativeFetch=window.fetch.bind(window);
 window.fetch=async function(input,options={}){
   const isCourseSave=courseRequest(input,options);
@@ -115,8 +143,31 @@ window.fetch=async function(input,options={}){
         const body=typeof options.body==='string'?JSON.parse(options.body):{};
         body.course_link=link;
         body.price=freeCourse?0:Number(body.price||0);
+
+        if(body.image){
+          try{
+            const storedImage=await localiseCourseImage(body.image);
+            body.image=storedImage;
+            const imageInput=$('#courseForm')?.elements?.image;
+            if(imageInput&&storedImage){
+              imageInput.value=storedImage;
+              imageInput.dispatchEvent(new Event('input',{bubbles:true}));
+            }
+          }catch(err){
+            const message=imageErrorText(err);
+            toast(message,true);
+            return new Response(JSON.stringify({message,errors:{image:[message]}}),{
+              status:422,headers:{'Content-Type':'application/json'}
+            });
+          }
+        }
+
         options={...options,body:JSON.stringify(body)};
-      }catch{}
+      }catch(err){
+        if(err instanceof SyntaxError){
+          toast('Course form data could not be prepared.',true);
+        }
+      }
     }
   }
 
