@@ -42,17 +42,15 @@ class CourseImageAssetController extends Controller
         $mime = strtolower(trim((string) ($file->getMimeType() ?: '')));
         abort_unless(str_starts_with($mime, 'image/'), 422, 'Please select an image file.');
 
-        [$content, $mime, $extension] = $this->browserReadyImage($content, $mime, (string) $file->getClientOriginalExtension());
+        [$content, $mime, $extension] = $this->browserReadyImage($content, $mime);
 
         $filename = Str::uuid()->toString().'.'.$extension;
         $path = 'course-images/'.$filename;
         abort_unless(Storage::disk('local')->put($path, $content), 500, 'The course image could not be saved.');
 
-        $url = rtrim($request->getSchemeAndHttpHost(), '/').'/api/course-images/'.$filename;
-
         return response()->json([
             'ok' => true,
-            'url' => $url,
+            'url' => '/api/course-images/'.$filename,
             'filename' => $filename,
             'mime_type' => $mime,
             'size_bytes' => strlen($content),
@@ -89,14 +87,14 @@ class CourseImageAssetController extends Controller
         ]);
     }
 
-    private function browserReadyImage(string $content, string $mime, string $clientExtension): array
+    private function browserReadyImage(string $content, string $mime): array
     {
         if (isset(self::BROWSER_MIMES[$mime])) {
             return [$content, $mime, self::BROWSER_MIMES[$mime]];
         }
 
-        // When Imagick is available, convert less browser-friendly image formats
-        // (for example HEIC/HEIF/TIFF) to WebP so they can still be shown as course images.
+        // Convert less browser-friendly image formats (HEIC/HEIF/TIFF etc.)
+        // to WebP whenever ImageMagick is available on the server.
         if (class_exists(\Imagick::class)) {
             try {
                 $image = new \Imagick();
@@ -112,18 +110,30 @@ class CourseImageAssetController extends Controller
                     return [$converted, 'image/webp', 'webp'];
                 }
             } catch (Throwable) {
-                // Fall through to a clear validation response below.
+                // Try GD next.
             }
         }
 
-        $extension = strtolower(trim($clientExtension));
-        if ($extension !== '' && preg_match('/^[a-z0-9]{2,5}$/', $extension) && str_starts_with($mime, 'image/')) {
-            // Keep image/* formats that the current browser/server may support even if
-            // they are not in our common list. The public endpoint preserves the file.
-            // Unknown extensions are stored as WebP only when Imagick can convert them.
-            abort(422, 'This image format is not browser-ready on this server. Please use JPG, PNG, WebP, GIF, AVIF, SVG, BMP or ICO.');
+        // GD provides another conversion path for any image format it can decode.
+        if (function_exists('imagecreatefromstring') && function_exists('imagewebp')) {
+            try {
+                $gd = @imagecreatefromstring($content);
+                if ($gd !== false) {
+                    ob_start();
+                    imagewebp($gd, null, 88);
+                    $converted = (string) ob_get_clean();
+                    imagedestroy($gd);
+                    if ($converted !== '') {
+                        return [$converted, 'image/webp', 'webp'];
+                    }
+                }
+            } catch (Throwable) {
+                if (ob_get_level() > 0) {
+                    @ob_end_clean();
+                }
+            }
         }
 
-        abort(422, 'Unsupported image format. Please upload a standard image file.');
+        abort(422, 'This image format cannot be converted for browser display on this server. Please use JPG, PNG, WebP, GIF, AVIF, SVG, BMP or ICO.');
     }
 }
