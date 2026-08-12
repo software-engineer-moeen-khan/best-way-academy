@@ -1,0 +1,2 @@
+body[data-page="course"] #marketplaceDetails .market-section:has(.instructor-card),
+body[data-page="course"] .market-details .market-section:has(.instructor-card){display:none!important}
