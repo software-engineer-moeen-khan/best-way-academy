@@ -98,11 +98,21 @@ function loadCourseImageSource(){
   script.dataset.bwaImageSource='1';
   document.head.appendChild(script);
 }
+function loadHomepageTrendingBannerAd(){
+  if(!(location.pathname==='/'||document.body?.dataset?.page==='home'))return;
+  if(document.querySelector('script[data-bwa-trending-banner-ad]'))return;
+  const script=document.createElement('script');
+  script.src='/assets/homepage-trending-banner-ad.js?rev=20260812-v1';
+  script.defer=true;
+  script.dataset.bwaTrendingBannerAd='1';
+  document.head.appendChild(script);
+}
 function run(){cleanBanner();removeCourseInstructorSection();ensureFooterLegalLinks()}
 run();
 loadCourseImageSource();
 loadCommerceState();
 loadCourseFreeLabels();
+loadHomepageTrendingBannerAd();
 const observer=new MutationObserver(run);
 observer.observe(document.documentElement,{childList:true,subtree:true});
 window.addEventListener('load',run,{once:true});
