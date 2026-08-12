@@ -4,6 +4,7 @@ const $=(s,r=document)=>r.querySelector(s);
 const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 const GOOGLE_AI_PLACEMENT='homepage_google_ai_popunder';
 const LONGBAR_PLACEMENT='homepage_popular_skills_longbar';
+const COURSE_HERO_PLACEMENT='course_detail_hero_ad';
 let api=null,items=[];
 
 async function backend(){
@@ -83,6 +84,15 @@ function ensureUi(){
         </form>
         <p id="longbarPlacementMessage" class="admin-muted" style="margin:10px 0 0"></p>
       </div>
+      <div class="admin-card admin-placement-card">
+        <strong>Course Details — Hero Banner / Native Ad</strong>
+        <p style="margin:6px 0 0;color:#667085">Shown below the Lifetime access / Certificate row in the Course Details hero. Choose an Image ad for a banner or Embed code for a native/network ad unit.</p>
+        <form id="courseHeroPlacementForm" class="admin-placement-grid">
+          <label>Selected advertisement<select id="courseHeroAdvertisement"><option value="">None / hidden</option></select></label>
+          <button class="admin-primary" type="submit">Save placement</button>
+        </form>
+        <p id="courseHeroPlacementMessage" class="admin-muted" style="margin:10px 0 0"></p>
+      </div>
       <div class="admin-toolbar"><input id="advertisementSearch" type="search" placeholder="Search advertisements…"><select id="advertisementTypeFilter"><option value="">All types</option><option value="image">Image ads</option><option value="embed">Embed code ads</option></select><select id="advertisementStatusFilter"><option value="">All statuses</option><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
       <div class="admin-card admin-table-wrap">
         <table class="admin-table admin-table-wide"><thead><tr><th>Preview</th><th>Advertisement</th><th>Destination</th><th>Placement</th><th>Status</th><th>Actions</th></tr></thead><tbody id="advertisementsBody"></tbody></table>
@@ -134,7 +144,7 @@ function matches(item){
 }
 function shortCode(value){const text=String(value||'').replace(/\s+/g,' ').trim();return text.length>90?text.slice(0,87)+'…':text}
 function placementsOf(item){return Array.isArray(item.placements)?item.placements:(item.placement_key?[item.placement_key]:[])}
-function placementLabel(key){if(key===GOOGLE_AI_PLACEMENT)return'Homepage · Google AI Popunder';if(key===LONGBAR_PLACEMENT)return'Homepage · Popular Skills LongBar';return key||'Unassigned'}
+function placementLabel(key){if(key===GOOGLE_AI_PLACEMENT)return'Homepage · Google AI Popunder';if(key===LONGBAR_PLACEMENT)return'Homepage · Popular Skills LongBar';if(key===COURSE_HERO_PLACEMENT)return'Course Details · Hero Ad';return key||'Unassigned'}
 function usableForPopunder(item){return !!item.active&&(item.ad_type==='embed'?!!String(item.embed_code||'').trim():!!String(item.target_url||'').trim())}
 function usableForLongbar(item){return !!item.active&&(item.ad_type==='embed'?!!String(item.embed_code||'').trim():!!String(item.image_url||'').trim())}
 
@@ -153,6 +163,7 @@ function fillPlacement(selectId,msgId,key,usable,emptyText,selectedText){
 function renderPlacements(){
   fillPlacement('#googleAiPopunderAdvertisement','#googleAiPopunderPlacementMessage',GOOGLE_AI_PLACEMENT,usableForPopunder,'No popunder advertisement is currently assigned.',x=>`Currently selected: ${x.name}.`);
   fillPlacement('#longbarAdvertisement','#longbarPlacementMessage',LONGBAR_PLACEMENT,usableForLongbar,'No LongBar advertisement is currently assigned; Popular Skills will be hidden.',x=>`Currently selected: ${x.name}. It replaces the Popular Skills section.`);
+  fillPlacement('#courseHeroAdvertisement','#courseHeroPlacementMessage',COURSE_HERO_PLACEMENT,usableForLongbar,'No Course Details hero advertisement is currently assigned.',x=>`Currently selected: ${x.name}. It appears below the course metadata.`);
 }
 
 function render(){
@@ -215,6 +226,7 @@ function init(){
   $('#advertisementForm')?.addEventListener('submit',save);
   $('#googleAiPopunderPlacementForm')?.addEventListener('submit',e=>savePlacement(e,'#googleAiPopunderAdvertisement','#googleAiPopunderPlacementMessage','/api/admin/manage/advertisement-placements/homepage-google-ai-popunder','Google AI popunder'));
   $('#longbarPlacementForm')?.addEventListener('submit',e=>savePlacement(e,'#longbarAdvertisement','#longbarPlacementMessage','/api/admin/manage/advertisement-placements/homepage-popular-skills-longbar','Homepage LongBar'));
+  $('#courseHeroPlacementForm')?.addEventListener('submit',e=>savePlacement(e,'#courseHeroAdvertisement','#courseHeroPlacementMessage','/api/admin/manage/advertisement-placements/course-detail-hero-ad','Course Details hero'));
   $('#advertisementForm [name="ad_type"]')?.addEventListener('change',syncMode);
   $('#advertisementForm [name="image_url"]')?.addEventListener('input',paintPreview);
   $('#advertisementForm [name="embed_code"]')?.addEventListener('input',paintEmbedPreview);
