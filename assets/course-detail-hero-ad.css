@@ -1,0 +1,8 @@
+.course-hero-ad-slot{width:100%;margin-top:34px;display:flex;align-items:center;justify-content:center;min-height:0;position:relative;z-index:1;text-align:center}
+.course-hero-ad-slot[data-type="image"]>a,.course-hero-ad-slot[data-type="image"]>div{display:block;max-width:100%}
+.course-hero-ad-slot[data-type="image"] img{display:block;width:auto;max-width:100%;height:auto;max-height:250px;margin:0 auto;object-fit:contain}
+.course-hero-ad-slot[data-type="embed"]{display:block;overflow:visible;text-align:center}
+.course-hero-ad-slot[data-type="embed"]>*{max-width:100%}
+.course-hero-ad-slot iframe{max-width:100%!important}
+@media(max-width:850px){.course-hero-ad-slot{margin-top:24px;justify-content:flex-start}.course-hero-ad-slot[data-type="image"] img{margin-left:0;margin-right:auto}}
+@media(max-width:520px){.course-hero-ad-slot{margin-top:20px}}
