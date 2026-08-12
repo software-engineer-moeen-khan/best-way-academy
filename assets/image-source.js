@@ -38,16 +38,20 @@ function isCourseImage(img){
   return img instanceof HTMLImageElement&&img.matches(COURSE_IMAGE_SELECTORS);
 }
 
+function assign(img,value,stage){
+  img.dataset.bwaManagedSrc=value;
+  img.dataset.bwaImageStage=stage;
+  img.src=value;
+}
+
 function prepare(img,raw){
   if(!isCourseImage(img))return;
   const original=normalise(raw||img.dataset.bwaOriginalImage||img.getAttribute('src')||'');
   if(!original||original===FALLBACK)return;
 
-  if(!img.dataset.bwaOriginalImage)img.dataset.bwaOriginalImage=original;
-  if(img.dataset.bwaImagePrepared==='1')return;
+  img.dataset.bwaOriginalImage=original;
   img.dataset.bwaImagePrepared='1';
-  img.dataset.bwaImageStage='proxy';
-  img.src=proxyUrl(original);
+  assign(img,proxyUrl(original),'proxy');
 }
 
 function handleError(event){
@@ -57,22 +61,31 @@ function handleError(event){
   const stage=img.dataset.bwaImageStage||'';
 
   if(stage==='proxy'&&original&&/^https?:\/\//i.test(original)){
-    img.dataset.bwaImageStage='direct';
-    img.src=original;
+    assign(img,original,'direct');
     return;
   }
 
-  if(stage!=='fallback'){
-    img.dataset.bwaImageStage='fallback';
-    img.src=FALLBACK;
-  }
+  if(stage!=='fallback')assign(img,FALLBACK,'fallback');
 }
 
 document.addEventListener('error',handleError,true);
 
 function scan(root=document){
   if(root instanceof HTMLImageElement&&isCourseImage(root))prepare(root);
-  root.querySelectorAll?.(COURSE_IMAGE_SELECTORS).forEach(img=>prepare(img));
+  root.querySelectorAll?.(COURSE_IMAGE_SELECTORS).forEach(img=>{
+    const current=img.getAttribute('src')||'';
+    if(current===img.dataset.bwaManagedSrc)return;
+    prepare(img,current);
+  });
+}
+
+function handleSrcMutation(img){
+  if(!isCourseImage(img))return;
+  const current=img.getAttribute('src')||'';
+  if(!current||current===img.dataset.bwaManagedSrc)return;
+  if(current===FALLBACK)return;
+  img.dataset.bwaImagePrepared='';
+  prepare(img,current);
 }
 
 function enhanceAdminImageField(){
@@ -98,7 +111,14 @@ function enhanceAdminImageField(){
 
   const update=()=>{
     const value=normalise(input.value);
-    if(!value){preview.hidden=true;previewImg.removeAttribute('src');previewImg.dataset.bwaOriginalImage='';previewImg.dataset.bwaImagePrepared='';return}
+    if(!value){
+      preview.hidden=true;
+      previewImg.removeAttribute('src');
+      previewImg.dataset.bwaOriginalImage='';
+      previewImg.dataset.bwaImagePrepared='';
+      previewImg.dataset.bwaManagedSrc='';
+      return;
+    }
     preview.hidden=false;
     previewImg.dataset.bwaOriginalImage=value;
     previewImg.dataset.bwaImagePrepared='';
@@ -134,9 +154,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
 const observer=new MutationObserver(records=>{
   for(const record of records){
+    if(record.type==='attributes'){
+      handleSrcMutation(record.target);
+      continue;
+    }
     record.addedNodes.forEach(node=>{if(node instanceof Element)scan(node)});
   }
   enhanceAdminImageField();
 });
-observer.observe(document.documentElement,{childList:true,subtree:true});
+observer.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['src']});
 })();
