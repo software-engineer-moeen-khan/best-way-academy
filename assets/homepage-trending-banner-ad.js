@@ -13,13 +13,14 @@ function installStyle(){
   const style=document.createElement('style');
   style.id='bwaTrendingBannerAdStyle';
   style.textContent=`
-    .homepage-trending-banner-ad{margin-top:34px;margin-bottom:6px;display:flex;justify-content:center;align-items:center;min-height:0;text-align:center}
-    .homepage-trending-banner-ad[data-type="image"]>a,.homepage-trending-banner-ad[data-type="image"]>div{display:block;width:100%}
-    .homepage-trending-banner-ad[data-type="image"] img{display:block;width:100%;height:auto;max-height:260px;object-fit:contain;margin:0 auto;border-radius:14px}
-    .homepage-trending-banner-ad[data-type="embed"]{display:block;overflow:visible}
+    .homepage-trending-banner-ad{box-sizing:border-box;margin-top:24px;margin-bottom:18px;min-height:132px;padding:12px 0;display:flex;justify-content:center;align-items:center;text-align:center;overflow:hidden}
+    .homepage-trending-banner-ad:empty::before{content:'Advertisement';font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#98a2b3;opacity:.45}
+    .homepage-trending-banner-ad[data-type="image"]>a,.homepage-trending-banner-ad[data-type="image"]>div{display:flex;width:100%;min-height:108px;align-items:center;justify-content:center}
+    .homepage-trending-banner-ad[data-type="image"] img{display:block;width:auto;height:auto;max-width:100%;max-height:220px;object-fit:contain;margin:0 auto;border-radius:14px}
+    .homepage-trending-banner-ad[data-type="embed"]{display:flex;overflow:visible;min-height:132px}
     .homepage-trending-banner-ad[data-type="embed"]>*{max-width:100%!important;margin-left:auto!important;margin-right:auto!important}
     .homepage-trending-banner-ad iframe,.homepage-trending-banner-ad img,.homepage-trending-banner-ad video{max-width:100%!important}
-    @media(max-width:780px){.homepage-trending-banner-ad{margin-top:22px;margin-bottom:0}.homepage-trending-banner-ad[data-type="image"] img{border-radius:10px;max-height:210px}}
+    @media(max-width:780px){.homepage-trending-banner-ad{margin-top:16px;margin-bottom:12px;min-height:100px;padding:8px 0}.homepage-trending-banner-ad[data-type="image"]>a,.homepage-trending-banner-ad[data-type="image"]>div{min-height:84px}.homepage-trending-banner-ad[data-type="image"] img{border-radius:10px;max-height:150px}.homepage-trending-banner-ad[data-type="embed"]{min-height:100px}}
   `;
   document.head.appendChild(style);
 }
@@ -33,11 +34,13 @@ function ensureSlot(){
   slot.id='homepageTrendingBannerAd';
   slot.className='homepage-trending-banner-ad shell';
   slot.setAttribute('aria-label','Advertisement');
+  slot.dataset.adPlacement='homepage_before_trending_banner';
   courses.insertAdjacentElement('beforebegin',slot);
   return slot;
 }
 
 function renderImage(slot,item){
+  slot.replaceChildren();
   slot.dataset.type='image';
   const destination=String(item.target_url||'').trim();
   const wrapper=document.createElement(destination?'a':'div');
@@ -53,6 +56,7 @@ function renderImage(slot,item){
 
 function renderEmbed(slot,code){
   code=String(code||'').trim();if(!code)return Promise.resolve();
+  slot.replaceChildren();
   slot.dataset.type='embed';
   return new Promise(resolve=>{
     const nativeWrite=document.write.bind(document),nativeWriteln=document.writeln.bind(document);
@@ -80,13 +84,14 @@ function renderEmbed(slot,code){
 async function init(){
   if(!(location.pathname==='/'||document.body?.dataset?.page==='home'))return;
   installStyle();
+  const slot=ensureSlot();
+  if(!slot)return;
   try{
     const response=await fetch(API,{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'}});
     if(!response.ok)return;
     const data=await response.json();
     const item=data?.advertisement;
     if(!usable(item))return;
-    const slot=ensureSlot();if(!slot)return;
     if(item.ad_type==='embed')await renderEmbed(slot,item.embed_code);else renderImage(slot,item);
   }catch(err){console.warn('[BWA homepage trending banner ad]',err?.message||err)}
 }
