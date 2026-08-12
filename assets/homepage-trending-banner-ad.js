@@ -14,7 +14,7 @@ function installStyle(){
   style.id='bwaTrendingBannerAdStyle';
   style.textContent=`
     .homepage-trending-banner-ad{box-sizing:border-box;margin-top:24px;margin-bottom:18px;min-height:132px;padding:12px 0;display:flex;justify-content:center;align-items:center;text-align:center;overflow:hidden}
-    .homepage-trending-banner-ad:empty::before{content:'Advertisement';font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#98a2b3;opacity:.45}
+    .homepage-trending-banner-ad[hidden]{display:none!important}
     .homepage-trending-banner-ad[data-type="image"]>a,.homepage-trending-banner-ad[data-type="image"]>div{display:flex;width:100%;min-height:108px;align-items:center;justify-content:center}
     .homepage-trending-banner-ad[data-type="image"] img{display:block;width:auto;height:auto;max-width:100%;max-height:220px;object-fit:contain;margin:0 auto;border-radius:14px}
     .homepage-trending-banner-ad[data-type="embed"]{display:flex;overflow:visible;min-height:132px}
@@ -35,6 +35,7 @@ function ensureSlot(){
   slot.className='homepage-trending-banner-ad shell';
   slot.setAttribute('aria-label','Advertisement');
   slot.dataset.adPlacement='homepage_before_trending_banner';
+  slot.hidden=true;
   courses.insertAdjacentElement('beforebegin',slot);
   return slot;
 }
@@ -42,6 +43,7 @@ function ensureSlot(){
 function renderImage(slot,item){
   slot.replaceChildren();
   slot.dataset.type='image';
+  slot.hidden=false;
   const destination=String(item.target_url||'').trim();
   const wrapper=document.createElement(destination?'a':'div');
   if(destination){wrapper.href=destination;wrapper.target='_blank';wrapper.rel='noopener noreferrer sponsored'}
@@ -50,6 +52,7 @@ function renderImage(slot,item){
   img.alt=String(item.alt_text||item.name||'Advertisement');
   img.loading='eager';
   img.decoding='async';
+  img.addEventListener('error',()=>{slot.hidden=true},{once:true});
   wrapper.appendChild(img);
   slot.appendChild(wrapper);
 }
@@ -58,6 +61,7 @@ function renderEmbed(slot,code){
   code=String(code||'').trim();if(!code)return Promise.resolve();
   slot.replaceChildren();
   slot.dataset.type='embed';
+  slot.hidden=false;
   return new Promise(resolve=>{
     const nativeWrite=document.write.bind(document),nativeWriteln=document.writeln.bind(document);
     let restored=false,finished=false;
@@ -86,6 +90,7 @@ async function init(){
   installStyle();
   const slot=ensureSlot();
   if(!slot)return;
+  slot.hidden=true;
   try{
     const response=await fetch(API,{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'}});
     if(!response.ok)return;
@@ -93,7 +98,10 @@ async function init(){
     const item=data?.advertisement;
     if(!usable(item))return;
     if(item.ad_type==='embed')await renderEmbed(slot,item.embed_code);else renderImage(slot,item);
-  }catch(err){console.warn('[BWA homepage trending banner ad]',err?.message||err)}
+  }catch(err){
+    slot.hidden=true;
+    console.warn('[BWA homepage trending banner ad]',err?.message||err);
+  }
 }
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
