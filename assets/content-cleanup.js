@@ -90,8 +90,17 @@ function loadCourseFreeLabels(){
   script.dataset.bwaCourseFreeLabels='1';
   document.head.appendChild(script);
 }
+function loadCourseImageSource(){
+  if(document.querySelector('script[data-bwa-image-source]'))return;
+  const script=document.createElement('script');
+  script.src='/assets/image-source.js?rev=20260812-course-images-v1';
+  script.defer=true;
+  script.dataset.bwaImageSource='1';
+  document.head.appendChild(script);
+}
 function run(){cleanBanner();removeCourseInstructorSection();ensureFooterLegalLinks()}
 run();
+loadCourseImageSource();
 loadCommerceState();
 loadCourseFreeLabels();
 const observer=new MutationObserver(run);
