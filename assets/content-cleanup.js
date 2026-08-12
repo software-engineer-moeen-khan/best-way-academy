@@ -12,6 +12,27 @@ function cleanBanner(){
     }
   });
 }
+function removeCourseInstructorSection(){
+  const isCourse=location.pathname==='/course'||document.body?.dataset?.page==='course';
+  if(!isCourse)return;
+
+  const headings=[...document.querySelectorAll('h1,h2,h3,h4,h5,h6')]
+    .filter(el=>el.textContent.trim().toLowerCase()==='instructor');
+
+  headings.forEach(heading=>{
+    const section=heading.closest('section,.section,[data-course-instructor],.instructor-section,.instructor-profile-section');
+    if(section){
+      section.remove();
+      return;
+    }
+
+    const team=[...document.querySelectorAll('strong,b,h2,h3,h4,p,div')]
+      .find(el=>el.textContent.trim()==='Best Way Academy Instructor Team');
+    const block=team?.closest('section,.section,article,[data-course-instructor],.instructor-section,.instructor-profile-section');
+    if(block)block.remove();
+    else heading.parentElement?.remove();
+  });
+}
 function ensureFooterLegalLinks(){
   const footer=document.querySelector('footer');
   if(!footer)return;
@@ -69,7 +90,7 @@ function loadCourseFreeLabels(){
   script.dataset.bwaCourseFreeLabels='1';
   document.head.appendChild(script);
 }
-function run(){cleanBanner();ensureFooterLegalLinks()}
+function run(){cleanBanner();removeCourseInstructorSection();ensureFooterLegalLinks()}
 run();
 loadCommerceState();
 loadCourseFreeLabels();
