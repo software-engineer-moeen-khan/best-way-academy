@@ -29,6 +29,7 @@ Route::get('/api/homepage-trending-courses',[HomepageTrendingCoursesController::
 Route::get('/api/free-courses/{slug}',[FreeCourseController::class,'status'])->middleware('throttle:120,1');
 Route::get('/api/advertisements/action-gates',[ActionAdController::class,'show'])->middleware('throttle:120,1');
 Route::get('/api/advertisements/homepage-google-ai-popunder',[AdminAdvertisementController::class,'publicGoogleAiPopunder'])->middleware('throttle:120,1');
+Route::get('/api/advertisements/course-detail-hero-ad',[AdminAdvertisementController::class,'publicCourseDetailHero'])->middleware('throttle:120,1');
 Route::get('/api/advertisements/homepage-ai-career-learn-more-ad',[AiCareerAdController::class,'show'])->middleware('throttle:120,1');
 
 Route::middleware('auth')->group(function(){
@@ -66,6 +67,7 @@ Route::middleware('auth')->group(function(){
         Route::put('/advertisement-placements/checkout-coupon-apply-ad',[ActionAdController::class,'assignCoupon'])->middleware('throttle:30,1');
         Route::put('/advertisement-placements/homepage-google-ai-popunder',[AdminAdvertisementController::class,'assignGoogleAiPopunder'])->middleware('throttle:30,1');
         Route::put('/advertisement-placements/homepage-popular-skills-longbar',[AdminAdvertisementController::class,'assignPopularSkillsLongbar'])->middleware('throttle:30,1');
+        Route::put('/advertisement-placements/course-detail-hero-ad',[AdminAdvertisementController::class,'assignCourseDetailHero'])->middleware('throttle:30,1');
         Route::put('/advertisement-placements/homepage-ai-career-learn-more-ad',[AiCareerAdController::class,'assign'])->middleware('throttle:30,1');
         Route::put('/advertisements/{advertisement}',[AdminAdvertisementController::class,'update'])->whereNumber('advertisement')->middleware('throttle:30,1');
         Route::delete('/advertisements/{advertisement}',[AdminAdvertisementController::class,'destroy'])->whereNumber('advertisement')->middleware('throttle:30,1');
