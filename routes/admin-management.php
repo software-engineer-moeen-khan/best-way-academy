@@ -10,6 +10,7 @@ use App\Http\Controllers\AiCareerAdController;
 use App\Http\Controllers\CatalogMetadataController;
 use App\Http\Controllers\CouponController;
 use App\Http\Controllers\CourseAccessLinkController;
+use App\Http\Controllers\CourseImageAssetController;
 use App\Http\Controllers\EasypaisaPaymentController;
 use App\Http\Controllers\FreeCourseController;
 use App\Http\Controllers\HomepageCategoriesController;
@@ -28,6 +29,7 @@ Route::get('/api/payment/easypaisa',[EasypaisaPaymentController::class,'config']
 Route::get('/api/payment/easypaisa/qr',[EasypaisaPaymentController::class,'qr']);
 Route::get('/api/homepage-trending-courses',[HomepageTrendingCoursesController::class,'publicIndex'])->middleware('throttle:120,1');
 Route::get('/api/image-proxy',ImageProxyController::class)->middleware('throttle:240,1');
+Route::get('/api/course-images/{filename}',[CourseImageAssetController::class,'show'])->where('filename','[A-Za-z0-9._-]+')->middleware('throttle:240,1');
 Route::get('/api/free-courses/{slug}',[FreeCourseController::class,'status'])->middleware('throttle:120,1');
 Route::get('/api/advertisements/action-gates',[ActionAdController::class,'show'])->middleware('throttle:120,1');
 Route::get('/api/advertisements/homepage-google-ai-popunder',[AdminAdvertisementController::class,'publicGoogleAiPopunder'])->middleware('throttle:120,1');
@@ -74,6 +76,7 @@ Route::middleware('auth')->group(function(){
         Route::put('/advertisements/{advertisement}',[AdminAdvertisementController::class,'update'])->whereNumber('advertisement')->middleware('throttle:30,1');
         Route::delete('/advertisements/{advertisement}',[AdminAdvertisementController::class,'destroy'])->whereNumber('advertisement')->middleware('throttle:30,1');
 
+        Route::post('/course-images',[CourseImageAssetController::class,'upload'])->middleware('throttle:30,1');
         Route::post('/courses',[AdminExternalCourseController::class,'create']);
         Route::put('/courses/{course}',[AdminExternalCourseController::class,'update'])->whereNumber('course');
         Route::delete('/courses/{course}',[AdminManagementController::class,'deleteCourse'])->whereNumber('course');
