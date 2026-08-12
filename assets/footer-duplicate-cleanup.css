@@ -1,0 +1,5 @@
+/* Remove only the duplicated About / Contact links appended at the end of the legal footer row. */
+footer .legal-links > a:nth-last-child(2),
+footer .legal-links > a:last-child {
+  display: none !important;
+}
