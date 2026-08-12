@@ -11,6 +11,15 @@ function loadActionAdControls(){
   document.body.appendChild(script);
 }
 
+function loadAdvertisementControls(){
+  if(document.querySelector('script[src*="admin-advertisements.js"]'))return;
+  const script=document.createElement('script');
+  script.src='/assets/admin-advertisements.js?rev=20260812-advertisements-v5';
+  script.defer=true;
+  script.dataset.bwaAdvertisements='1';
+  document.body.appendChild(script);
+}
+
 async function backend(){
   for(let i=0;i<150&&!window.BWABackend;i++)await new Promise(r=>setTimeout(r,40));
   if(!window.BWABackend)throw new Error('Backend bridge did not load.');
@@ -90,6 +99,7 @@ async function save(e){
 
 function init(){
   loadActionAdControls();
+  loadAdvertisementControls();
   ensureUi();
   $('#homepageTrendingCoursesForm')?.addEventListener('submit',save);
   load();
