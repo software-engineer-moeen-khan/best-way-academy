@@ -119,6 +119,33 @@ function payload(form){
     modules:lines(form.elements.modules?.value),
   };
 }
+function isStoredCourseImage(value){
+  if(!value)return false;
+  try{
+    const url=new URL(value,location.origin);
+    return url.origin===location.origin&&url.pathname.startsWith('/api/course-images/');
+  }catch{return false}
+}
+async function localiseImage(form,body,button){
+  const raw=String(body.image||'').trim();
+  if(!raw||isStoredCourseImage(raw))return;
+
+  let external=raw;
+  if(!/^[a-z][a-z0-9+.-]*:/i.test(external)&&/^(?:www\.)?[a-z0-9.-]+\.[a-z]{2,}(?:[/:?#].*)?$/i.test(external))external='https://'+external;
+  if(!/^https?:\/\//i.test(external))return;
+
+  if(button)button.textContent='Preparing image…';
+  const out=await api('/api/admin/manage/course-images/import',{
+    method:'POST',body:JSON.stringify({url:external}),
+  });
+  const stored=String(out?.url||'').trim();
+  if(!stored)throw new Error('The image was downloaded but no stored image URL was returned.');
+  body.image=stored;
+  if(form.elements.image){
+    form.elements.image.value=stored;
+    form.elements.image.dispatchEvent(new Event('input',{bubbles:true}));
+  }
+}
 async function authoritativeSave(form){
   const id=Number(form.elements.id?.value||0),body=payload(form),input=ensureField(),isFree=!!ensureFreeField()?.checked;
   if(!body.course_link){toast('Course access link is required.',true);input?.focus();return}
@@ -126,6 +153,8 @@ async function authoritativeSave(form){
   if(button){button.disabled=true;button.textContent='Saving course…'}
   try{
     if(!api)await ready();
+    await localiseImage(form,body,button);
+    if(button)button.textContent='Saving course…';
     const out=await api(id?`/api/admin/manage/courses/${id}`:'/api/admin/manage/courses',{
       method:id?'PUT':'POST',body:JSON.stringify(body),
     });
