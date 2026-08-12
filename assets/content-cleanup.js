@@ -93,7 +93,7 @@ function loadCourseFreeLabels(){
 function loadCourseImageSource(){
   if(document.querySelector('script[data-bwa-image-source]'))return;
   const script=document.createElement('script');
-  script.src='/assets/image-source.js?rev=20260812-course-images-v2';
+  script.src='/assets/image-source.js?rev=20260812-course-images-v3';
   script.defer=true;
   script.dataset.bwaImageSource='1';
   document.head.appendChild(script);
