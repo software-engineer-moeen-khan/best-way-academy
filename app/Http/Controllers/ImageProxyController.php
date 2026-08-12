@@ -124,12 +124,27 @@ class ImageProxyController extends Controller
         if (filter_var($host, FILTER_VALIDATE_IP)) {
             $ips[] = $host;
         } else {
-            $resolved = gethostbynamel($host);
-            if (is_array($resolved)) {
-                $ips = $resolved;
+            try {
+                $records = dns_get_record($host, DNS_A | DNS_AAAA);
+                if (is_array($records)) {
+                    foreach ($records as $record) {
+                        if (!empty($record['ip'])) $ips[] = $record['ip'];
+                        if (!empty($record['ipv6'])) $ips[] = $record['ipv6'];
+                    }
+                }
+            } catch (\Throwable) {
+                // Fall back to the IPv4 resolver below on restricted hosts.
+            }
+
+            if (!$ips) {
+                $resolved = gethostbynamel($host);
+                if (is_array($resolved)) {
+                    $ips = $resolved;
+                }
             }
         }
 
+        $ips = array_values(array_unique($ips));
         if (!$ips) {
             abort(422, 'The image host could not be resolved.');
         }
@@ -143,7 +158,8 @@ class ImageProxyController extends Controller
 
     private function mime(HttpResponse $response): string
     {
-        $type = strtolower(trim(explode(';', (string) $response->header('Content-Type'))[0] ?? ''));
+        $header = (string) $response->header('Content-Type');
+        $type = strtolower(trim((string) (explode(';', $header)[0] ?? '')));
         if ($type !== '' && $type !== 'application/octet-stream') {
             return $type;
         }
