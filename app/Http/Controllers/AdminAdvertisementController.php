@@ -11,6 +11,7 @@ class AdminAdvertisementController extends Controller
 {
     private const GOOGLE_AI_POPUNDER = 'homepage_google_ai_popunder';
     private const POPULAR_SKILLS_LONGBAR = 'homepage_popular_skills_longbar';
+    private const COURSE_DETAIL_HERO = 'course_detail_hero_ad';
 
     private function admin(Request $request): User
     {
@@ -172,6 +173,15 @@ class AdminAdvertisementController extends Controller
         ])->header('Cache-Control', 'no-cache, no-store, must-revalidate');
     }
 
+    public function publicCourseDetailHero(): JsonResponse
+    {
+        $row = $this->placementAdvertisement(self::COURSE_DETAIL_HERO);
+
+        return response()->json([
+            'advertisement' => $row ? $this->payload($row, [self::COURSE_DETAIL_HERO]) : null,
+        ])->header('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
+
     public function assignGoogleAiPopunder(Request $request): JsonResponse
     {
         return $this->assignPlacement($request, self::GOOGLE_AI_POPUNDER, 'popunder');
@@ -180,6 +190,11 @@ class AdminAdvertisementController extends Controller
     public function assignPopularSkillsLongbar(Request $request): JsonResponse
     {
         return $this->assignPlacement($request, self::POPULAR_SKILLS_LONGBAR, 'longbar');
+    }
+
+    public function assignCourseDetailHero(Request $request): JsonResponse
+    {
+        return $this->assignPlacement($request, self::COURSE_DETAIL_HERO, 'display');
     }
 
     public function index(Request $request): JsonResponse
