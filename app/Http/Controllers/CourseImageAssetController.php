@@ -25,6 +25,11 @@ class CourseImageAssetController extends Controller
         'image/vnd.microsoft.icon' => 'ico',
     ];
 
+    private const IMAGE_EXTENSIONS = [
+        'jpg','jpeg','png','webp','gif','avif','svg','bmp','ico',
+        'heic','heif','tif','tiff','jxl','jfif','pjpeg','pjp',
+    ];
+
     public function upload(Request $request): JsonResponse
     {
         abort_unless($request->user()?->role === 'admin', 403);
@@ -40,7 +45,9 @@ class CourseImageAssetController extends Controller
         abort_unless($content !== false && $content !== '', 422, 'The selected image is empty or unreadable.');
 
         $mime = strtolower(trim((string) ($file->getMimeType() ?: '')));
-        abort_unless(str_starts_with($mime, 'image/'), 422, 'Please select an image file.');
+        $clientExtension = strtolower(trim((string) $file->getClientOriginalExtension()));
+        $looksLikeImage = str_starts_with($mime, 'image/') || in_array($clientExtension, self::IMAGE_EXTENSIONS, true);
+        abort_unless($looksLikeImage, 422, 'Please select an image file.');
 
         [$content, $mime, $extension] = $this->browserReadyImage($content, $mime);
 
@@ -116,6 +123,7 @@ class CourseImageAssetController extends Controller
 
         // GD provides another conversion path for any image format it can decode.
         if (function_exists('imagecreatefromstring') && function_exists('imagewebp')) {
+            $bufferLevel = ob_get_level();
             try {
                 $gd = @imagecreatefromstring($content);
                 if ($gd !== false) {
@@ -128,7 +136,9 @@ class CourseImageAssetController extends Controller
                     }
                 }
             } catch (Throwable) {
-                if (ob_get_level() > 0) {
+                // A clean validation response is returned below.
+            } finally {
+                while (ob_get_level() > $bufferLevel) {
                     @ob_end_clean();
                 }
             }
