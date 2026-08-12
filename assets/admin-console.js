@@ -52,14 +52,153 @@ function ensureFreeCourseField(){
   return input;
 }
 
+function updateCourseImagePreview(){
+  const form=$('#courseForm');
+  const input=form?.elements?.image;
+  const preview=$('#bwaCourseImagePreview');
+  const previewImg=preview?.querySelector('img');
+  if(!input||!preview||!previewImg)return;
+  let value=String(input.value||'').trim();
+  if(!value){preview.hidden=true;previewImg.removeAttribute('src');return}
+  if(!/^[a-z][a-z0-9+.-]*:/i.test(value)&&/^(?:www\.)?[a-z0-9.-]+\.[a-z]{2,}(?:[/:?#].*)?$/i.test(value))value='https://'+value;
+  preview.hidden=false;
+  try{
+    const url=new URL(value,location.origin);
+    previewImg.src=url.origin===location.origin?url.href:`/api/image-proxy?url=${encodeURIComponent(url.href)}`;
+  }catch{
+    previewImg.removeAttribute('src');
+  }
+}
+
+function resetCourseImageUploadUi(){
+  const status=$('#bwaCourseImageUploadStatus');
+  const file=$('#bwaCourseImageFile');
+  if(status){status.textContent='';status.classList.remove('success','error')}
+  if(file)file.value='';
+  setTimeout(updateCourseImagePreview,30);
+}
+
+function ensureCourseImageUi(){
+  const form=$('#courseForm');
+  const input=form?.elements?.image;
+  if(!form||!input)return null;
+  input.type='text';
+  input.setAttribute('inputmode','url');
+  input.setAttribute('autocomplete','off');
+  input.dataset.bwaImageEnhanced='1';
+  if(input.dataset.bwaAdminUploadEnhanced==='1')return input;
+  input.dataset.bwaAdminUploadEnhanced='1';
+
+  const label=input.closest('label');
+  if(!label)return input;
+  label.classList.add('bwa-course-image-url-field');
+  if(!label.querySelector('.bwa-course-image-help')){
+    const help=document.createElement('small');
+    help.className='bwa-course-image-help';
+    help.innerHTML='<b>Option 1:</b> paste an image URL here. <b>Option 2:</b> upload an image from your device below. Recommended: 1280 × 720 px (16:9).';
+    label.appendChild(help);
+  }
+
+  if(!$('#bwaCourseImageUploadBox')){
+    const box=document.createElement('div');
+    box.id='bwaCourseImageUploadBox';
+    box.className='span-2 bwa-course-image-upload';
+    box.innerHTML=`
+      <div class="bwa-course-image-or"><span>OR</span></div>
+      <div class="bwa-course-image-upload-row">
+        <label class="bwa-course-image-file-button" for="bwaCourseImageFile">Upload image</label>
+        <input id="bwaCourseImageFile" type="file" accept="image/*,.heic,.heif,.tif,.tiff,.avif,.svg,.ico" hidden>
+        <div class="bwa-course-image-upload-copy">
+          <b>Choose image from computer / phone</b>
+          <small>Maximum 12 MB. Uploaded image is stored on this website and used as the course thumbnail.</small>
+        </div>
+      </div>
+      <p id="bwaCourseImageUploadStatus" class="bwa-course-image-upload-status" aria-live="polite"></p>
+    `;
+    label.insertAdjacentElement('afterend',box);
+
+    const preview=document.createElement('div');
+    preview.id='bwaCourseImagePreview';
+    preview.className='span-2 bwa-course-image-preview';
+    preview.hidden=true;
+    preview.innerHTML='<img alt="Course image preview"><small>Course image preview</small>';
+    box.insertAdjacentElement('afterend',preview);
+
+    const file=box.querySelector('#bwaCourseImageFile');
+    const status=box.querySelector('#bwaCourseImageUploadStatus');
+    const previewImg=preview.querySelector('img');
+    previewImg.addEventListener('error',()=>{
+      if(status&&!status.classList.contains('success')){
+        status.textContent='Preview could not be loaded. For URL images, Save Course will try to import the image to this website.';
+      }
+    });
+
+    file.addEventListener('change',async()=>{
+      const selected=file.files?.[0];
+      if(!selected)return;
+      status.classList.remove('success','error');
+      if(selected.size>12*1024*1024){
+        status.textContent='Image is larger than 12 MB. Please choose a smaller image.';
+        status.classList.add('error');
+        file.value='';
+        return;
+      }
+      status.textContent=`Uploading ${selected.name}…`;
+      const saveButton=form.querySelector('button[type="submit"]');
+      if(saveButton)saveButton.disabled=true;
+      try{
+        const bridge=await backend();
+        const body=new FormData();
+        body.append('image',selected,selected.name);
+        const out=await bridge.api('/api/admin/manage/course-images',{method:'POST',body});
+        const url=String(out?.url||'').trim();
+        if(!url)throw new Error('Image upload completed but no image URL was returned.');
+        input.value=url;
+        input.dispatchEvent(new Event('input',{bubbles:true}));
+        input.dispatchEvent(new Event('change',{bubbles:true}));
+        status.textContent='✓ Image uploaded successfully. Save the course to use it.';
+        status.classList.add('success');
+        updateCourseImagePreview();
+      }catch(err){
+        status.textContent=imageErrorText(err);
+        status.classList.add('error');
+      }finally{
+        if(saveButton)saveButton.disabled=false;
+        file.value='';
+      }
+    });
+  }
+
+  if(input.dataset.bwaPreviewBound!=='1'){
+    input.dataset.bwaPreviewBound='1';
+    input.addEventListener('input',updateCourseImagePreview);
+    input.addEventListener('change',updateCourseImagePreview);
+  }
+  updateCourseImagePreview();
+  return input;
+}
+
 function installExternalCourseUi(){
   ensureCourseLinkField();
+  ensureCourseImageUi();
   ensureFreeCourseField();
   syncFreeCourseUi();
   if(!$('#bwaExternalCourseAdminStyle')){
     const style=document.createElement('style');
     style.id='bwaExternalCourseAdminStyle';
-    style.textContent='[data-panel="courses"] .admin-table th:nth-child(4),[data-panel="courses"] .admin-table td:nth-child(4),[data-course-curriculum]{display:none!important}.admin-free-course-field{align-self:end;min-height:54px}.admin-free-course-field small{display:block;margin-top:3px;color:#667085}';
+    style.textContent=`
+      [data-panel="courses"] .admin-table th:nth-child(4),[data-panel="courses"] .admin-table td:nth-child(4),[data-course-curriculum]{display:none!important}
+      .admin-free-course-field{align-self:end;min-height:54px}.admin-free-course-field small{display:block;margin-top:3px;color:#667085}
+      .bwa-course-image-help{display:block;margin-top:7px;color:#667085;line-height:1.45;font-weight:500}.bwa-course-image-help b{color:#344054}
+      .bwa-course-image-upload{min-width:0}.bwa-course-image-or{display:flex;align-items:center;gap:12px;margin:0 0 11px;color:#98a2b3;font-size:11px;font-weight:800;letter-spacing:.1em}
+      .bwa-course-image-or:before,.bwa-course-image-or:after{content:'';height:1px;background:#e4e7ec;flex:1}
+      .bwa-course-image-upload-row{display:flex;align-items:center;gap:14px;padding:14px;border:1px dashed #98a2b3;border-radius:8px;background:#f9fafb}
+      .bwa-course-image-file-button{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:9px 14px;border-radius:6px;background:#6d28d9;color:#fff;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap}
+      .bwa-course-image-file-button:hover{background:#4c1d95}.bwa-course-image-upload-copy{display:grid;gap:3px}.bwa-course-image-upload-copy b{font-size:13px;color:#344054}.bwa-course-image-upload-copy small{font-size:11px;color:#667085;line-height:1.4}
+      .bwa-course-image-upload-status{min-height:18px;margin:7px 0 0;font-size:12px;color:#667085}.bwa-course-image-upload-status.success{color:#067647}.bwa-course-image-upload-status.error{color:#b42318}
+      .bwa-course-image-preview{width:min(520px,100%);border:1px solid #d1d7dc;border-radius:8px;overflow:hidden;background:#f7f9fa}.bwa-course-image-preview[hidden]{display:none!important}.bwa-course-image-preview img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;background:#202230}.bwa-course-image-preview small{display:block;padding:7px 10px;background:#fff;color:#667085}
+      @media(max-width:640px){.bwa-course-image-upload-row{align-items:flex-start;flex-direction:column}.bwa-course-image-file-button{width:100%}}
+    `;
     document.head.appendChild(style);
   }
   const description=document.querySelector('[data-panel="courses"] .admin-heading p:not(.eyebrow)');
@@ -209,12 +348,14 @@ async function fillEditCourseExtras(courseId){
     const isFree=!!freeInfo.is_free;
     for(const delay of [20,100,260])setTimeout(()=>{
       const form=$('#courseForm'),dialog=$('#courseDialog'),input=ensureCourseLinkField(),free=ensureFreeCourseField();
+      ensureCourseImageUi();
       if(!form||!dialog?.open||!input||!free)return;
       if(String(form.elements.id?.value||'')!==courseId)return;
       input.value=saved;
       free.checked=isFree;
       if(!isFree&&freeInfo.price!==undefined)form.elements.price.value=String(freeInfo.price);
       syncFreeCourseUi();
+      updateCourseImagePreview();
     },delay);
   }catch(err){
     console.warn('[BWA course edit extras]',err?.message||err);
@@ -227,12 +368,14 @@ installExternalCourseUi();
 document.addEventListener('click',e=>{
   if(!(e.target instanceof Element))return;
   const edit=e.target.closest('[data-course-edit]');
-  if(edit){setTimeout(()=>fillEditCourseExtras(edit.getAttribute('data-course-edit')),0);return}
+  if(edit){setTimeout(()=>{ensureCourseImageUi();resetCourseImageUploadUi();fillEditCourseExtras(edit.getAttribute('data-course-edit'))},0);return}
   if(e.target.closest('#addCourseBtn'))setTimeout(()=>{
     const input=ensureCourseLinkField(),free=ensureFreeCourseField(),price=$('#courseForm')?.elements.price;
+    ensureCourseImageUi();
     if(input)input.value='';
     if(free)free.checked=false;
     if(price){price.disabled=false;price.required=true;delete price.dataset.paidPrice}
+    resetCourseImageUploadUi();
   },20);
 },true);
 
