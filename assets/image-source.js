@@ -98,6 +98,9 @@ function enhanceAdminImageField(){
   const input=form?.elements?.image;
   if(!input||input.dataset.bwaImageEnhanced==='1')return;
   input.dataset.bwaImageEnhanced='1';
+  input.type='text';
+  input.setAttribute('inputmode','url');
+  input.setAttribute('autocomplete','off');
 
   const label=input.closest('label');
   if(!label)return;
