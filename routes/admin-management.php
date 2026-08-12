@@ -77,6 +77,7 @@ Route::middleware('auth')->group(function(){
         Route::delete('/advertisements/{advertisement}',[AdminAdvertisementController::class,'destroy'])->whereNumber('advertisement')->middleware('throttle:30,1');
 
         Route::post('/course-images',[CourseImageAssetController::class,'upload'])->middleware('throttle:30,1');
+        Route::post('/course-images/import',[CourseImageAssetController::class,'importUrl'])->middleware('throttle:30,1');
         Route::post('/courses',[AdminExternalCourseController::class,'create']);
         Route::put('/courses/{course}',[AdminExternalCourseController::class,'update'])->whereNumber('course');
         Route::delete('/courses/{course}',[AdminManagementController::class,'deleteCourse'])->whereNumber('course');
