@@ -22,16 +22,36 @@ function normalise(raw){
   return value;
 }
 
+function parsedUrl(raw){
+  const value=normalise(raw);
+  if(!value)return null;
+  try{return new URL(value,location.href)}catch{return null}
+}
+
+function isExternalHttp(raw){
+  const url=parsedUrl(raw);
+  return !!url&&/^https?:$/i.test(url.protocol)&&url.origin!==location.origin;
+}
+
 function proxyUrl(raw){
   const value=normalise(raw);
   if(!value)return FALLBACK;
   if(/^data:image\//i.test(value)||/^blob:/i.test(value))return value;
-  try{
-    const url=new URL(value,location.href);
-    if(url.origin===location.origin)return url.href;
-    if(!/^https?:$/i.test(url.protocol))return FALLBACK;
-    return `/api/image-proxy?url=${encodeURIComponent(url.href)}`;
-  }catch{return FALLBACK}
+  const url=parsedUrl(value);
+  if(!url)return FALLBACK;
+  if(url.origin===location.origin)return url.href;
+  if(!/^https?:$/i.test(url.protocol))return FALLBACK;
+  return `/api/image-proxy?url=${encodeURIComponent(url.href)}`;
+}
+
+function displayUrl(raw){
+  const value=normalise(raw);
+  if(!value)return FALLBACK;
+  if(/^data:image\//i.test(value)||/^blob:/i.test(value))return value;
+  const url=parsedUrl(value);
+  if(!url)return FALLBACK;
+  if(!/^https?:$/i.test(url.protocol)&&url.origin!==location.origin)return FALLBACK;
+  return url.href;
 }
 
 function isCourseImage(img){
@@ -51,7 +71,7 @@ function prepare(img,raw){
 
   img.dataset.bwaOriginalImage=original;
   img.dataset.bwaImagePrepared='1';
-  assign(img,proxyUrl(original),'proxy');
+  assign(img,displayUrl(original),'direct');
 }
 
 function handleError(event){
@@ -60,8 +80,11 @@ function handleError(event){
   const original=normalise(img.dataset.bwaOriginalImage||'');
   const stage=img.dataset.bwaImageStage||'';
 
-  if(stage==='proxy'&&original&&/^https?:\/\//i.test(original)){
-    assign(img,original,'direct');
+  // Direct image URLs should work without any server-side storage or proxy permission.
+  // If a host blocks hotlinking, or the supplied URL is an image page (e.g. Unsplash),
+  // retry through the Laravel image proxy which can resolve the actual image.
+  if(stage==='direct'&&original&&isExternalHttp(original)){
+    assign(img,proxyUrl(original),'proxy');
     return;
   }
 
@@ -232,7 +255,7 @@ function installStyle(){
   document.head.appendChild(style);
 }
 
-window.BWAImage={src:proxyUrl,prepare,fallback:FALLBACK,normalise};
+window.BWAImage={src:displayUrl,proxy:proxyUrl,prepare,fallback:FALLBACK,normalise};
 
 function boot(){installStyle();scan();enhanceAdminImageField()}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
