@@ -7,7 +7,7 @@ function loadTrendingBannerAdvertisement(){
   if(window.__bwaHomepageTrendingBannerAd)return;
   if(document.querySelector('script[src*="homepage-trending-banner-ad.js"]'))return;
   const script=document.createElement('script');
-  script.src='/assets/homepage-trending-banner-ad.js?rev=20260812-v3';
+  script.src='/assets/homepage-trending-banner-ad.js?rev=20260812-v4';
   script.async=false;
   script.dataset.bwaTrendingBannerAd='1';
   (document.head||document.documentElement).appendChild(script);
