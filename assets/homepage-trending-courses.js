@@ -3,6 +3,16 @@
 const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 const fallback='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80';
 
+function loadTrendingBannerAdvertisement(){
+  if(window.__bwaHomepageTrendingBannerAd)return;
+  if(document.querySelector('script[src*="homepage-trending-banner-ad.js"]'))return;
+  const script=document.createElement('script');
+  script.src='/assets/homepage-trending-banner-ad.js?rev=20260812-v3';
+  script.async=false;
+  script.dataset.bwaTrendingBannerAd='1';
+  (document.head||document.documentElement).appendChild(script);
+}
+
 function card(course,currency){
   const slug=encodeURIComponent(course.slug||'');
   const title=esc(course.title||'Course');
@@ -44,6 +54,7 @@ function bindSearch(grid){
 
 async function init(){
   if(!(location.pathname==='/'||document.body?.dataset?.page==='home'))return;
+  loadTrendingBannerAdvertisement();
   const grid=document.querySelector('#courseGrid');
   if(!grid)return;
   try{
@@ -60,5 +71,6 @@ async function init(){
   }catch(err){console.warn('[BWA trending courses]',err?.message||err)}
 }
 
+loadTrendingBannerAdvertisement();
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
