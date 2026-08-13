@@ -12,6 +12,7 @@ class AdminAdvertisementController extends Controller
     private const GOOGLE_AI_POPUNDER = 'homepage_google_ai_popunder';
     private const POPULAR_SKILLS_LONGBAR = 'homepage_popular_skills_longbar';
     private const COURSE_DETAIL_HERO = 'course_detail_hero_ad';
+    private const COURSE_DETAIL_CONTENT = 'course_detail_before_learn_ad';
 
     private function admin(Request $request): User
     {
@@ -173,12 +174,15 @@ class AdminAdvertisementController extends Controller
         ])->header('Cache-Control', 'no-cache, no-store, must-revalidate');
     }
 
-    public function publicCourseDetailHero(): JsonResponse
+    public function publicCourseDetailHero(Request $request): JsonResponse
     {
-        $row = $this->placementAdvertisement(self::COURSE_DETAIL_HERO);
+        $placement = $request->query('placement') === 'content'
+            ? self::COURSE_DETAIL_CONTENT
+            : self::COURSE_DETAIL_HERO;
+        $row = $this->placementAdvertisement($placement);
 
         return response()->json([
-            'advertisement' => $row ? $this->payload($row, [self::COURSE_DETAIL_HERO]) : null,
+            'advertisement' => $row ? $this->payload($row, [$placement]) : null,
         ])->header('Cache-Control', 'no-cache, no-store, must-revalidate');
     }
 
@@ -194,7 +198,11 @@ class AdminAdvertisementController extends Controller
 
     public function assignCourseDetailHero(Request $request): JsonResponse
     {
-        return $this->assignPlacement($request, self::COURSE_DETAIL_HERO, 'display');
+        $placement = $request->query('placement') === 'content'
+            ? self::COURSE_DETAIL_CONTENT
+            : self::COURSE_DETAIL_HERO;
+
+        return $this->assignPlacement($request, $placement, 'display');
     }
 
     public function index(Request $request): JsonResponse
