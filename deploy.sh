@@ -36,6 +36,7 @@ fi
 
 [[ "$(git rev-parse --abbrev-ref HEAD)" == "$BRANCH" ]] || fail "Deployment branch verification failed."
 [[ -f deploy/hostinger-deploy.sh ]] || fail "deploy/hostinger-deploy.sh is missing."
+[[ -f deploy/hostinger-db-preflight.sh ]] || fail "deploy/hostinger-db-preflight.sh is missing."
 
 # Hostinger commonly has the repository itself checked out inside the domain's
 # public_html directory. The existing Laravel publisher deliberately creates a
@@ -44,7 +45,14 @@ fi
 export PUBLIC_HTML="${PUBLIC_HTML:-$ROOT/public_html}"
 mkdir -p "$PUBLIC_HTML"
 
-chmod +x deploy/hostinger-deploy.sh 2>/dev/null || true
+chmod +x deploy/hostinger-deploy.sh deploy/hostinger-db-preflight.sh 2>/dev/null || true
+
+# Run database provisioning first. It lists the whole Hostinger account so an
+# unassigned DB left by a previous attempt is not missed, and it preserves the
+# API token in this shell so the main deploy does not ask for it a second time.
+log "Running Hostinger database preflight..."
+# shellcheck disable=SC1091
+source "$ROOT/deploy/hostinger-db-preflight.sh"
 
 log "Running Hostinger application deployment..."
 bash deploy/hostinger-deploy.sh
