@@ -4,5 +4,14 @@
 .course-hero-ad-slot[data-type="embed"]{display:block;overflow:visible;text-align:center}
 .course-hero-ad-slot[data-type="embed"]>*{max-width:100%}
 .course-hero-ad-slot iframe{max-width:100%!important}
-@media(max-width:850px){.course-hero-ad-slot{margin-top:24px;justify-content:flex-start}.course-hero-ad-slot[data-type="image"] img{margin-left:0;margin-right:auto}}
-@media(max-width:520px){.course-hero-ad-slot{margin-top:20px}}
+
+.course-detail-content-ad-slot{box-sizing:border-box;margin:32px auto 0;padding:0;display:flex;align-items:center;justify-content:center;min-height:0;text-align:center;overflow:hidden}
+.course-detail-content-ad-slot[hidden]{display:none!important}
+.course-detail-content-ad-slot[data-type="image"]>a,.course-detail-content-ad-slot[data-type="image"]>div{display:flex;width:100%;align-items:center;justify-content:center}
+.course-detail-content-ad-slot[data-type="image"] img{display:block;width:auto;max-width:100%;height:auto;max-height:260px;margin:0 auto;object-fit:contain;border-radius:14px}
+.course-detail-content-ad-slot[data-type="embed"]{display:block;overflow:visible;text-align:center;min-height:100px}
+.course-detail-content-ad-slot[data-type="embed"]>*{max-width:100%!important;margin-left:auto!important;margin-right:auto!important}
+.course-detail-content-ad-slot iframe,.course-detail-content-ad-slot img,.course-detail-content-ad-slot video{max-width:100%!important}
+
+@media(max-width:850px){.course-hero-ad-slot{margin-top:24px;justify-content:flex-start}.course-hero-ad-slot[data-type="image"] img{margin-left:0;margin-right:auto}.course-detail-content-ad-slot{margin-top:24px}}
+@media(max-width:520px){.course-hero-ad-slot{margin-top:20px}.course-detail-content-ad-slot{margin-top:20px}.course-detail-content-ad-slot[data-type="image"] img{max-height:180px;border-radius:10px}}
