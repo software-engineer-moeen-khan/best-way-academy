@@ -15,8 +15,18 @@ function removeCourseContentControls(){
     `;
     document.head.appendChild(style);
   }
-  const modules=$('#courseForm [name="modules"]');
-  if(modules?.closest('label'))modules.closest('label').style.display='none';
+
+  const form=$('#courseForm');
+  const modules=form?.elements?.modules;
+  if(modules&&modules.type!=='hidden'){
+    const hidden=document.createElement('input');
+    hidden.type='hidden';
+    hidden.name='modules';
+    hidden.value=modules.value||'';
+    const label=modules.closest('label');
+    if(label)label.replaceWith(hidden);else modules.replaceWith(hidden);
+  }
+
   const dialog=$('#curriculumDialog');
   if(dialog){dialog.hidden=true;dialog.setAttribute('aria-hidden','true')}
 }
