@@ -3,3 +3,10 @@ footer .legal-links > a:nth-last-child(2),
 footer .legal-links > a:last-child {
   display: none !important;
 }
+
+/* Keep the complete Best Way Academy footer brand readable on the dark footer. */
+footer .footer-brand,
+footer .footer-brand > span,
+footer .footer-brand > span b {
+  color: #fff !important;
+}
