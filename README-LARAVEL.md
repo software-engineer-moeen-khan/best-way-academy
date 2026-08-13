@@ -2,32 +2,51 @@
 
 The repository contains a Laravel 12 backend while preserving the existing Udemy-style marketplace UI.
 
-## Hostinger Web/Cloud — automated deployment
+## Hostinger Web/Cloud — one-command deployment
 
-Run from the repository root, one level above `public_html`:
+This branch is configured for Hostinger deployment from:
+
+`awk-paid-courses-azadi-sale`
+
+After the repository is present on Hostinger, run this from the repository root:
 
 ```bash
-git fetch origin
-git reset --hard origin/main
-chmod +x deploy/hostinger-deploy.sh
-./deploy/hostinger-deploy.sh
+bash deploy.sh
 ```
 
-On the first deployment only, the script securely asks for a Hostinger API token. The token is not written to `.env` or committed. The script automatically:
+That single command automatically:
 
-- detects the Hostinger account/domain where possible;
+- fetches the latest `origin/awk-paid-courses-azadi-sale` branch;
+- force-aligns the deployment checkout with that remote branch;
+- preserves ignored server-only files such as `.env`, `.deploy/`, `vendor/`, and generated `public_html/`;
 - verifies PHP 8.2+ and Composer 2;
-- creates `.env` and Laravel `APP_KEY`;
-- creates the MySQL database/user through the Hostinger Hosting API if needed;
-- generates a strong random database password and writes all DB values to `.env`;
-- generates an admin account/password and stores a server-only copy in `.deploy/admin-credentials.txt`;
-- runs migrations and seeders;
-- publishes the existing HTML/assets into `public_html` without exposing protected learner/admin/instructor pages directly;
-- installs Laravel's public `index.php` and rewrite rules;
-- attempts to create Laravel's scheduler cron through the Hostinger API;
-- caches production configuration.
+- installs production Composer dependencies;
+- creates `.env` and the Laravel `APP_KEY` when needed;
+- creates or repairs the MySQL database/user through the Hostinger API when needed;
+- runs Laravel migrations and seeders;
+- creates the generated Laravel public web root and publishes assets;
+- creates the storage link;
+- attempts to configure Laravel Scheduler on Hostinger;
+- clears/rebuilds Laravel production caches;
+- verifies important Laravel routes and database connectivity.
 
-Future deployments reuse `.env`, so the API token is normally not requested again.
+The repository may itself be checked out inside Hostinger's domain `public_html` directory. In that layout, the root `.htaccess` securely forwards public traffic to the generated Laravel `public_html/` child directory so framework/source files are not served directly.
+
+### Existing Hostinger checkout that does not have `deploy.sh` yet
+
+Use this one-time bootstrap command from the existing repository root:
+
+```bash
+git fetch origin +refs/heads/awk-paid-courses-azadi-sale:refs/remotes/origin/awk-paid-courses-azadi-sale && git checkout -f -B awk-paid-courses-azadi-sale origin/awk-paid-courses-azadi-sale && bash deploy.sh
+```
+
+After that, every future deployment is simply:
+
+```bash
+bash deploy.sh
+```
+
+On the first deployment, the script may securely ask for a Hostinger API token if it needs to create/recover database access. The token is not committed or written to `.env`. Existing valid database credentials are reused on later deployments.
 
 Never commit `.env`, `.deploy/`, database passwords, or Hostinger API tokens.
 
