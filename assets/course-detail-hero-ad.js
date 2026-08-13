@@ -1,7 +1,8 @@
 (()=>{
 'use strict';
 
-const AD_API='/api/advertisements/course-detail-hero-ad';
+const HERO_AD_API='/api/advertisements/course-detail-hero-ad';
+const CONTENT_AD_API='/api/advertisements/course-detail-hero-ad?placement=content';
 
 function usable(item){
   if(!item?.active)return false;
@@ -10,9 +11,9 @@ function usable(item){
     : !!String(item.image_url||'').trim();
 }
 
-async function loadAdvertisement(){
+async function loadAdvertisement(url){
   try{
-    const response=await fetch(AD_API,{
+    const response=await fetch(url,{
       credentials:'same-origin',
       cache:'no-store',
       headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'},
@@ -23,7 +24,7 @@ async function loadAdvertisement(){
   }catch{return null}
 }
 
-function ensureSlot(){
+function ensureHeroSlot(){
   const meta=document.querySelector('.course-detail-hero .detail-meta');
   if(!meta)return null;
   let slot=document.querySelector('#courseHeroAdvertisement');
@@ -36,7 +37,12 @@ function ensureSlot(){
   return slot;
 }
 
+function contentSlot(){
+  return document.querySelector('#courseDetailContentAd');
+}
+
 function renderImage(slot,item){
+  slot.replaceChildren();
   slot.dataset.type='image';
   const destination=String(item.target_url||'').trim();
   const wrapper=document.createElement(destination?'a':'div');
@@ -50,6 +56,8 @@ function renderImage(slot,item){
   image.alt=String(item.alt_text||item.name||'Advertisement');
   image.loading='lazy';
   image.decoding='async';
+  image.addEventListener('load',()=>{slot.hidden=false},{once:true});
+  image.addEventListener('error',()=>{if(slot.id==='courseDetailContentAd')slot.hidden=true},{once:true});
   wrapper.appendChild(image);
   slot.appendChild(wrapper);
 }
@@ -57,7 +65,9 @@ function renderImage(slot,item){
 function renderEmbed(slot,code){
   code=String(code||'').trim();
   if(!code)return Promise.resolve();
+  slot.replaceChildren();
   slot.dataset.type='embed';
+  slot.hidden=false;
 
   return new Promise(resolve=>{
     const nativeWrite=document.write.bind(document);
@@ -111,14 +121,20 @@ function renderEmbed(slot,code){
   });
 }
 
-async function init(){
-  if(document.body?.dataset?.page!=='course')return;
-  const item=await loadAdvertisement();
-  if(!usable(item))return;
-  const slot=ensureSlot();
-  if(!slot)return;
+async function render(slot,item){
+  if(!slot||!usable(item))return;
   if(item.ad_type==='embed')await renderEmbed(slot,item.embed_code);
   else renderImage(slot,item);
+}
+
+async function init(){
+  if(document.body?.dataset?.page!=='course')return;
+  const [heroItem,contentItem]=await Promise.all([
+    loadAdvertisement(HERO_AD_API),
+    loadAdvertisement(CONTENT_AD_API),
+  ]);
+  if(heroItem)await render(ensureHeroSlot(),heroItem);
+  if(contentItem)await render(contentSlot(),contentItem);
 }
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
