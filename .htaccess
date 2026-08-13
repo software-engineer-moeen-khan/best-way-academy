@@ -1,12 +1,39 @@
 Options -Indexes
-DirectoryIndex index.html
+DirectoryIndex index.php index.html
 
-<IfModule mod_headers.c>
-  <FilesMatch "\.(html|css|js)$">
-    Header set Cache-Control "no-cache, no-store, must-revalidate"
-    Header set Pragma "no-cache"
-    Header set Expires "0"
-  </FilesMatch>
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Keep Hostinger/Let's Encrypt validation reachable from the real document root.
+    RewriteRule ^\.well-known(?:/|$) - [END]
+
+    # The generated Laravel web root is an implementation detail and must not be
+    # directly browsable. Internal rewrites below are still allowed because the
+    # original browser request (THE_REQUEST) does not contain /public_html.
+    RewriteCond %{THE_REQUEST} \s/+public_html(?:[/?\s]) [NC]
+    RewriteRule ^public_html(?:/.*)?$ - [F,L]
+
+    # Serve only explicitly public generated files from the generated web root.
+    RewriteRule ^assets/(.*)$ public_html/assets/$1 [END]
+    RewriteRule ^storage/(.*)$ public_html/storage/$1 [END]
+
+    # Send every application/page/API request through Laravel. This also prevents
+    # tracked root HTML files and framework files from bypassing Laravel auth/routes.
+    RewriteRule ^ public_html/index.php [END]
 </IfModule>
 
-ErrorDocument 404 /404.html
+<IfModule mod_authz_core.c>
+    <FilesMatch "^(\.env(?:\..*)?|artisan|composer\.(?:json|lock)|phpunit\.xml|Dockerfile)$">
+        Require all denied
+    </FilesMatch>
+</IfModule>
+
+<IfModule mod_headers.c>
+    <FilesMatch "\.(html|css|js)$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires "0"
+    </FilesMatch>
+</IfModule>
+
+ErrorDocument 404 /404
