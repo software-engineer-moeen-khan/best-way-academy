@@ -5,8 +5,11 @@ footer .legal-links > a:last-child {
 }
 
 /* Keep the complete Best Way Academy footer brand readable on the dark footer. */
-footer .footer-brand,
-footer .footer-brand > span,
-footer .footer-brand > span b {
+footer .footer-bottom .brand.footer-brand,
+footer .footer-bottom .brand.footer-brand > span:not(.brand-mark),
+footer .footer-bottom .brand.footer-brand > span:not(.brand-mark) *,
+footer .footer-bottom .brand.footer-brand b {
   color: #fff !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
