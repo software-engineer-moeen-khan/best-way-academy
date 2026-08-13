@@ -3,6 +3,24 @@
 const $=(s,r=document)=>r.querySelector(s);
 const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 
+function removeCourseContentControls(){
+  if(!$('#bwaRemoveCourseContentAdminStyle')){
+    const style=document.createElement('style');
+    style.id='bwaRemoveCourseContentAdminStyle';
+    style.textContent=`
+      [data-panel="courses"] .admin-table th:nth-child(4),
+      [data-panel="courses"] .admin-table td:nth-child(4),
+      [data-course-curriculum],
+      #curriculumDialog{display:none!important}
+    `;
+    document.head.appendChild(style);
+  }
+  const modules=$('#courseForm [name="modules"]');
+  if(modules?.closest('label'))modules.closest('label').style.display='none';
+  const dialog=$('#curriculumDialog');
+  if(dialog){dialog.hidden=true;dialog.setAttribute('aria-hidden','true')}
+}
+
 function loadActionAdControls(){
   if(document.querySelector('script[src*="action-ad-gates.js"]'))return;
   const script=document.createElement('script');
@@ -82,6 +100,7 @@ function renderSlots(courses,selected){
 }
 
 async function load(){
+  removeCourseContentControls();
   ensureUi();
   const message=$('#homepageTrendingCoursesMessage');
   try{
@@ -107,6 +126,7 @@ async function save(e){
 }
 
 function init(){
+  removeCourseContentControls();
   loadActionAdControls();
   loadAdvertisementControls();
   loadTrendingBannerAdControls();
