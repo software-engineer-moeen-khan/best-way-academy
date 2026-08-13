@@ -8,6 +8,7 @@ use App\Http\Controllers\CatalogMetadataController;
 use App\Http\Controllers\CouponController;
 use App\Http\Controllers\CourseAccessLinkController;
 use App\Http\Controllers\EasypaisaPaymentController;
+use App\Http\Controllers\FlightLabController;
 use App\Http\Controllers\LearningContentController;
 use App\Http\Controllers\SadapayPaymentController;
 use App\Http\Controllers\SubscriptionController;
@@ -21,6 +22,16 @@ Route::get('/api/payment/sadapay/qr',[SadapayPaymentController::class,'qr']);
 // Keep existing EasyPaisa endpoints for backwards compatibility on old links.
 Route::get('/api/payment/easypaisa',[EasypaisaPaymentController::class,'config']);
 Route::get('/api/payment/easypaisa/qr',[EasypaisaPaymentController::class,'qr']);
+
+// Hidden Aviator-style flight lab. This is intentionally demo-only: virtual credits,
+// no deposits, withdrawals, payment settlement, or real-money payouts.
+Route::prefix('api/flight-lab')->middleware('throttle:120,1')->group(function(){
+    Route::get('/state',[FlightLabController::class,'state']);
+    Route::post('/bets',[FlightLabController::class,'placeBet']);
+    Route::delete('/bets/{slot}',[FlightLabController::class,'cancelBet'])->whereNumber('slot');
+    Route::post('/cashout',[FlightLabController::class,'cashout']);
+    Route::post('/reset',[FlightLabController::class,'reset'])->middleware('throttle:10,1');
+});
 
 Route::middleware('auth')->group(function(){
     Route::post('/api/coupons/quote',[CouponController::class,'quote'])->middleware('throttle:30,1');

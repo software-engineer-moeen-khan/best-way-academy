@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [EnsureAccountActive::class]);
+        $middleware->validateCsrfTokens(except: ['api/flight-lab/*']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Use Laravel's production-safe defaults.
