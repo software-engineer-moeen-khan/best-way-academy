@@ -13,6 +13,7 @@ class AdminAdvertisementController extends Controller
     private const POPULAR_SKILLS_LONGBAR = 'homepage_popular_skills_longbar';
     private const COURSE_DETAIL_HERO = 'course_detail_hero_ad';
     private const COURSE_DETAIL_CONTENT = 'course_detail_before_learn_ad';
+    private const COURSE_DETAIL_STUDENTS_VIEWED = 'course_detail_before_students_viewed_ad';
 
     private function admin(Request $request): User
     {
@@ -115,6 +116,15 @@ class AdminAdvertisementController extends Controller
             ->first();
     }
 
+    private function courseDetailPlacement(Request $request): string
+    {
+        return match ((string) $request->query('placement')) {
+            'content' => self::COURSE_DETAIL_CONTENT,
+            'students-viewed' => self::COURSE_DETAIL_STUDENTS_VIEWED,
+            default => self::COURSE_DETAIL_HERO,
+        };
+    }
+
     private function assignPlacement(Request $request, string $placementKey, string $mode): JsonResponse
     {
         $this->admin($request);
@@ -176,9 +186,7 @@ class AdminAdvertisementController extends Controller
 
     public function publicCourseDetailHero(Request $request): JsonResponse
     {
-        $placement = $request->query('placement') === 'content'
-            ? self::COURSE_DETAIL_CONTENT
-            : self::COURSE_DETAIL_HERO;
+        $placement = $this->courseDetailPlacement($request);
         $row = $this->placementAdvertisement($placement);
 
         return response()->json([
@@ -198,11 +206,7 @@ class AdminAdvertisementController extends Controller
 
     public function assignCourseDetailHero(Request $request): JsonResponse
     {
-        $placement = $request->query('placement') === 'content'
-            ? self::COURSE_DETAIL_CONTENT
-            : self::COURSE_DETAIL_HERO;
-
-        return $this->assignPlacement($request, $placement, 'display');
+        return $this->assignPlacement($request, $this->courseDetailPlacement($request), 'display');
     }
 
     public function index(Request $request): JsonResponse
