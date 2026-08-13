@@ -3,6 +3,7 @@
 
 const HERO_AD_API='/api/advertisements/course-detail-hero-ad';
 const CONTENT_AD_API='/api/advertisements/course-detail-hero-ad?placement=content';
+const STUDENTS_VIEWED_AD_API='/api/advertisements/course-detail-hero-ad?placement=students-viewed';
 
 function usable(item){
   if(!item?.active)return false;
@@ -41,6 +42,19 @@ function contentSlot(){
   return document.querySelector('#courseDetailContentAd');
 }
 
+function studentsViewedSlot(){
+  const slot=document.querySelector('#courseStudentsViewedAd');
+  if(!slot)return null;
+
+  const heading=[...document.querySelectorAll('h1,h2,h3,h4')]
+    .find(el=>el.textContent.trim().toLowerCase()==='students also viewed');
+  if(heading){
+    const section=heading.closest('section,.section')||heading.parentElement;
+    if(section&&slot.nextElementSibling!==section)section.insertAdjacentElement('beforebegin',slot);
+  }
+  return slot;
+}
+
 function renderImage(slot,item){
   slot.replaceChildren();
   slot.dataset.type='image';
@@ -57,7 +71,9 @@ function renderImage(slot,item){
   image.loading='lazy';
   image.decoding='async';
   image.addEventListener('load',()=>{slot.hidden=false},{once:true});
-  image.addEventListener('error',()=>{if(slot.id==='courseDetailContentAd')slot.hidden=true},{once:true});
+  image.addEventListener('error',()=>{
+    if(slot.id==='courseDetailContentAd'||slot.id==='courseStudentsViewedAd')slot.hidden=true;
+  },{once:true});
   wrapper.appendChild(image);
   slot.appendChild(wrapper);
 }
@@ -127,14 +143,25 @@ async function render(slot,item){
   else renderImage(slot,item);
 }
 
+function keepStudentsViewedSlotPosition(){
+  const position=()=>studentsViewedSlot();
+  position();
+  const observer=new MutationObserver(position);
+  observer.observe(document.body,{childList:true,subtree:true});
+  setTimeout(()=>observer.disconnect(),12000);
+}
+
 async function init(){
   if(document.body?.dataset?.page!=='course')return;
-  const [heroItem,contentItem]=await Promise.all([
+  keepStudentsViewedSlotPosition();
+  const [heroItem,contentItem,studentsViewedItem]=await Promise.all([
     loadAdvertisement(HERO_AD_API),
     loadAdvertisement(CONTENT_AD_API),
+    loadAdvertisement(STUDENTS_VIEWED_AD_API),
   ]);
   if(heroItem)await render(ensureHeroSlot(),heroItem);
   if(contentItem)await render(contentSlot(),contentItem);
+  if(studentsViewedItem)await render(studentsViewedSlot(),studentsViewedItem);
 }
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
