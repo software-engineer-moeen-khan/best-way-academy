@@ -28,7 +28,6 @@ Route::middleware('auth')->group(function () {
     Route::prefix('api/admin/manage')->group(function () {
         Route::get('/wallet', [WalletController::class, 'adminIndex'])->middleware('throttle:60,1');
         Route::patch('/wallet/requests/{walletRequest}', [WalletController::class, 'adminReview'])->whereNumber('walletRequest')->middleware('throttle:30,1');
-        Route::post('/wallet/adjust', [WalletController::class, 'adminAdjust'])->middleware('throttle:30,1');
         Route::post('/wallet/qr', [WalletController::class, 'uploadQr'])->middleware('throttle:10,1');
         Route::delete('/wallet/qr', [WalletController::class, 'removeQr'])->middleware('throttle:10,1');
     });
