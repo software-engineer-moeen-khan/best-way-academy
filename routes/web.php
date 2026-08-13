@@ -54,6 +54,7 @@ Route::middleware('auth')->group(function(){
 });
 
 require base_path('routes/admin-management.php');
+require base_path('routes/wallet.php');
 
 Route::any('/api',fn()=>response()->json(['message'=>'API endpoint not found.'],404));
 Route::any('/api/{path}',fn()=>response()->json(['message'=>'API endpoint not found.'],404))->where('path','.*');
