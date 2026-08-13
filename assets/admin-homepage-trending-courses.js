@@ -3,6 +3,7 @@
 const $=(s,r=document)=>r.querySelector(s);
 const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 const COURSE_CONTENT_AD_KEY='course_detail_before_learn_ad';
+const STUDENTS_VIEWED_AD_KEY='course_detail_before_students_viewed_ad';
 
 function removeCourseContentControls(){
   if(!$('#bwaRemoveCourseContentAdminStyle')){
@@ -99,66 +100,100 @@ function ensureUi(){
 function adPlacements(item){return Array.isArray(item?.placements)?item.placements:(item?.placement_key?[item.placement_key]:[])}
 function adUsable(item){return !!item?.active&&(item.ad_type==='embed'?!!String(item.embed_code||'').trim():!!String(item.image_url||'').trim())}
 
-async function refreshCourseContentAdPlacement(){
-  const select=$('#courseContentAdvertisement'),message=$('#courseContentAdPlacementMessage');
+async function loadAdOptions(selectId,messageId,key,positionText){
+  const select=$(selectId),message=$(messageId);
   if(!select)return;
   try{
     const b=await backend();
     const out=await b.api('/api/admin/manage/advertisements');
     const items=Array.isArray(out?.advertisements)?out.advertisements:[];
-    const selected=items.find(item=>adPlacements(item).includes(COURSE_CONTENT_AD_KEY));
+    const selected=items.find(item=>adPlacements(item).includes(key));
     select.innerHTML='<option value="">None / hidden</option>'+items.map(item=>{
       const ok=adUsable(item),type=item.ad_type==='embed'?'Embed':'Image';
       const why=!item.active?' — inactive':(!ok?' — missing required content':'');
       return `<option value="${Number(item.id)}" ${ok?'':'disabled'}>${esc(item.name)} (${type})${esc(why)}</option>`;
     }).join('');
     select.value=selected?String(selected.id):'';
-    if(message)message.textContent=selected?`Currently selected: ${selected.name}. It appears above “What you'll learn”.`:'No advertisement is currently assigned above “What you\'ll learn”.';
+    if(message)message.textContent=selected?`Currently selected: ${selected.name}. It appears ${positionText}.`:`No advertisement is currently assigned ${positionText}.`;
   }catch(err){if(message)message.textContent=err?.message||'Could not load this advertisement placement.'}
 }
 
-async function saveCourseContentAdPlacement(e){
+async function saveAdPlacement(e,selectId,messageId,placementQuery,successText){
   e.preventDefault();
-  const select=$('#courseContentAdvertisement'),message=$('#courseContentAdPlacementMessage');
+  const select=$(selectId),message=$(messageId);
   const id=Number(select?.value||0)||null;
   try{
     const b=await backend();
-    await b.api('/api/admin/manage/advertisement-placements/course-detail-hero-ad?placement=content',{
+    await b.api(`/api/admin/manage/advertisement-placements/course-detail-hero-ad?placement=${placementQuery}`,{
       method:'PUT',body:JSON.stringify({advertisement_id:id}),
     });
-    await refreshCourseContentAdPlacement();
-    if(message)message.textContent=id?'Course content advertisement placement saved successfully.':'Course content advertisement placement disabled.';
-  }catch(err){if(message)message.textContent=err?.data?.errors?Object.values(err.data.errors).flat().join(' '):(err?.message||'Could not save this advertisement placement.')}
+    if(message)message.textContent=id?successText:'Advertisement placement disabled.';
+    return true;
+  }catch(err){
+    if(message)message.textContent=err?.data?.errors?Object.values(err.data.errors).flat().join(' '):(err?.message||'Could not save this advertisement placement.');
+    return false;
+  }
 }
 
-async function ensureCourseContentAdPlacement(){
+function placementCardHtml(title,description,formId,selectId,messageId){
+  return `
+    <strong>${title}</strong>
+    <p style="margin:6px 0 0;color:#667085">${description}</p>
+    <form id="${formId}" class="admin-placement-grid">
+      <label>Selected advertisement<select id="${selectId}"><option value="">None / hidden</option></select></label>
+      <button class="admin-primary" type="submit">Save placement</button>
+    </form>
+    <p id="${messageId}" class="admin-muted" style="margin:10px 0 0"></p>`;
+}
+
+async function ensureCourseAdPlacements(){
   for(let i=0;i<160;i++){
     const panel=$('[data-panel="advertisements"]');
     if(panel){
-      let card=$('#courseContentAdPlacementCard');
-      if(!card){
-        card=document.createElement('div');
-        card.id='courseContentAdPlacementCard';
-        card.className='admin-card admin-placement-card';
-        card.innerHTML=`
-          <strong>Course Details — Banner above What you'll learn</strong>
-          <p style="margin:6px 0 0;color:#667085">Shown between the Course Details hero and the “What you'll learn” section. Supports Image ads and Embed code ads.</p>
-          <form id="courseContentAdPlacementForm" class="admin-placement-grid">
-            <label>Selected advertisement<select id="courseContentAdvertisement"><option value="">None / hidden</option></select></label>
-            <button class="admin-primary" type="submit">Save placement</button>
-          </form>
-          <p id="courseContentAdPlacementMessage" class="admin-muted" style="margin:10px 0 0"></p>`;
+      let contentCard=$('#courseContentAdPlacementCard');
+      if(!contentCard){
+        contentCard=document.createElement('div');
+        contentCard.id='courseContentAdPlacementCard';
+        contentCard.className='admin-card admin-placement-card';
+        contentCard.innerHTML=placementCardHtml(
+          'Course Details — Banner above What you\'ll learn',
+          'Shown between the Course Details hero and the “What you\'ll learn” section. Supports Image ads and Embed code ads.',
+          'courseContentAdPlacementForm','courseContentAdvertisement','courseContentAdPlacementMessage'
+        );
         const heroCard=$('#courseHeroPlacementForm')?.closest('.admin-placement-card');
         const toolbar=panel.querySelector('.admin-toolbar');
-        if(heroCard)heroCard.insertAdjacentElement('afterend',card);else if(toolbar)panel.insertBefore(card,toolbar);else panel.appendChild(card);
-        $('#courseContentAdPlacementForm')?.addEventListener('submit',saveCourseContentAdPlacement);
+        if(heroCard)heroCard.insertAdjacentElement('afterend',contentCard);else if(toolbar)panel.insertBefore(contentCard,toolbar);else panel.appendChild(contentCard);
+        $('#courseContentAdPlacementForm')?.addEventListener('submit',async e=>{
+          if(await saveAdPlacement(e,'#courseContentAdvertisement','#courseContentAdPlacementMessage','content','Course content advertisement placement saved successfully.'))
+            await loadAdOptions('#courseContentAdvertisement','#courseContentAdPlacementMessage',COURSE_CONTENT_AD_KEY,'above “What you\'ll learn”');
+        });
       }
-      await refreshCourseContentAdPlacement();
-      return card;
+
+      let studentsCard=$('#studentsViewedAdPlacementCard');
+      if(!studentsCard){
+        studentsCard=document.createElement('div');
+        studentsCard.id='studentsViewedAdPlacementCard';
+        studentsCard.className='admin-card admin-placement-card';
+        studentsCard.innerHTML=placementCardHtml(
+          'Course Details — Banner above Students also viewed',
+          'Shown immediately before the “Students also viewed” section on Course Details pages. Supports Image ads and Embed code ads.',
+          'studentsViewedAdPlacementForm','studentsViewedAdvertisement','studentsViewedAdPlacementMessage'
+        );
+        contentCard.insertAdjacentElement('afterend',studentsCard);
+        $('#studentsViewedAdPlacementForm')?.addEventListener('submit',async e=>{
+          if(await saveAdPlacement(e,'#studentsViewedAdvertisement','#studentsViewedAdPlacementMessage','students-viewed','Students also viewed advertisement placement saved successfully.'))
+            await loadAdOptions('#studentsViewedAdvertisement','#studentsViewedAdPlacementMessage',STUDENTS_VIEWED_AD_KEY,'above “Students also viewed”');
+        });
+      }
+
+      await Promise.all([
+        loadAdOptions('#courseContentAdvertisement','#courseContentAdPlacementMessage',COURSE_CONTENT_AD_KEY,'above “What you\'ll learn”'),
+        loadAdOptions('#studentsViewedAdvertisement','#studentsViewedAdPlacementMessage',STUDENTS_VIEWED_AD_KEY,'above “Students also viewed”'),
+      ]);
+      return;
     }
     await new Promise(r=>setTimeout(r,50));
   }
-  return null;
 }
 
 function renderSlots(courses,selected){
@@ -207,9 +242,9 @@ function init(){
   loadAdvertisementControls();
   loadTrendingBannerAdControls();
   ensureUi();
-  ensureCourseContentAdPlacement();
+  ensureCourseAdPlacements();
   $('#homepageTrendingCoursesForm')?.addEventListener('submit',save);
-  window.addEventListener('hashchange',()=>{if(location.hash==='#advertisements')setTimeout(ensureCourseContentAdPlacement,100)});
+  window.addEventListener('hashchange',()=>{if(location.hash==='#advertisements')setTimeout(ensureCourseAdPlacements,100)});
   load();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
