@@ -43,8 +43,18 @@ function contentSlot(){
 }
 
 function studentsViewedSlot(){
-  const slot=document.querySelector('#courseStudentsViewedAd');
-  if(!slot)return null;
+  let slot=document.querySelector('#courseStudentsViewedAd');
+  if(!slot){
+    slot=document.createElement('section');
+    slot.id='courseStudentsViewedAd';
+    slot.className='course-students-viewed-ad-slot shell';
+    slot.dataset.adPlacement='course_detail_before_students_viewed_ad';
+    slot.setAttribute('aria-label','Advertisement');
+    slot.hidden=true;
+    const detailContent=document.querySelector('.detail-content');
+    if(detailContent)detailContent.insertAdjacentElement('afterend',slot);
+    else document.querySelector('main')?.appendChild(slot);
+  }
 
   const heading=[...document.querySelectorAll('h1,h2,h3,h4')]
     .find(el=>el.textContent.trim().toLowerCase()==='students also viewed');
