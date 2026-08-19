@@ -1,0 +1,32 @@
+/* Keep the learner links in one horizontal footer row on desktop. */
+footer .footer-grid > div:first-child{
+  grid-column:1 / -1 !important;
+  display:flex !important;
+  flex-direction:row !important;
+  align-items:center !important;
+  flex-wrap:wrap !important;
+  column-gap:30px !important;
+  row-gap:12px !important;
+}
+footer .footer-grid > div:first-child h4{
+  margin:0 10px 0 0 !important;
+  white-space:nowrap;
+}
+footer .footer-grid > div:first-child a{
+  display:inline-flex;
+  align-items:center;
+  margin:0 !important;
+  white-space:nowrap;
+}
+@media(max-width:760px){
+  footer .footer-grid > div:first-child{
+    column-gap:20px !important;
+    row-gap:12px !important;
+  }
+}
+@media(max-width:480px){
+  footer .footer-grid > div:first-child h4{
+    flex:0 0 100%;
+    margin-bottom:2px !important;
+  }
+}
