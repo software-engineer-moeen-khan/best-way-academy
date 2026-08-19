@@ -29,8 +29,37 @@
     row.innerHTML='<h4>For learners</h4><a href="/courses">All courses</a><a href="/wishlist">Wishlist</a><a href="/my-learning">My learning</a><a href="/contact">Support</a>';
   };
 
+  const ensureScrollTopButton=()=>{
+    if(document.getElementById('bwaScrollTop'))return;
+    const style=document.createElement('style');
+    style.id='bwaScrollTopStyle';
+    style.textContent=`
+      #bwaScrollTop{position:fixed;right:22px;bottom:22px;width:46px;height:46px;border:0;border-radius:50%;display:grid;place-items:center;background:#6d28d9;color:#fff;font-size:24px;font-weight:900;line-height:1;cursor:pointer;z-index:9998;box-shadow:0 10px 28px rgba(17,24,39,.28);opacity:0;visibility:hidden;transform:translateY(12px);transition:opacity .2s ease,transform .2s ease,visibility .2s ease,background .2s ease}
+      #bwaScrollTop:hover{background:#4c1d95;transform:translateY(-2px)}
+      #bwaScrollTop.is-visible{opacity:1;visibility:visible;transform:translateY(0)}
+      #bwaScrollTop:focus-visible{outline:3px solid rgba(109,40,217,.3);outline-offset:3px}
+      @media(max-width:640px){#bwaScrollTop{right:14px;bottom:16px;width:44px;height:44px;font-size:22px}}
+      @media(prefers-reduced-motion:reduce){#bwaScrollTop{transition:none}}
+    `;
+    document.head.appendChild(style);
+
+    const button=document.createElement('button');
+    button.id='bwaScrollTop';
+    button.type='button';
+    button.setAttribute('aria-label','Back to top');
+    button.setAttribute('title','Back to top');
+    button.textContent='↑';
+    document.body.appendChild(button);
+
+    const sync=()=>button.classList.toggle('is-visible',window.scrollY>360);
+    button.addEventListener('click',()=>window.scrollTo({top:0,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'}));
+    window.addEventListener('scroll',sync,{passive:true});
+    sync();
+  };
+
   document.addEventListener('DOMContentLoaded',()=>{
     normalizeLearnerFooter();
+    ensureScrollTopButton();
     setTimeout(normalizeLearnerFooter,220);
   });
 
