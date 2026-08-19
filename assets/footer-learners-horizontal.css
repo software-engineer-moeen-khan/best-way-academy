@@ -12,6 +12,11 @@ footer .bwa-footer-learners-row{
   gap:30px !important;
   color:#fff;
 }
+footer .bwa-footer-learners-row h2,
+footer .bwa-footer-learners-row h3,
+footer .bwa-footer-learners-row h4{
+  display:none !important;
+}
 footer .bwa-footer-learners-row a{
   display:inline-flex !important;
   align-items:center;
