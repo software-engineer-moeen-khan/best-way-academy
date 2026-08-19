@@ -1,4 +1,4 @@
-/* Best Way Academy learner footer row */
+/* Best Way Academy learner footer links */
 footer .bwa-footer-learners-row{
   width:min(1320px,calc(100% - 32px));
   margin-inline:auto;
@@ -7,36 +7,30 @@ footer .bwa-footer-learners-row{
   display:flex !important;
   flex-direction:row !important;
   align-items:center !important;
-  flex-wrap:wrap !important;
-  gap:12px 30px !important;
+  justify-content:flex-start !important;
+  flex-wrap:nowrap !important;
+  gap:30px !important;
   color:#fff;
 }
-footer .bwa-footer-learners-row h4{
-  margin:0 10px 0 0 !important;
-  white-space:nowrap;
-  font-size:14px;
-}
 footer .bwa-footer-learners-row a{
-  display:inline-flex;
+  display:inline-flex !important;
   align-items:center;
   margin:0 !important;
-  white-space:nowrap;
+  white-space:nowrap !important;
   color:#d9dbe2;
   font-size:14px;
+  line-height:1.4;
 }
 footer .bwa-footer-learners-row a:hover{color:#fff}
 
-/* If an existing full footer already has For learners as the first grid group. */
+/* Existing full footer grid: make the learner row span the full footer width. */
 footer .footer-grid > div.bwa-footer-learners-row{
   grid-column:1 / -1 !important;
 }
 
 @media(max-width:760px){
-  footer .bwa-footer-learners-row{gap:12px 20px !important}
-}
-@media(max-width:480px){
-  footer .bwa-footer-learners-row h4{
-    flex:0 0 100%;
-    margin-bottom:2px !important;
+  footer .bwa-footer-learners-row{
+    flex-wrap:wrap !important;
+    gap:12px 20px !important;
   }
 }
