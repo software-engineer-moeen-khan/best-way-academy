@@ -26,7 +26,7 @@
     }
 
     row.classList.add('bwa-footer-learners-row');
-    row.innerHTML='<h4>For learners</h4><a href="/courses">All courses</a><a href="/wishlist">Wishlist</a><a href="/my-learning">My learning</a><a href="/contact">Support</a>';
+    row.innerHTML='<a href="/courses">All courses</a><a href="/wishlist">Wishlist</a><a href="/my-learning">My learning</a><a href="/contact">Support</a>';
   };
 
   const ensureScrollTopButton=()=>{
