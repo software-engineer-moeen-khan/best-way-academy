@@ -2,6 +2,38 @@
   const backend=()=>window.BWABackend;
   const errorText=err=>err?.data?.errors?Object.values(err.data.errors).flat().join(' '):(err?.message||'Request failed.');
 
+  const normalizeLearnerFooter=()=>{
+    if(document.body.classList.contains('admin-body')||document.body.classList.contains('instructor-app')||document.body.classList.contains('checkout-page')||document.body.classList.contains('awk-home')||document.querySelector('.player-layout,.certificate-wrap'))return;
+    const footer=document.querySelector('footer:not(.awk-footer),.portal-footer');
+    if(!footer)return;
+
+    let row=[...footer.querySelectorAll('.footer-grid > div')].find(group=>{
+      const heading=group.querySelector('h2,h3,h4,strong');
+      return heading&&heading.textContent.trim().toLowerCase()==='for learners';
+    });
+
+    if(!row){
+      const heading=[...footer.querySelectorAll('h2,h3,h4,strong')].find(el=>el.textContent.trim().toLowerCase()==='for learners');
+      if(heading)row=heading.parentElement;
+    }
+
+    if(!row){
+      row=document.createElement('div');
+      row.className='bwa-footer-learners-row shell';
+      const bottom=footer.querySelector('.footer-bottom');
+      if(bottom)bottom.insertAdjacentElement('beforebegin',row);
+      else footer.appendChild(row);
+    }
+
+    row.classList.add('bwa-footer-learners-row');
+    row.innerHTML='<h4>For learners</h4><a href="/courses">All courses</a><a href="/wishlist">Wishlist</a><a href="/my-learning">My learning</a><a href="/contact">Support</a>';
+  };
+
+  document.addEventListener('DOMContentLoaded',()=>{
+    normalizeLearnerFooter();
+    setTimeout(normalizeLearnerFooter,220);
+  });
+
   document.addEventListener('submit',async e=>{
     const form=e.target;
     if(!(form instanceof HTMLFormElement)||form.id!=='contactForm')return;
