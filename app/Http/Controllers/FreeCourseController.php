@@ -87,12 +87,33 @@ class FreeCourseController extends Controller
     {
         abort_unless($request->user()?->role==='admin',403);
         abort_unless(DB::table('courses')->where('id',$course)->exists(),404);
-        $data=$request->validate(['is_free'=>['required','boolean']]);
+        $data=$request->validate([
+            'is_free'=>['required','boolean'],
+            'course_ids'=>['sometimes','array','min:1','max:500'],
+            'course_ids.*'=>['integer','distinct','exists:courses,id'],
+        ]);
         $isFree=(bool)$data['is_free'];
+        $courseIds=isset($data['course_ids'])
+            ? array_values(array_unique(array_map('intval',$data['course_ids'])))
+            : [$course];
+
+        // A bulk request still has to reference one of its selected courses in the URL.
+        abort_if(isset($data['course_ids'])&&!in_array($course,$courseIds,true),422,'The route course must be included in course_ids.');
 
         $update=['is_free'=>$isFree,'updated_at'=>now()];
         if($isFree)$update['price']=0;
-        DB::table('courses')->where('id',$course)->update($update);
+        DB::table('courses')->whereIn('id',$courseIds)->update($update);
+
+        if(count($courseIds)>1){
+            return response()->json([
+                'ok'=>true,
+                'bulk'=>true,
+                'updated_count'=>count($courseIds),
+                'course_ids'=>$courseIds,
+                'is_free'=>$isFree,
+                'price'=>$isFree?0:null,
+            ])->header('Cache-Control','no-store, no-cache, must-revalidate');
+        }
 
         $saved=DB::table('courses')->where('id',$course)->first(['id','is_free','price']);
         return response()->json([
