@@ -9,17 +9,64 @@ async function json(path){const r=await fetch(path,{credentials:'same-origin',he
 function addCart(id){const cart=[...new Set([...(read('bwa_cart',[])||[]),id])];write('bwa_cart',cart);if(typeof headerEnhance==='function')headerEnhance();if(typeof toast==='function')toast('Added to cart')}
 function toggleWish(id){const list=read('bwa_wishlist',[])||[],next=list.includes(id)?list.filter(x=>x!==id):[...list,id];write('bwa_wishlist',next);if(typeof headerEnhance==='function')headerEnhance();if(typeof toast==='function')toast(list.includes(id)?'Removed from wishlist':'Saved to wishlist')}
 function image(c){return c.image||'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80'}
-function card(c){return `<a class="course-card" href="/course?course=${encodeURIComponent(c.slug)}" data-course="${esc(c.slug)}" data-category="${esc(c.category)}" data-search="${esc(`${c.title} ${c.category} ${c.subtitle||''}`.toLowerCase())}" data-price="${Number(c.price||0)}" data-rating="${Number(c.rating||0)}"><img src="${esc(image(c))}" alt="${esc(c.title)}"><div class="course-body"><h3>${esc(c.title)}</h3><p class="teacher">Best Way Academy</p><div class="rating"><b>${Number(c.rating||0).toFixed(1)}</b> ★★★★★ <span>(${esc(c.students||'0')})</span></div><p class="price">${money(c.price)}</p>${c.badge?`<span class="badge">${esc(c.badge)}</span>`:''}<div class="card-tools"><span role="button" tabindex="0" data-dynamic-wish="${esc(c.slug)}">♡ Save</span><span role="button" tabindex="0" data-dynamic-cart="${esc(c.slug)}">+ Cart</span></div></div></a>`}
+function isUdemyCoupon(c){return /^Udemy 100% OFF$/i.test(String(c?.badge||'').trim())}
+function safeUdemyUrl(value){
+  const raw=String(value||'').trim();if(!raw)return null;
+  try{
+    const u=new URL(raw);
+    const host=u.hostname.toLowerCase();
+    const coupon=[...u.searchParams.keys()].some(k=>k.toLowerCase()==='couponcode');
+    if(u.protocol!=='https:'||!(host==='udemy.com'||host.endsWith('.udemy.com'))||!u.pathname.startsWith('/course/')||!coupon)return null;
+    return u.href;
+  }catch{return null}
+}
+function card(c){
+  const coupon=isUdemyCoupon(c);
+  const tool=coupon?'<span class="external-course-label">View deal →</span>':`<span role="button" tabindex="0" data-dynamic-cart="${esc(c.slug)}">+ Cart</span>`;
+  return `<a class="course-card" href="/course?course=${encodeURIComponent(c.slug)}" data-course="${esc(c.slug)}" data-category="${esc(c.category)}" data-search="${esc(`${c.title} ${c.category} ${c.subtitle||''}`.toLowerCase())}" data-price="${Number(c.price||0)}" data-rating="${Number(c.rating||0)}"><img src="${esc(image(c))}" alt="${esc(c.title)}"><div class="course-body"><h3>${esc(c.title)}</h3><p class="teacher">${coupon?'Udemy coupon course':'Best Way Academy'}</p><div class="rating"><b>${Number(c.rating||0).toFixed(1)}</b> ★★★★★ <span>(${esc(c.students||'0')})</span></div><p class="price">${coupon?'Free with coupon':money(c.price)}</p>${c.badge?`<span class="badge">${esc(c.badge)}</span>`:''}<div class="card-tools"><span role="button" tabindex="0" data-dynamic-wish="${esc(c.slug)}">♡ Save</span>${tool}</div></div></a>`
+}
 async function catalogPage(courses,activeCategories){
   const grid=document.querySelector('#catalogGrid'),filters=document.querySelector('#categoryFilters'),input=document.querySelector('#catalogSearch'),empty=document.querySelector('#catalogEmpty');if(!grid||!filters)return;
   const params=new URLSearchParams(location.search);const categories=(activeCategories||[]).map(c=>c.name);let category=params.get('category')||'all',sort='featured';if(category!=='all'&&!categories.includes(category))category='all';
   filters.innerHTML=`<button data-dyn-filter="all" class="active">All</button>${categories.map(c=>`<button data-dyn-filter="${esc(c)}">${esc(c)}</button>`).join('')}<select id="dynamicSortCourses" class="sort-select"><option value="featured">Featured</option><option value="rating">Highest rated</option><option value="low">Price: low to high</option><option value="high">Price: high to low</option></select>`;
   if(input&&params.get('q'))input.value=params.get('q');
   function render(){let list=courses.filter(c=>(category==='all'||c.category===category)&&(!(input?.value||'').trim()||`${c.title} ${c.category} ${c.subtitle||''}`.toLowerCase().includes(input.value.trim().toLowerCase())));if(sort==='rating')list.sort((a,b)=>Number(b.rating)-Number(a.rating));else if(sort==='low')list.sort((a,b)=>Number(a.price)-Number(b.price));else if(sort==='high')list.sort((a,b)=>Number(b.price)-Number(a.price));grid.innerHTML=list.map(card).join('');if(empty)empty.hidden=list.length>0;filters.querySelectorAll('[data-dyn-filter]').forEach(b=>b.classList.toggle('active',b.dataset.dynFilter===category));}
-  filters.addEventListener('click',e=>{const b=e.target.closest('[data-dyn-filter]');if(!b)return;category=b.dataset.dynFilter;render()});filters.querySelector('#dynamicSortCourses').addEventListener('change',e=>{sort=e.target.value;render()});input?.addEventListener('input',render);
+  filters.addEventListener('click',e=>{const b=e.target.closest('[data-dyn-filter]');if(!b)return;category=b.dataset.dynFilter;render()});
+  filters.querySelector('#dynamicSortCourses').addEventListener('change',e=>{sort=e.target.value;render()});
+  input?.addEventListener('input',render);
   grid.addEventListener('click',e=>{const w=e.target.closest('[data-dynamic-wish]'),c=e.target.closest('[data-dynamic-cart]');if(w){e.preventDefault();e.stopPropagation();toggleWish(w.dataset.dynamicWish)}if(c){e.preventDefault();e.stopPropagation();addCart(c.dataset.dynamicCart)}});render();
 }
-async function detailPage(){if(document.body.dataset.page!=='course')return;const slug=new URLSearchParams(location.search).get('course')||'python';let c;try{c=await json(`/api/courses/${encodeURIComponent(slug)}`)}catch{return}document.title=`${c.title} — ${platform.site_name||'Best Way Academy'}`;const set=(id,value)=>{const el=document.querySelector(id);if(el)el.textContent=value};set('#detailCategory',c.category);set('#detailTitle',c.title);set('#detailSubtitle',c.subtitle||'');set('#detailRating',Number(c.rating||0).toFixed(1));set('#detailStudents',`(${c.students||'0'} learners)`);set('#detailPrice',money(c.price));const img=document.querySelector('#detailImage');if(img){img.src=image(c);img.alt=c.title}const learn=document.querySelector('#learnList');if(learn)learn.innerHTML=(c.learn||[]).map(x=>`<li>✓ ${esc(x)}</li>`).join('');const curriculum=document.querySelector('#curriculum');if(curriculum)curriculum.innerHTML=(c.sections||[]).map((s,i)=>`<div><b>${String(i+1).padStart(2,'0')}</b><span>${esc(s.title)}</span><small>${Number(s.lessons?.length||0)} lessons</small></div>`).join('')||'<div><span>Curriculum is being prepared.</span></div>';const enroll=document.querySelector('#enrollNow');if(enroll)enroll.href=`/checkout?course=${encodeURIComponent(slug)}`;const cart=document.querySelector('#addCartBtn'),wish=document.querySelector('#wishBtn');if(cart){const fresh=cart.cloneNode(true);cart.replaceWith(fresh);fresh.addEventListener('click',()=>addCart(slug))}if(wish){const fresh=wish.cloneNode(true);wish.replaceWith(fresh);const paint=()=>fresh.textContent=(read('bwa_wishlist',[])||[]).includes(slug)?'♥ Saved':'♡ Wishlist';fresh.addEventListener('click',()=>{toggleWish(slug);paint()});paint()}}
+async function detailPage(){
+  if(document.body.dataset.page!=='course')return;
+  const slug=new URLSearchParams(location.search).get('course')||'python';let c;
+  try{c=await json(`/api/courses/${encodeURIComponent(slug)}`)}catch{return}
+  document.title=`${c.title} — ${platform.site_name||'Best Way Academy'}`;
+  const set=(id,value)=>{const el=document.querySelector(id);if(el)el.textContent=value};
+  set('#detailCategory',c.category);set('#detailTitle',c.title);set('#detailSubtitle',c.subtitle||'');set('#detailRating',Number(c.rating||0).toFixed(1));set('#detailStudents',`(${c.students||'0'} learners)`);
+  const external=safeUdemyUrl(c.external_url);
+  set('#detailPrice',external?`Free with coupon${c.original_price_label?` · was ${c.original_price_label}`:''}`:money(c.price));
+  const img=document.querySelector('#detailImage');if(img){img.src=image(c);img.alt=c.title}
+  const learn=document.querySelector('#learnList');if(learn)learn.innerHTML=(c.learn||[]).map(x=>`<li>✓ ${esc(x)}</li>`).join('');
+  const curriculum=document.querySelector('#curriculum');if(curriculum)curriculum.innerHTML=(c.sections||[]).map((s,i)=>`<div><b>${String(i+1).padStart(2,'0')}</b><span>${esc(s.title)}</span><small>${Number(s.lessons?.length||0)} lessons</small></div>`).join('')||'<div><span>Curriculum is provided on Udemy after enrollment.</span></div>';
+  const enroll=document.querySelector('#enrollNow');
+  if(enroll){
+    if(external){
+      enroll.href=external;enroll.target='_blank';enroll.rel='noopener noreferrer';enroll.textContent='Enroll Free on Udemy ↗';
+      enroll.dataset.externalCourse='udemy';
+      const note=enroll.parentElement?.querySelector('p');
+      if(note)note.textContent=`Limited-time 100% off coupon${c.coupon_code?` · Coupon: ${c.coupon_code}`:''}`;
+    }else{
+      enroll.href=`/checkout?course=${encodeURIComponent(slug)}`;
+      enroll.removeAttribute('target');enroll.removeAttribute('rel');enroll.textContent='Enroll now';
+    }
+  }
+  const cart=document.querySelector('#addCartBtn'),wish=document.querySelector('#wishBtn');
+  if(cart){
+    if(external){cart.hidden=true;cart.style.display='none'}
+    else{const fresh=cart.cloneNode(true);cart.replaceWith(fresh);fresh.addEventListener('click',()=>addCart(slug))}
+  }
+  if(wish){const fresh=wish.cloneNode(true);wish.replaceWith(fresh);const paint=()=>fresh.textContent=(read('bwa_wishlist',[])||[]).includes(slug)?'♥ Saved':'♡ Wishlist';fresh.addEventListener('click',()=>{toggleWish(slug);paint()});paint()}
+}
 async function categoriesPage(categories){const grid=document.querySelector('.category-grid');if(!grid||location.pathname!=='/categories')return;grid.innerHTML=categories.map(c=>`<article class="category-card"><b>${esc(c.icon||'')} ${esc(c.name)}</b><p>${esc(c.description||`${Number(c.course_count||0)} course${Number(c.course_count||0)===1?'':'s'} available in this category.`)}</p><a href="/courses?category=${encodeURIComponent(c.name)}">Explore ${esc(c.name)} →</a></article>`).join('')||'<p class="no-results">No active categories available.</p>'}
 async function init(){try{platform=await json('/api/platform')}catch{}try{const path=location.pathname;if(path==='/courses'){const [courses,categories]=await Promise.all([json('/api/courses'),json('/api/categories')]);await catalogPage(courses,categories)}else if(path==='/course'){await detailPage()}else if(path==='/categories'){await categoriesPage(await json('/api/categories'))}}catch(e){console.warn('[BWA dynamic catalog]',e.message)}}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();

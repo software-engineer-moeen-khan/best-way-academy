@@ -8,6 +8,46 @@ use Illuminate\Support\Facades\DB;
 
 class CourseViewController extends Controller
 {
+    private function metadata(object $course): array
+    {
+        if (is_array($course->metadata ?? null)) {
+            return $course->metadata;
+        }
+        $decoded = json_decode((string) ($course->metadata ?? ''), true);
+        return is_array($decoded) ? $decoded : [];
+    }
+
+    private function udemyExternalUrl(object $course, array $meta): ?string
+    {
+        if (($meta['external_provider'] ?? null) !== 'udemy') {
+            return null;
+        }
+
+        $candidate = trim((string) ($course->course_link ?? ''));
+        if ($candidate === '' || mb_strlen($candidate) > 2048) {
+            return null;
+        }
+
+        $parts = parse_url($candidate);
+        if (! is_array($parts)) {
+            return null;
+        }
+        $scheme = strtolower((string) ($parts['scheme'] ?? ''));
+        $host = strtolower((string) ($parts['host'] ?? ''));
+        $path = (string) ($parts['path'] ?? '');
+        if ($scheme !== 'https' || ! ($host === 'udemy.com' || str_ends_with($host, '.udemy.com')) || ! str_starts_with($path, '/course/')) {
+            return null;
+        }
+
+        parse_str((string) ($parts['query'] ?? ''), $query);
+        foreach (array_keys($query) as $key) {
+            if (strtolower((string) $key) === 'couponcode') {
+                return $candidate;
+            }
+        }
+        return null;
+    }
+
     public function __invoke(Request $request,string $slug): JsonResponse
     {
         $course=DB::table('courses')->where('slug',$slug)->first();
@@ -19,7 +59,8 @@ class CourseViewController extends Controller
         $enrolled=$user?DB::table('enrollments')->where('user_id',$user->id)->where('course_id',$course->id)->exists():false;
         $fullAccess=$canManage||$enrolled;
 
-        $meta=is_string($course->metadata)?json_decode($course->metadata,true):($course->metadata??[]);
+        $meta=$this->metadata($course);
+        $externalUrl=$this->udemyExternalUrl($course,$meta);
         $out=[
             'id'=>$course->id,'slug'=>$course->slug,'title'=>$course->title,'category'=>$course->category,
             'subtitle'=>$course->subtitle,'description'=>$course->description,'price'=>(int)$course->price,
@@ -27,6 +68,9 @@ class CourseViewController extends Controller
             'rating'=>(float)$course->rating,'students'=>number_format((int)$course->students_count),
             'image'=>$course->image,'badge'=>$course->badge,'learn'=>$meta['learn']??[],'modules'=>$meta['modules']??[],
             'enrolled'=>$enrolled,'can_manage'=>$canManage,
+            'external_provider'=>$externalUrl?'udemy':null,'external_url'=>$externalUrl,
+            'coupon_code'=>$externalUrl?($meta['coupon_code']??null):null,
+            'original_price_label'=>$externalUrl?($meta['original_price_label']??null):null,
         ];
 
         $out['sections']=DB::table('course_sections')->where('course_id',$course->id)->orderBy('position')->get()->map(function($section)use($fullAccess){
