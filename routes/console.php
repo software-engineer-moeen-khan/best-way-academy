@@ -1,6 +1,7 @@
 <?php
 
 use App\Services\UdemyCouponImporter;
+use App\Services\UdemyEnglishCourseCleaner;
 use Illuminate\Support\Facades\Artisan;
 
 Artisan::command(
@@ -9,7 +10,7 @@ Artisan::command(
         {--category=* : Import only one or more named categories}
         {--pages=1 : Search pages to scan for each keyword (1-8)}
         {--dry-run : Discover and verify coupons without writing to the database}',
-    function (UdemyCouponImporter $importer): int {
+    function (UdemyCouponImporter $importer, UdemyEnglishCourseCleaner $englishCleaner): int {
         $limit = max(1, min(100, (int) $this->option('limit')));
         $pages = max(1, min(8, (int) $this->option('pages')));
         $categories = array_values(array_filter(array_map(
@@ -32,9 +33,10 @@ Artisan::command(
             }
         }
 
-        $this->info(($dryRun ? 'Checking' : 'Importing').' verified Udemy paid courses with 100% off coupons.');
+        $this->info(($dryRun ? 'Checking' : 'Importing').' verified English Udemy paid courses with 100% off coupons.');
         $this->line('Biomedical is processed first when all categories are imported.');
         $this->line('Expired offers, non-Udemy links, missing coupon codes and non-100%-off listings are skipped.');
+        $this->line('After import, non-English Udemy coupon courses are removed automatically.');
         $this->newLine();
 
         $result = $importer->import(
@@ -68,9 +70,47 @@ Artisan::command(
         );
 
         if (! $dryRun) {
+            $this->newLine();
+            $this->info('Applying English-only catalog policy...');
+            $cleanup = $englishCleaner->cleanup(function (string $message): void {
+                $this->line('<comment>[Language]</comment> '.$message);
+            });
+
+            $this->line(
+                "Language cleanup checked {$cleanup['checked']} Udemy coupon course(s): "
+                ."{$cleanup['english']} English kept, {$cleanup['removed']} non-English removed, "
+                ."{$cleanup['archived']} archived because of order history, {$cleanup['unknown']} could not be classified."
+            );
             $this->line('Imported courses open the verified Udemy coupon URL instead of the local checkout flow.');
         }
 
         return 0;
     }
-)->purpose('Import paid Udemy courses that are currently free only after a verified 100% off coupon is applied.');
+)->purpose('Import paid Udemy courses with verified 100% off coupons and keep only English-language courses.');
+
+Artisan::command(
+    'courses:cleanup-udemy-language',
+    function (UdemyEnglishCourseCleaner $englishCleaner): int {
+        $this->info('Removing non-English Udemy coupon courses...');
+
+        $cleanup = $englishCleaner->cleanup(function (string $message): void {
+            $this->line('<comment>[Language]</comment> '.$message);
+        });
+
+        $this->newLine();
+        $this->table(
+            ['Checked', 'English kept', 'Removed', 'Archived', 'Unknown'],
+            [[
+                $cleanup['checked'],
+                $cleanup['english'],
+                $cleanup['removed'],
+                $cleanup['archived'],
+                $cleanup['unknown'],
+            ]]
+        );
+
+        $this->info('English-only Udemy coupon cleanup finished.');
+
+        return 0;
+    }
+)->purpose('Remove imported Udemy coupon courses whose source language is not English.');
