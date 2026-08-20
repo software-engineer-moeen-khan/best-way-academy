@@ -23,6 +23,15 @@ async function backend(){
   return window.BWABackend;
 }
 
+function loadBulkFreeControls(){
+  if(document.querySelector('script[data-bwa-bulk-free-loader]'))return;
+  const script=document.createElement('script');
+  script.src='/assets/admin-bulk-free.js?rev=20260820-bulk-free-v1';
+  script.async=true;
+  script.dataset.bwaBulkFreeLoader='1';
+  document.body.appendChild(script);
+}
+
 function buildUi(){
   const panel=document.querySelector('[data-panel="settings"]');
   if(!panel||$('#adminPromoMessageForm'))return null;
@@ -51,6 +60,7 @@ function buildUi(){
 }
 
 async function load(){
+  loadBulkFreeControls();
   const form=buildUi();
   if(!form)return;
   const input=$('#adminPromoMessageInput');
