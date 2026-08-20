@@ -5,13 +5,13 @@ use Illuminate\Support\Facades\Artisan;
 
 Artisan::command(
     'courses:import-udemy-coupons
-        {--limit=10 : Maximum valid coupon courses to save per category}
+        {--limit=20 : Maximum verified paid-to-free Udemy courses to save per category}
         {--category=* : Import only one or more named categories}
-        {--pages=1 : Search pages to scan for each keyword (1-5)}
+        {--pages=1 : Search pages to scan for each keyword (1-8)}
         {--dry-run : Discover and verify coupons without writing to the database}',
     function (UdemyCouponImporter $importer): int {
-        $limit = max(1, min(50, (int) $this->option('limit')));
-        $pages = max(1, min(5, (int) $this->option('pages')));
+        $limit = max(1, min(100, (int) $this->option('limit')));
+        $pages = max(1, min(8, (int) $this->option('pages')));
         $categories = array_values(array_filter(array_map(
             static fn ($value) => trim((string) $value),
             (array) $this->option('category')
@@ -32,8 +32,9 @@ Artisan::command(
             }
         }
 
-        $this->info(($dryRun ? 'Checking' : 'Importing').' current Udemy 100% off coupon courses.');
+        $this->info(($dryRun ? 'Checking' : 'Importing').' verified Udemy paid courses with 100% off coupons.');
         $this->line('Biomedical is processed first when all categories are imported.');
+        $this->line('Expired offers, non-Udemy links, missing coupon codes and non-100%-off listings are skipped.');
         $this->newLine();
 
         $result = $importer->import(
@@ -57,12 +58,12 @@ Artisan::command(
 
         $this->newLine();
         $this->table(
-            ['Category', 'Valid saved', 'Created', 'Updated', 'Skipped', 'Source errors'],
+            ['Category', 'Verified saved', 'Created', 'Updated', 'Skipped', 'Source errors'],
             $rows
         );
 
         $this->info(
-            "Finished. Saved {$result['total_saved']} valid coupon course(s) "
+            "Finished. Saved {$result['total_saved']} verified 100%-off coupon course(s) "
             ."({$result['total_created']} created, {$result['total_updated']} updated)."
         );
 
@@ -72,4 +73,4 @@ Artisan::command(
 
         return 0;
     }
-)->purpose('Import current paid Udemy courses that become free with valid coupon codes.');
+)->purpose('Import paid Udemy courses that are currently free only after a verified 100% off coupon is applied.');
