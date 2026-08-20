@@ -26,7 +26,7 @@ class UdemyEnglishCourseCleaner
             'english' => 0,
             'removed' => 0,
             'archived' => 0,
-            'unknown' => 0,
+            'unverified' => 0,
         ];
 
         if (! Schema::hasTable('courses')) {
@@ -58,19 +58,19 @@ class UdemyEnglishCourseCleaner
                         continue;
                     }
 
-                    if ($language === 'non_english') {
-                        $title = trim((string) ($course->title ?? 'Udemy course'));
-                        if ($this->removeCourse((int) $course->id)) {
-                            $result['removed']++;
-                            $progress && $progress("Removed non-English course: {$title}");
-                        } else {
-                            $result['archived']++;
-                            $progress && $progress("Archived non-English course with order history: {$title}");
-                        }
-                        continue;
+                    $title = trim((string) ($course->title ?? 'Udemy course'));
+                    if ($language === null) {
+                        $result['unverified']++;
                     }
 
-                    $result['unknown']++;
+                    if ($this->removeCourse((int) $course->id)) {
+                        $result['removed']++;
+                        $reason = $language === 'non_english' ? 'non-English' : 'unverified-language';
+                        $progress && $progress("Removed {$reason} course: {$title}");
+                    } else {
+                        $result['archived']++;
+                        $progress && $progress("Archived non-English/unverified course with order history: {$title}");
+                    }
                 }
             }, 'id');
 
