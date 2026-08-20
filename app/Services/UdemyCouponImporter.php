@@ -4,7 +4,6 @@ namespace App\Services;
 
 use DOMDocument;
 use DOMElement;
-use DOMNode;
 use DOMXPath;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -17,19 +16,156 @@ class UdemyCouponImporter
     private const SOURCE_BASE = 'https://www.couponami.com';
 
     /**
-     * Ordered deliberately: Biomedical is imported first.
+     * Ordered deliberately: Biomedical is always processed first.
+     *
+     * Keep queries fairly focused. A course can appear in several searches,
+     * but global de-duplication makes sure it is only claimed once per run.
      */
     private const CATEGORY_QUERIES = [
-        'Biomedical' => ['medical', 'healthcare', 'biology', 'anatomy', 'pharmacology', 'clinical', 'cancer', 'nursing'],
-        'Development' => ['web development', 'php', 'laravel', 'javascript', 'react'],
-        'Artificial Intelligence' => ['artificial intelligence', 'machine learning', 'chatgpt', 'generative ai', 'llm'],
-        'Data' => ['data science', 'data analysis', 'sql', 'excel', 'power bi'],
-        'Cyber Security' => ['cyber security', 'ethical hacking', 'network security', 'penetration testing'],
-        'Marketing' => ['digital marketing', 'seo', 'social media marketing', 'content marketing'],
-        'Business' => ['business', 'management', 'leadership', 'project management'],
-        'Design' => ['graphic design', 'ui ux', 'figma', 'photoshop', 'canva'],
-        'Finance' => ['finance', 'accounting', 'financial analysis', 'investing'],
-        'Career' => ['career', 'interview', 'resume', 'job search', 'productivity'],
+        'Biomedical' => [
+            'biomedical', 'medical', 'healthcare', 'biology', 'anatomy', 'physiology',
+            'pharmacology', 'clinical', 'oncology', 'cancer', 'genetics', 'microbiology',
+            'bacteriology', 'mycology', 'nursing', 'medical ethics', 'public health',
+        ],
+        'Development' => [
+            'web development', 'php', 'laravel', 'javascript', 'typescript', 'react',
+            'vue', 'angular', 'nodejs', 'python', 'java', 'c sharp', 'dotnet',
+        ],
+        'Artificial Intelligence' => [
+            'artificial intelligence', 'machine learning', 'deep learning', 'chatgpt',
+            'generative ai', 'llm', 'prompt engineering', 'computer vision', 'nlp',
+        ],
+        'Data Science & Analytics' => [
+            'data science', 'data analysis', 'data analytics', 'pandas', 'numpy',
+            'statistics', 'tableau', 'power bi', 'business intelligence',
+        ],
+        'Cyber Security' => [
+            'cyber security', 'ethical hacking', 'network security', 'penetration testing',
+            'web security', 'information security', 'soc', 'malware', 'kali linux',
+        ],
+        'Cloud & DevOps' => [
+            'aws', 'azure', 'google cloud', 'devops', 'docker', 'kubernetes', 'terraform',
+            'jenkins', 'ci cd', 'linux administration',
+        ],
+        'IT & Software' => [
+            'it support', 'computer science', 'linux', 'windows server', 'networking',
+            'system administration', 'technical support', 'api', 'git', 'github',
+        ],
+        'Mobile Development' => [
+            'android development', 'ios development', 'flutter', 'react native', 'swift',
+            'kotlin', 'mobile app development',
+        ],
+        'Database' => [
+            'sql', 'mysql', 'postgresql', 'mongodb', 'database design', 'oracle database',
+            'sql server', 'redis',
+        ],
+        'Office Productivity' => [
+            'excel', 'microsoft excel', 'microsoft office', 'word', 'powerpoint',
+            'google sheets', 'office productivity', 'vba',
+        ],
+        'Marketing' => [
+            'digital marketing', 'seo', 'social media marketing', 'content marketing',
+            'email marketing', 'google ads', 'facebook ads', 'copywriting', 'branding',
+        ],
+        'Business' => [
+            'business', 'management', 'leadership', 'operations management',
+            'business strategy', 'business analysis', 'communication skills',
+        ],
+        'Entrepreneurship' => [
+            'entrepreneurship', 'startup', 'business startup', 'freelancing',
+            'online business', 'business plan',
+        ],
+        'Project Management' => [
+            'project management', 'agile', 'scrum', 'pmp', 'product management',
+            'jira', 'risk management',
+        ],
+        'Sales' => [
+            'sales', 'sales management', 'b2b sales', 'lead generation', 'cold email',
+            'customer success', 'crm',
+        ],
+        'Human Resources' => [
+            'human resources', 'hr management', 'recruitment', 'talent acquisition',
+            'employee management', 'performance management',
+        ],
+        'Design' => [
+            'graphic design', 'ui ux', 'figma', 'photoshop', 'illustrator', 'canva',
+            'web design', 'user experience', 'user interface',
+        ],
+        'Photography & Video' => [
+            'photography', 'video editing', 'premiere pro', 'after effects',
+            'davinci resolve', 'cinematography', 'youtube',
+        ],
+        'Finance & Accounting' => [
+            'finance', 'accounting', 'financial analysis', 'bookkeeping', 'investing',
+            'stock market', 'financial modeling', 'quickbooks',
+        ],
+        'E-Commerce' => [
+            'ecommerce', 'e commerce', 'shopify', 'woocommerce', 'amazon fba',
+            'dropshipping', 'etsy',
+        ],
+        'Personal Development' => [
+            'personal development', 'productivity', 'time management', 'confidence',
+            'goal setting', 'mindfulness', 'public speaking',
+        ],
+        'Career' => [
+            'career', 'interview', 'resume', 'cv', 'job search', 'linkedin',
+            'career development', 'freelance career',
+        ],
+        'Teaching & Academics' => [
+            'teaching', 'education', 'teacher training', 'instructional design',
+            'academic writing', 'research methods',
+        ],
+        'Languages' => [
+            'english language', 'spoken english', 'business english', 'spanish language',
+            'german language', 'french language', 'arabic language', 'ielts',
+        ],
+        'Engineering' => [
+            'engineering', 'mechanical engineering', 'civil engineering',
+            'electrical engineering', 'chemical engineering', 'autocad', 'solidworks',
+        ],
+        'Electronics' => [
+            'electronics', 'arduino', 'raspberry pi', 'embedded systems', 'pcb design',
+            'iot', 'robotics',
+        ],
+        'Mathematics' => [
+            'mathematics', 'calculus', 'algebra', 'linear algebra', 'probability',
+            'mathematical statistics',
+        ],
+        'Science' => [
+            'physics', 'chemistry', 'environmental science', 'astronomy',
+            'scientific research',
+        ],
+    ];
+
+    private const CATEGORY_ICONS = [
+        'Biomedical' => '🧬',
+        'Development' => '💻',
+        'Artificial Intelligence' => '🤖',
+        'Data Science & Analytics' => '📊',
+        'Cyber Security' => '🔐',
+        'Cloud & DevOps' => '☁️',
+        'IT & Software' => '🖥️',
+        'Mobile Development' => '📱',
+        'Database' => '🗄️',
+        'Office Productivity' => '📈',
+        'Marketing' => '📣',
+        'Business' => '💼',
+        'Entrepreneurship' => '🚀',
+        'Project Management' => '📋',
+        'Sales' => '🤝',
+        'Human Resources' => '👥',
+        'Design' => '🎨',
+        'Photography & Video' => '🎬',
+        'Finance & Accounting' => '💰',
+        'E-Commerce' => '🛒',
+        'Personal Development' => '🌱',
+        'Career' => '🎯',
+        'Teaching & Academics' => '🎓',
+        'Languages' => '🌐',
+        'Engineering' => '⚙️',
+        'Electronics' => '🔌',
+        'Mathematics' => '➗',
+        'Science' => '🔬',
     ];
 
     private const GENERIC_ANCHOR_TEXT = [
@@ -39,14 +175,14 @@ class UdemyCouponImporter
     ];
 
     public function import(
-        int $limitPerCategory = 10,
+        int $limitPerCategory = 20,
         array $requestedCategories = [],
         int $pagesPerQuery = 1,
         bool $dryRun = false,
         ?callable $progress = null
     ): array {
-        $limitPerCategory = max(1, min(50, $limitPerCategory));
-        $pagesPerQuery = max(1, min(5, $pagesPerQuery));
+        $limitPerCategory = max(1, min(100, $limitPerCategory));
+        $pagesPerQuery = max(1, min(8, $pagesPerQuery));
 
         $categories = $this->selectedCategories($requestedCategories);
         $result = [
@@ -58,6 +194,10 @@ class UdemyCouponImporter
             'total_updated' => 0,
             'total_skipped' => 0,
         ];
+
+        // Global across the whole run so one Udemy course cannot be moved through
+        // multiple categories just because several search keywords matched it.
+        $claimedUdemySlugs = [];
 
         foreach (array_keys($categories) as $position => $category) {
             if (! $dryRun) {
@@ -74,10 +214,9 @@ class UdemyCouponImporter
                 'errors' => [],
             ];
 
-            $progress && $progress($category, "Searching current paid-to-free Udemy coupons...");
+            $progress && $progress($category, 'Searching current paid Udemy courses with 100% off coupons...');
 
             $seenDetailUrls = [];
-            $seenUdemySlugs = [];
 
             foreach ($categories[$category] as $query) {
                 if ($stats['saved'] >= $limitPerCategory) {
@@ -118,10 +257,10 @@ class UdemyCouponImporter
                         }
 
                         $udemySlug = $this->udemySlug($resolved['url']);
-                        if (! $udemySlug || isset($seenUdemySlugs[$udemySlug])) {
+                        if (! $udemySlug || isset($claimedUdemySlugs[$udemySlug])) {
                             continue;
                         }
-                        $seenUdemySlugs[$udemySlug] = true;
+                        $claimedUdemySlugs[$udemySlug] = true;
 
                         $candidate['category'] = $category;
                         $candidate['search_query'] = $query;
@@ -132,7 +271,7 @@ class UdemyCouponImporter
                         if ($dryRun) {
                             $stats['saved']++;
                             $stats['created']++;
-                            $progress && $progress($category, "Found: {$candidate['title']}");
+                            $progress && $progress($category, "Verified 100% OFF: {$candidate['title']}");
                             continue;
                         }
 
@@ -157,7 +296,7 @@ class UdemyCouponImporter
 
             $progress && $progress(
                 $category,
-                "Done: {$stats['saved']}/{$limitPerCategory} valid coupon course(s) saved."
+                "Done: {$stats['saved']}/{$limitPerCategory} verified paid-to-free coupon course(s) saved."
             );
         }
 
@@ -186,6 +325,7 @@ class UdemyCouponImporter
             if (! isset($lookup[$key])) {
                 continue;
             }
+
             [$canonical, $queries] = $lookup[$key];
             $selected[$canonical] = $queries;
         }
@@ -197,13 +337,13 @@ class UdemyCouponImporter
     {
         try {
             $response = Http::withHeaders([
-                'User-Agent' => 'Mozilla/5.0 (compatible; BestWayAcademyCouponImporter/1.0)',
+                'User-Agent' => 'Mozilla/5.0 (compatible; BestWayAcademyCouponImporter/2.0)',
                 'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                 'Accept-Language' => 'en-US,en;q=0.9',
             ])
                 ->withOptions(['allow_redirects' => true])
-                ->timeout(18)
-                ->retry(2, 400, throw: false)
+                ->timeout(20)
+                ->retry(2, 500, throw: false)
                 ->get($url);
 
             if (! $response->successful()) {
@@ -257,7 +397,12 @@ class UdemyCouponImporter
             }
 
             $containerText = $this->cleanText($container->textContent);
-            if (! preg_match('/(?P<original>(?:US\$|\$|€|£|₹|Rs\.?)\s*\d+(?:[.,]\d+)?)\s*(?:->|→|–>|—>)\s*(?:US\$|\$|€|£|₹|Rs\.?)?\s*0\b/iu', $containerText, $priceMatch)) {
+            if (! preg_match($this->paidToFreePattern(), $containerText, $priceMatch)) {
+                continue;
+            }
+
+            $originalPrice = $priceMatch['original'] ?? null;
+            if (! $this->hasPositiveOriginalPrice($originalPrice)) {
                 continue;
             }
 
@@ -270,7 +415,7 @@ class UdemyCouponImporter
                 'title' => mb_substr($title, 0, 255),
                 'subtitle' => $this->extractSubtitle($xpath, $container, $title),
                 'image' => $this->extractImage($xpath, $container, $pageUrl),
-                'original_price_label' => $priceMatch['original'] ?? null,
+                'original_price_label' => $originalPrice,
                 'detail_url' => $detailUrl,
                 'source' => 'couponami',
             ];
@@ -282,6 +427,7 @@ class UdemyCouponImporter
     private function paidToFreeContainer(DOMElement $anchor): ?DOMElement
     {
         $node = $anchor;
+
         for ($i = 0; $i < 8; $i++) {
             $parent = $node->parentNode;
             if (! $parent instanceof DOMElement) {
@@ -289,7 +435,8 @@ class UdemyCouponImporter
             }
 
             $text = $this->cleanText($parent->textContent);
-            if (preg_match('/(?:US\$|\$|€|£|₹|Rs\.?)\s*\d+(?:[.,]\d+)?\s*(?:->|→|–>|—>)\s*(?:US\$|\$|€|£|₹|Rs\.?)?\s*0\b/iu', $text)) {
+            if (preg_match($this->paidToFreePattern(), $text, $match)
+                && $this->hasPositiveOriginalPrice($match['original'] ?? null)) {
                 return $parent;
             }
 
@@ -303,6 +450,27 @@ class UdemyCouponImporter
         return null;
     }
 
+    private function paidToFreePattern(): string
+    {
+        return '/(?P<original>(?:US\$|\$|€|£|₹|Rs\.?)\s*\d+(?:[.,]\d+)?)\s*'
+            .'(?:->|→|–>|—>)\s*(?:US\$|\$|€|£|₹|Rs\.?)?\s*0(?:[.,]0{1,2})?\b/iu';
+    }
+
+    private function hasPositiveOriginalPrice(?string $label): bool
+    {
+        if (! is_string($label) || $label === '') {
+            return false;
+        }
+
+        $number = preg_replace('/[^0-9.,]/u', '', $label);
+        if (! is_string($number) || $number === '') {
+            return false;
+        }
+
+        $number = str_replace(',', '.', $number);
+        return (float) $number > 0;
+    }
+
     private function extractSubtitle(DOMXPath $xpath, DOMElement $container, string $title): string
     {
         foreach ($xpath->query('.//p|.//*[contains(@class,"description")]|.//*[contains(@class,"subtitle")]', $container) ?: [] as $node) {
@@ -311,13 +479,13 @@ class UdemyCouponImporter
                 mb_strlen($text) >= 20
                 && mb_strlen($text) <= 1200
                 && strcasecmp($text, $title) !== 0
-                && ! preg_match('/(?:US\$|\$|€|£|₹|Rs\.?)\s*\d+\s*(?:->|→)/u', $text)
+                && ! preg_match($this->paidToFreePattern(), $text)
             ) {
                 return mb_substr($text, 0, 1000);
             }
         }
 
-        return 'Limited-time Udemy course coupon discovered from a current paid-to-free offer.';
+        return 'Limited-time Udemy course coupon verified from a current paid-to-free offer.';
     }
 
     private function extractImage(DOMXPath $xpath, DOMElement $container, string $pageUrl): ?string
@@ -346,7 +514,7 @@ class UdemyCouponImporter
     private function resolveUdemyCoupon(string $detailUrl): ?array
     {
         $detail = $this->getPage($detailUrl);
-        if (! $detail) {
+        if (! $detail || $this->looksExpired($detail['body'])) {
             return null;
         }
 
@@ -395,7 +563,7 @@ class UdemyCouponImporter
 
         foreach (array_values(array_unique($goUrls)) as $goUrl) {
             $go = $this->getPage($goUrl);
-            if (! $go) {
+            if (! $go || $this->looksExpired($go['body'])) {
                 continue;
             }
 
@@ -409,6 +577,16 @@ class UdemyCouponImporter
         }
 
         return null;
+    }
+
+    private function looksExpired(string $html): bool
+    {
+        $text = strtolower($this->cleanText(strip_tags($html)));
+
+        return (bool) preg_match(
+            '/\b(expired coupon|coupon expired|coupon has expired|offer expired|deal expired|promotion expired)\b/i',
+            $text
+        );
     }
 
     private function findUdemyCouponInHtml(string $html): ?array
@@ -462,7 +640,10 @@ class UdemyCouponImporter
             $url = preg_replace('#^http://#i', 'https://', $url) ?: $url;
         }
 
-        return ['url' => mb_substr($url, 0, 2048), 'coupon_code' => $couponCode];
+        return [
+            'url' => mb_substr($url, 0, 2048),
+            'coupon_code' => $couponCode,
+        ];
     }
 
     private function saveCourse(array $course): ?string
@@ -481,6 +662,7 @@ class UdemyCouponImporter
         $metadata = [
             'external_provider' => 'udemy',
             'external_offer' => '100_percent_coupon',
+            'verified_paid_to_free' => true,
             'source' => $course['source'],
             'source_url' => $course['detail_url'],
             'coupon_code' => $course['coupon_code'],
@@ -488,7 +670,7 @@ class UdemyCouponImporter
             'search_query' => $course['search_query'],
             'imported_at' => now()->toIso8601String(),
             'learn' => [
-                'Use the Udemy coupon link while the limited-time offer remains active.',
+                'Use the Udemy coupon link while the limited-time 100% off offer remains active.',
                 'Enrollment and course access are completed directly on Udemy.',
             ],
             'modules' => [],
@@ -516,13 +698,14 @@ class UdemyCouponImporter
             $row['course_link'] = $course['udemy_url'];
         }
         if (Schema::hasColumn('courses', 'is_free')) {
-            // External coupon course: do not use the academy's local free-enrollment flow.
+            // It is free only after the external coupon is applied, therefore it
+            // must not enter the academy's own local free-enrollment flow.
             $row['is_free'] = false;
         }
 
         $action = $existing ? 'updated' : 'created';
 
-        DB::transaction(function () use (&$existing, $row, $course, $now): void {
+        DB::transaction(function () use ($existing, $row, $course, $now): void {
             if ($existing) {
                 DB::table('courses')->where('id', $existing->id)->update($row);
                 $courseId = (int) $existing->id;
@@ -561,6 +744,7 @@ class UdemyCouponImporter
             $key = 'course_link_'.$courseId;
             $value = json_encode($url, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
             $exists = DB::table('platform_settings')->where('key', $key)->exists();
+
             if ($exists) {
                 DB::table('platform_settings')->where('key', $key)->update([
                     'value' => $value,
@@ -589,6 +773,10 @@ class UdemyCouponImporter
             if ($name === 'Biomedical') {
                 $update['position'] = 0;
             }
+            if (empty($existing->icon) && isset(self::CATEGORY_ICONS[$name])) {
+                $update['icon'] = self::CATEGORY_ICONS[$name];
+            }
+
             DB::table('course_categories')->where('id', $existing->id)->update($update);
             return;
         }
@@ -605,9 +793,9 @@ class UdemyCouponImporter
             'name' => $name,
             'slug' => $slug,
             'description' => $name === 'Biomedical'
-                ? 'Current biomedical and healthcare Udemy courses available through limited-time 100% off coupons.'
-                : 'Current Udemy courses available through limited-time 100% off coupons.',
-            'icon' => $name === 'Biomedical' ? '🧬' : null,
+                ? 'Current biomedical and healthcare Udemy courses available through verified limited-time 100% off coupons.'
+                : 'Current paid Udemy courses available through verified limited-time 100% off coupons.',
+            'icon' => self::CATEGORY_ICONS[$name] ?? null,
             'active' => true,
             'position' => $name === 'Biomedical' ? 0 : max($maxPosition + 1, $position + 1),
             'created_at' => now(),
